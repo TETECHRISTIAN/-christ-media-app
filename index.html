@@ -193,7 +193,8 @@ tr:hover .td-actions{opacity:1}
   .sidebar.mobile-open{display:flex;position:fixed;inset:0;z-index:100;width:80vw;max-width:280px}
   .sidebar-overlay{display:block!important}
 }
-.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99;pointer-events:none}
+.sidebar-overlay.visible{pointer-events:auto}
 
 /* ─── INSTALL BANNER ─── */
 .install-banner{background:var(--navy);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;font-size:13px;gap:12px}
@@ -628,11 +629,15 @@ document.addEventListener('click',e=>{
 // ─── MOBILE SIDEBAR ───
 function openMobileSidebar(){
   document.getElementById('sidebar').classList.add('mobile-open');
-  document.getElementById('sidebar-overlay').style.display='block';
+  const ov=document.getElementById('sidebar-overlay');
+  ov.style.display='block';
+  ov.classList.add('visible');
 }
 function closeMobileSidebar(){
   document.getElementById('sidebar').classList.remove('mobile-open');
-  document.getElementById('sidebar-overlay').style.display='none';
+  const ov=document.getElementById('sidebar-overlay');
+  ov.style.display='none';
+  ov.classList.remove('visible');
 }
 
 // ─── MODAL ───
