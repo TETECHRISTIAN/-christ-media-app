@@ -7,7 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Christ Media">
-<title>Christ Media — Gestion V3</title>
+<title>Christ Media — Gestion V4</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="manifest" href="#" id="manifest-link">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -200,6 +201,37 @@ tr:hover .td-actions{opacity:1}
 .install-banner{background:var(--navy);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;font-size:13px;gap:12px}
 .install-banner.hidden{display:none}
 
+/* ─── CHARTS ─── */
+.chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
+.chart-title{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+.chart-canvas{width:100%!important;max-height:220px}
+
+/* ─── REÇU PRINT ─── */
+.recu{display:none}
+@media print{
+  body *{visibility:hidden}
+  .recu,.recu *{visibility:visible}
+  .recu{display:block!important;position:fixed;inset:0;padding:20px;background:#fff;font-family:'DM Sans',sans-serif}
+  .recu-header{text-align:center;margin-bottom:16px;border-bottom:2px solid #0f1f3d;padding-bottom:12px}
+  .recu-title{font-size:20px;font-weight:700;color:#0f1f3d}
+  .recu-sub{font-size:12px;color:#666;margin-top:4px}
+  .recu-body{margin:16px 0}
+  .recu-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;font-size:13px}
+  .recu-total{font-size:16px;font-weight:700;margin-top:12px;text-align:right;color:#0f1f3d}
+  .recu-footer{text-align:center;margin-top:20px;font-size:11px;color:#999}
+}
+
+/* ─── HISTORIQUE ─── */
+.hist-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px}
+.hist-item:last-child{border-bottom:none}
+.hist-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.hist-in{background:var(--green-bg)}
+.hist-out{background:var(--red-bg)}
+.hist-info{flex:1}
+.hist-nom{font-weight:500;color:var(--text)}
+.hist-det{color:var(--text3);font-size:11px}
+.hist-qty{font-weight:600;font-size:13px}
+
 /* ─── SYNC STATUS ─── */
 .sync-bar{padding:6px 10px;display:flex;align-items:center;gap:8px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.5)}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s}
@@ -257,6 +289,10 @@ tr:hover .td-actions{opacity:1}
     <div class="ni" data-page="rapports" onclick="nav(this,'rapports')">
       <svg viewBox="0 0 16 16" fill="none"><path d="M2 14L5 9l3 3 3-5 3 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Rapports
+    </div>
+    <div class="ni" data-page="historique" onclick="nav(this,'historique')">
+      <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Historique stock
     </div>
   </nav>
   <div class="sidebar-bottom">
@@ -337,6 +373,10 @@ tr:hover .td-actions{opacity:1}
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
           Dépenses
         </div>
+        <div class="mn-dd-item" onclick="nav(document.querySelector('[data-page=historique]'),'historique');mnActivate('mn-more')">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Historique stock
+        </div>
       </div>
     </div>
   </div>
@@ -344,6 +384,7 @@ tr:hover .td-actions{opacity:1}
 
 <div id="modal-root"></div>
 <div class="toast" id="toast"></div>
+<div class="recu" id="recu-print"></div>
 
 <script>
 // ─── UTILS ───
@@ -402,7 +443,8 @@ const defaultData={
     {id:3,date:'2026-03-20',four:'BureauPlus Lomé',cat:'Bureautique',mt:12000,mode:'Espèces',notes:'Papeterie'},
   ],
   nid:200,
-  vf:{aid:'',qte:1,client:'',statut:'Payé',mode:'Espèces'}
+  vf:{aid:'',qte:1,client:'',statut:'Payé',mode:'Espèces'},
+  historique:[]
 };
 
 // ─── FIREBASE CONFIG ───
@@ -510,7 +552,7 @@ async function manualSync(){
       saveLocal(S);
       setSyncStatus('online','Synchronisé ✓');
       toast('✅ Données synchronisées depuis le cloud');
-      ({dashboard:rDash,vente:rVente,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,rapports:rRap})[currentPage]();
+      ({dashboard:rDash,vente:rVente,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,rapports:rRap,historique:rHistorique})[currentPage]();
     }else{
       await saveToFirebase(S);
       toast('✅ Données locales envoyées au cloud');
@@ -534,7 +576,7 @@ let S=loadData();
         S=remote;
         saveLocal(S);
         setSyncStatus('online','Synchronisé ✓');
-        ({dashboard:rDash,vente:rVente,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,rapports:rRap})[currentPage]();
+        ({dashboard:rDash,vente:rVente,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,rapports:rRap,historique:rHistorique})[currentPage]();
       }else{
         await saveToFirebase(S);
       }
@@ -590,7 +632,7 @@ function toast(msg,dur=2200){
 }
 
 // ─── NAVIGATION ───
-const titles={dashboard:'Tableau de bord',vente:'Ventes',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',rapports:'Rapports & Analyses'};
+const titles={dashboard:'Tableau de bord',vente:'Ventes',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',rapports:'Rapports & Analyses',historique:'Historique des mouvements'};
 const actionsMap={
   dashboard:()=>'<button class="btn btn-success" onclick="nav(document.querySelector(\'[data-page=vente]\'),\'vente\')">+ Vente</button>',
   vente:()=>'',
@@ -600,6 +642,7 @@ const actionsMap={
   fournisseurs:()=>'<button class="btn btn-primary" onclick="addFour()">+ Fournisseur</button>',
   depenses:()=>'<button class="btn btn-danger" onclick="addDep()">+ Dépense</button>',
   rapports:()=>'<button class="btn" onclick="printRapport()">🖨️ Imprimer</button>',
+  historique:()=>'<button class="btn" onclick="clearHistorique()">🗑️ Vider</button>',
 };
 
 let currentPage='dashboard';
@@ -609,7 +652,7 @@ function nav(el,page){
   document.getElementById('topbar-title').textContent=titles[page]||'';
   document.getElementById('topbar-actions').innerHTML=actionsMap[page]?actionsMap[page]():'';
   currentPage=page;
-  ({dashboard:rDash,vente:rVente,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,rapports:rRap})[page]();
+  ({dashboard:rDash,vente:rVente,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,rapports:rRap,historique:rHistorique})[page]();
   closeMobileSidebar();
   document.getElementById('mn-dropdown').classList.remove('open');
 }
@@ -731,6 +774,7 @@ function rVente(){
         <td>${v.client||'—'}</td><td><span class="badge bb">${v.mode||'—'}</span></td><td>${sb(v.statut)}</td>
         <td><div class="td-actions">
           ${v.statut==='Non payé'?`<button class="btn-icon btn-sm" onclick="payerVente(${v.id})" title="Marquer payé">✓</button>`:''}
+          <button class="btn-icon btn-sm" onclick="printRecu(${v.id})" title="Imprimer reçu">🖨️</button>
           <button class="btn-icon btn-sm" onclick="delVente(${v.id})" title="Supprimer" style="color:var(--red)">✕</button>
         </div></td>
       </tr>`}).join('')}
@@ -746,6 +790,7 @@ function envente(){
   if(q>sa(a)){toast('❌ Stock insuffisant !');return}
   a.qv+=q;
   S.ventes.push({id:genId(),date:D(),aid:a.id,qte:q,pu:a.pv,mt:a.pv*q,statut:S.vf.statut,client:S.vf.client,mode:S.vf.mode||'Espèces'});
+  addHistorique('Sortie',a,q,`Vente à ${S.vf.client||'client anonyme'}`);
   S.vf={aid:'',qte:1,client:'',statut:'Payé',mode:'Espèces'};
   saveData();toast('✅ Vente enregistrée');rVente();
 }
@@ -812,10 +857,10 @@ function saveAchat(){
   const date=document.getElementById('mda').value;
   const notes=document.getElementById('mno').value;
   if(!fid||!aid)return toast('❌ Fournisseur et article requis');
-  // Update stock
   const art=ga(aid);
   if(art){art.ea=(art.ea||0)+qte;}
   S.achats.push({id:genId(),date,fid,aid,qte,pu,mt:pu*qte,mode,notes});
+  if(art) addHistorique('Entrée',art,qte,`Achat — ${notes||'réappro'}`);
   saveData();closeModal();toast('✅ Achat enregistré, stock mis à jour');rAchats();
 }
 function delAchat(id){
@@ -1084,7 +1129,8 @@ function delDep(id){
   saveData();toast('🗑️ Dépense supprimée');rDep();
 }
 
-// ─── RAPPORTS ───
+// ─── RAPPORTS AVEC GRAPHIQUES ───
+let chartVentes=null, chartSecteurs=null, chartDep=null;
 function rRap(){
   const vp=S.ventes.filter(v=>v.statut==='Payé').reduce((s,v)=>s+v.mt,0);
   const dep=S.depenses.reduce((s,d)=>s+d.mt,0);
@@ -1093,6 +1139,19 @@ function rRap(){
   const sv=S.stock.reduce((s,a)=>s+(sa(a)*a.pv),0);
   const sc=S.stock.reduce((s,a)=>s+(sa(a)*a.pa),0);
   const mg=sv>0?Math.round((sv-sc)/sv*100):0;
+
+  // Ventes par mode de paiement
+  const modes=['Espèces','Flooz','Mixx','Virement'];
+  const vModes=modes.map(m=>S.ventes.filter(v=>v.mode===m&&v.statut==='Payé').reduce((s,v)=>s+v.mt,0));
+
+  // Ventes par secteur
+  const cats=['Lingerie','Audio-Vidéo','Bureautique'];
+  const vCats=cats.map(cat=>S.ventes.filter(v=>{const a=ga(v.aid);return a&&a.cat===cat&&v.statut==='Payé'}).reduce((s,v)=>s+v.mt,0));
+
+  // Dépenses par catégorie
+  const depCats=[...new Set(S.depenses.map(d=>d.cat))];
+  const depMts=depCats.map(cat=>S.depenses.filter(d=>d.cat===cat).reduce((s,d)=>s+d.mt,0));
+
   document.getElementById('content').innerHTML=`
     <p class="st">Bilan financier global</p>
     <div class="g4">
@@ -1105,16 +1164,24 @@ function rRap(){
       <div class="card"><div class="ct">Valeur stock (vente)</div><div class="mv">${F(sv)}</div></div>
       <div class="card"><div class="ct">Marge stock globale</div><div class="mv">${mg}%</div></div>
     </div>
+
+    <p class="st">Graphiques</p>
+    <div class="g3">
+      <div class="chart-wrap"><div class="chart-title">Ventes par secteur</div><canvas class="chart-canvas" id="chart-secteurs"></canvas></div>
+      <div class="chart-wrap"><div class="chart-title">Modes de paiement</div><canvas class="chart-canvas" id="chart-modes"></canvas></div>
+      <div class="chart-wrap"><div class="chart-title">Dépenses par catégorie</div><canvas class="chart-canvas" id="chart-dep"></canvas></div>
+    </div>
+
     <p class="st">Performance par secteur</p>
-    <div class="g3">${['Lingerie','Audio-Vidéo','Bureautique'].map(cat=>{
-      const v=S.ventes.filter(v=>{const a=ga(v.aid);return a&&a.cat===cat&&v.statut==='Payé'}).reduce((s,v)=>s+v.mt,0);
+    <div class="g3">${cats.map((cat,i)=>{
       const nb=S.ventes.filter(v=>{const a=ga(v.aid);return a&&a.cat===cat}).length;
       const stk=S.stock.filter(a=>a.cat===cat).reduce((s,a)=>s+(sa(a)*a.pv),0);
       const ach=S.achats.filter(ac=>{const a=ga(ac.aid);return a&&a.cat===cat}).reduce((s,ac)=>s+ac.mt,0);
-      return`<div class="card"><div class="ct">${cat}</div><div class="mv">${F(v)}</div>
+      return`<div class="card"><div class="ct">${cat}</div><div class="mv">${F(vCats[i])}</div>
         <div class="ms">${N(nb)} ventes · Stock: ${F(stk)}</div>
         <div class="ms" style="color:var(--purple)">Achats: ${F(ach)}</div></div>`;
     }).join('')}</div>
+
     <p class="st">Top 10 articles vendus</p>
     <div class="tbl-wrap"><table>
       <thead><tr><th>Article</th><th>Catégorie</th><th>Qté vendue</th><th>Revenu</th><th>Marge</th><th>Stock restant</th></tr></thead>
@@ -1126,17 +1193,99 @@ function rRap(){
     <p class="st">Répartition dépenses par catégorie</p>
     <div class="tbl-wrap"><table>
       <thead><tr><th>Catégorie</th><th>Montant</th><th>Nb. opérations</th><th>Part</th></tr></thead>
-      <tbody>${[...new Set(S.depenses.map(d=>d.cat))].map(cat=>{
-        const total=S.depenses.filter(d=>d.cat===cat).reduce((s,d)=>s+d.mt,0);
+      <tbody>${depCats.map((cat,i)=>{
         const nb=S.depenses.filter(d=>d.cat===cat).length;
-        const part=dep>0?Math.round(total/dep*100):0;
-        return`<tr><td class="tdm">${cat}</td><td style="font-weight:600;color:var(--red)">${F(total)}</td><td>${N(nb)}</td>
+        const part=dep>0?Math.round(depMts[i]/dep*100):0;
+        return`<tr><td class="tdm">${cat}</td><td style="font-weight:600;color:var(--red)">${F(depMts[i])}</td><td>${N(nb)}</td>
           <td><span class="badge ba">${part}%</span></td></tr>`;
       }).join('')}
       </tbody></table></div>`;
+
+  // Dessiner les graphiques après rendu DOM
+  setTimeout(()=>{
+    const colors=['#0f1f3d','#8b2252','#0b6b5c','#5b3a8f','#8a5200','#b02828'];
+    if(chartSecteurs){chartSecteurs.destroy();}
+    chartSecteurs=new Chart(document.getElementById('chart-secteurs'),{
+      type:'doughnut',
+      data:{labels:cats,datasets:[{data:vCats,backgroundColor:['#f8e8f0','#e8edf5','#e0f5f1'],borderColor:['#8b2252','#0f1f3d','#0b6b5c'],borderWidth:2}]},
+      options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:8}}}}
+    });
+    if(chartDep){chartDep.destroy();}
+    chartDep=new Chart(document.getElementById('chart-dep'),{
+      type:'bar',
+      data:{labels:depCats,datasets:[{data:depMts,backgroundColor:'#fbeaea',borderColor:'#b02828',borderWidth:2,borderRadius:4}]},
+      options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{size:9}},grid:{display:false}},x:{ticks:{font:{size:9}}}}}
+    });
+    const modeChart=document.getElementById('chart-modes');
+    if(modeChart){
+      new Chart(modeChart,{
+        type:'pie',
+        data:{labels:modes,datasets:[{data:vModes,backgroundColor:['#e8edf5','#e0f5f1','#f8e8f0','#f0ebf8'],borderColor:['#0f1f3d','#0b6b5c','#8b2252','#5b3a8f'],borderWidth:2}]},
+        options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:8}}}}
+      });
+    }
+  },100);
 }
-function printRapport(){
+function printRapport(){window.print();}
+
+// ─── REÇU PDF ───
+function printRecu(vid){
+  const v=S.ventes.find(v=>v.id==vid);if(!v)return;
+  const a=ga(v.aid);
+  const recuDiv=document.getElementById('recu-print');
+  recuDiv.innerHTML=`
+    <div class="recu-header">
+      <div class="recu-title">Christ Media</div>
+      <div class="recu-sub">Lomé, Togo · Reçu de vente</div>
+      <div class="recu-sub">Reçu N° ${String(v.id).padStart(4,'0')} · ${v.date}</div>
+    </div>
+    <div class="recu-body">
+      <div class="recu-row"><span>Client</span><span>${v.client||'Client anonyme'}</span></div>
+      <div class="recu-row"><span>Article</span><span>${a?a.nom:'Article supprimé'}</span></div>
+      <div class="recu-row"><span>Quantité</span><span>${v.qte}</span></div>
+      <div class="recu-row"><span>Prix unitaire</span><span>${F(v.pu)}</span></div>
+      <div class="recu-row"><span>Mode de paiement</span><span>${v.mode}</span></div>
+      <div class="recu-row"><span>Statut</span><span>${v.statut}</span></div>
+    </div>
+    <div class="recu-total">Total : ${F(v.mt)}</div>
+    <div class="recu-footer">Merci pour votre confiance · Christ Media</div>`;
   window.print();
+}
+
+// ─── HISTORIQUE STOCK ───
+function addHistorique(type, article, qte, notes){
+  if(!S.historique) S.historique=[];
+  S.historique.unshift({
+    id:genId(), date:D(), type, aid:article.id,
+    nom:article.nom, cat:article.cat, qte, notes
+  });
+  // Garder max 200 entrées
+  if(S.historique.length>200) S.historique=S.historique.slice(0,200);
+}
+function rHistorique(){
+  if(!S.historique) S.historique=[];
+  const hist=S.historique;
+  document.getElementById('content').innerHTML=`
+    <p class="st">Mouvements de stock (${hist.length} entrées)</p>
+    ${hist.length===0?`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><p>Aucun mouvement enregistré</p><small>Les entrées/sorties de stock apparaîtront ici</small></div>`:`
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Type</th><th>Article</th><th>Catégorie</th><th>Qté</th><th>Notes</th></tr></thead>
+        <tbody>${hist.map(h=>`<tr>
+          <td>${h.date}</td>
+          <td><span class="badge ${h.type==='Entrée'?'bg':'br'}">${h.type==='Entrée'?'⬆️ Entrée':'⬇️ Sortie'}</span></td>
+          <td class="tdm">${h.nom}</td>
+          <td>${cb(h.cat)}</td>
+          <td style="font-weight:600;color:${h.type==='Entrée'?'var(--green)':'var(--red)'}">${h.type==='Entrée'?'+':'−'}${N(h.qte)}</td>
+          <td style="color:var(--text3)">${h.notes||'—'}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`}`;
+}
+function clearHistorique(){
+  if(!confirm('Vider tout l\'historique ?'))return;
+  S.historique=[];saveData();toast('🗑️ Historique vidé');rHistorique();
 }
 
 // ─── EXPORT / IMPORT ───
