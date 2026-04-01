@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Christ Media">
-<title>Christ Media — Gestion V5</title>
+<title>Christ Media — Gestion V6</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
 <link rel="manifest" href="#" id="manifest-link">
@@ -253,6 +253,45 @@ tr:hover .td-actions{opacity:1}
 .facture-tot-final{font-size:16px;font-weight:700;color:#0f1f3d;border-top:2px solid #0f1f3d;padding-top:8px;margin-top:4px}
 .facture-footer{text-align:center;margin-top:24px;font-size:11px;color:#aaa;border-top:1px solid #eee;padding-top:12px}
 
+/* ─── PANIER ─── */
+.panier-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:20px;box-shadow:var(--shadow)}
+.panier-title{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.panier-ligne{display:grid;grid-template-columns:1fr 80px 100px 80px 28px;gap:8px;align-items:center;margin-bottom:8px}
+.panier-ligne-header{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:grid;grid-template-columns:1fr 80px 100px 80px 28px;gap:8px}
+.panier-total{background:var(--navy);border-radius:var(--rs);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+.panier-total-lbl{color:rgba(255,255,255,.7);font-size:13px}
+.panier-total-val{color:#fff;font-size:24px;font-weight:700;letter-spacing:-.5px}
+.panier-empty{text-align:center;padding:24px;color:var(--text3);font-size:13px}
+.del-btn{background:var(--red-bg);color:var(--red);border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+@media(max-width:768px){
+  .panier-ligne,.panier-ligne-header{grid-template-columns:1fr 60px 90px 60px 24px;gap:4px}
+}
+
+/* ─── PARAMÈTRES ─── */
+.param-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.param-section-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.param-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.param-row:last-child{border-bottom:none}
+.param-label{font-size:13px;color:var(--text);font-weight:500}
+.param-desc{font-size:11px;color:var(--text3);margin-top:2px}
+.toggle{width:40px;height:22px;background:var(--border2);border-radius:11px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--navy)}
+.toggle::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on::after{left:21px}
+.employe-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.boutique-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;cursor:pointer;transition:all .15s}
+.boutique-card.active{background:var(--navy-bg);border-color:var(--navy)}
+.boutique-card:hover{background:var(--surface3)}
+
+/* ─── REVENUS SUPP ─── */
+.rev-tabs{display:flex;gap:6px;margin-bottom:16px}
+.rev-tab{padding:5px 14px;border-radius:20px;border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);transition:all .15s;font-family:inherit}
+.rev-tab.active{background:var(--green);color:#fff;border-color:var(--green)}
+
+/* ─── INVENTAIRE ─── */
+.inv-summary{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.inv-chip{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 16px;flex:1;min-width:120px}
+
 /* ─── CHARTS ─── */
 .chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
 .chart-title{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
@@ -303,8 +342,8 @@ tr:hover .td-actions{opacity:1}
 <!-- ─── SIDEBAR ─── -->
 <div class="sidebar" id="sidebar">
   <div class="logo">
-    <div class="logo-name">Christ Media</div>
-    <div class="logo-sub">Gestion · Lomé, Togo</div>
+    <div class="logo-name" id="logo-name">Christ Media</div>
+    <div class="logo-sub" id="logo-sub">Gestion · Lomé, Togo</div>
   </div>
   <nav class="nav">
     <div class="nav-sec">Principal</div>
@@ -342,13 +381,26 @@ tr:hover .td-actions{opacity:1}
       <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="currentColor" opacity=".6"/><path d="M1 6h14" stroke="currentColor" stroke-width="1"/></svg>
       Trésorerie
     </div>
+    <div class="ni" data-page="revenus" onclick="nav(this,'revenus')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M8 1v14M4 5h6a2 2 0 010 4H6a2 2 0 000 4h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Revenus & Charges
+    </div>
     <div class="ni" data-page="rapports" onclick="nav(this,'rapports')">
       <svg viewBox="0 0 16 16" fill="none"><path d="M2 14L5 9l3 3 3-5 3 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Rapports
     </div>
+    <div class="ni" data-page="inventaire" onclick="nav(this,'inventaire')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M2 2h12v2H2zM2 7h12v2H2zM2 12h12v2H2z" fill="currentColor" opacity=".6"/></svg>
+      Rapport inventaire
+    </div>
     <div class="ni" data-page="historique" onclick="nav(this,'historique')">
       <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       Historique stock
+    </div>
+    <div class="nav-sec">Système</div>
+    <div class="ni" data-page="parametres" onclick="nav(this,'parametres')">
+      <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Paramètres
     </div>
   </nav>
   <div class="sidebar-bottom">
@@ -437,9 +489,21 @@ tr:hover .td-actions{opacity:1}
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="currentColor" opacity=".6"/></svg>
           Trésorerie
         </div>
+        <div class="mn-dd-item" onclick="nav(document.querySelector('[data-page=revenus]'),'revenus');mnActivate('mn-more')">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M4 5h6a2 2 0 010 4H6a2 2 0 000 4h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Revenus & Charges
+        </div>
+        <div class="mn-dd-item" onclick="nav(document.querySelector('[data-page=inventaire]'),'inventaire');mnActivate('mn-more')">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 2h12v2H2zM2 7h12v2H2zM2 12h12v2H2z" fill="currentColor" opacity=".6"/></svg>
+          Rapport inventaire
+        </div>
         <div class="mn-dd-item" onclick="nav(document.querySelector('[data-page=historique]'),'historique');mnActivate('mn-more')">
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           Historique stock
+        </div>
+        <div class="mn-dd-item" onclick="nav(document.querySelector('[data-page=parametres]'),'parametres');mnActivate('mn-more')">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Paramètres
         </div>
       </div>
     </div>
@@ -469,7 +533,7 @@ tr:hover .td-actions{opacity:1}
 
 <script>
 // ─── UTILS ───
-const F=n=>Math.round(n).toLocaleString('fr-FR')+' FCFA';
+const F=n=>{const dev=(S&&S.parametres&&S.parametres.devise)||'FCFA';return Math.round(n).toLocaleString('fr-FR')+' '+dev;};
 const N=n=>Math.round(n).toLocaleString('fr-FR');
 const D=()=>new Date().toISOString().split('T')[0];
 const genId=()=>++S.nid;
@@ -525,7 +589,20 @@ const defaultData={
   ],
   nid:200,
   vf:{aid:'',qte:1,client:'',statut:'Payé',mode:'Espèces'},
-  historique:[]
+  historique:[],
+  revenus:[],
+  charges:[],
+  employes:[],
+  boutiques:[{id:1,nom:'Christ Media — Lomé',actif:true}],
+  boutique_active:1,
+  parametres:{
+    nom:'Christ Media',
+    ville:'Lomé, Togo',
+    email:'christmedia176@gmail.com',
+    devise:'FCFA',
+    categories:['Lingerie','Audio-Vidéo','Bureautique'],
+    theme:'light'
+  }
 };
 
 // ─── FIREBASE CONFIG ───
@@ -633,7 +710,7 @@ async function manualSync(){
       saveLocal(S);
       setSyncStatus('online','Synchronisé ✓');
       toast('✅ Données synchronisées depuis le cloud');
-      ({dashboard:rDash,vente:rVente,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,rapports:rRap,historique:rHistorique})[currentPage]();
+      ({dashboard:rDash,vente:rVente,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,parametres:rParametres})[currentPage]();
     }else{
       await saveToFirebase(S);
       toast('✅ Données locales envoyées au cloud');
@@ -658,7 +735,7 @@ let S=loadData();
         S=remote;
         saveLocal(S);
         setSyncStatus('online','Synchronisé ✓');
-        ({dashboard:rDash,vente:rVente,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,rapports:rRap,historique:rHistorique})[currentPage]();
+        ({dashboard:rDash,vente:rVente,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,parametres:rParametres})[currentPage]();
       }else{
         await saveToFirebase(S);
       }
@@ -714,7 +791,7 @@ function toast(msg,dur=2200){
 }
 
 // ─── NAVIGATION ───
-const titles={dashboard:'Tableau de bord',vente:'Ventes',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',rapports:'Rapports & Analyses',historique:'Historique des mouvements'};
+const titles={dashboard:'Tableau de bord',vente:'Ventes',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:'Rapport d'inventaire',historique:'Historique des mouvements',parametres:'Paramètres'};
 const actionsMap={
   dashboard:()=>'<button class="btn btn-success" onclick="nav(document.querySelector(\'[data-page=vente]\'),\'vente\')">+ Vente</button>',
   vente:()=>'',
@@ -723,8 +800,8 @@ const actionsMap={
   clients:()=>'<button class="btn btn-primary" onclick="addClient()">+ Client</button>',
   fournisseurs:()=>'<button class="btn btn-primary" onclick="addFour()">+ Fournisseur</button>',
   depenses:()=>'<button class="btn btn-danger" onclick="addDep()">+ Dépense</button>',
-  tresorerie:()=>'',rapports:()=>'<button class="btn" onclick="printRapport()">🖨️ Imprimer</button>',
-  historique:()=>'<button class="btn" onclick="clearHistorique()">🗑️ Vider</button>',
+  tresorerie:()=>'',revenus:()=>'<button class="btn btn-success" onclick="addRevenu()">+ Revenu</button> <button class="btn" onclick="addCharge()">+ Charge</button>',rapports:()=>'<button class="btn" onclick="printRapport()">🖨️ Imprimer</button>',
+  historique:()=>'<button class="btn" onclick="clearHistorique()">🗑️ Vider</button>',inventaire:()=>'<button class="btn" onclick="printRapport()">🖨️ Imprimer</button>',parametres:()=>'',
 };
 
 let currentPage='dashboard';
@@ -734,7 +811,7 @@ function nav(el,page){
   document.getElementById('topbar-title').textContent=titles[page]||'';
   document.getElementById('topbar-actions').innerHTML=actionsMap[page]?actionsMap[page]():'';
   currentPage=page;
-  ({dashboard:rDash,vente:rVente,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,rapports:rRap,historique:rHistorique})[page]();
+  ({dashboard:rDash,vente:rVente,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,parametres:rParametres})[page]();
   closeMobileSidebar();
   document.getElementById('mn-dropdown').classList.remove('open');
 }
@@ -820,62 +897,139 @@ function rDash(){
     </div>`;
 }
 
-// ─── VENTES ───
+// ─── VENTES (PANIER MULTI-ARTICLES) ───
+if(!window.panier) window.panier=[];
+
 function rVente(){
-  const a=S.vf.aid?ga(parseInt(S.vf.aid)):null;
-  const mt=a?a.pv*S.vf.qte:0;
-  const opts=S.stock.filter(a=>sa(a)>0).map(a=>`<option value="${a.id}">[${a.code}] ${a.nom} — ${F(a.pv)}</option>`).join('');
+  if(!window.panier) window.panier=[];
+  const opts=S.stock.filter(a=>sa(a)>0).map(a=>`<option value="${a.id}">[${a.code}] ${a.nom} — ${F(a.pv)} (${N(sa(a))} dispo)</option>`).join('');
+  const totalPanier=window.panier.reduce((s,l)=>s+l.mt,0);
+
   document.getElementById('content').innerHTML=`
-    <div class="vrf">
-      <div class="vrt">➕ Nouvelle vente</div>
-      <div class="fr">
-        <div class="fg"><label class="fl">Article en stock</label>
-          <select class="fs" id="va" onchange="uvf('aid',this.value)"><option value="">Sélectionner...</option>${opts}</select></div>
-        <div class="fg"><label class="fl">Client</label><input class="fi" id="vc" placeholder="Nom du client" value="${S.vf.client}" oninput="uvf('client',this.value)"></div>
+    <div class="panier-wrap">
+      <div class="panier-title">
+        🛒 Nouveau panier
+        <button class="btn btn-sm" onclick="viderPanier()">🗑️ Vider</button>
       </div>
-      <div class="fr3">
-        <div class="fg"><label class="fl">Quantité${a?` (${N(sa(a))} dispo)`:''}</label>
-          <input class="fi" type="number" id="vq" min="1" max="${a?sa(a):999}" value="${S.vf.qte}" oninput="uvf('qte',parseInt(this.value)||1)"></div>
-        <div class="fg"><label class="fl">Paiement</label>
-          <select class="fs" id="vm" onchange="uvf('mode',this.value)"><option>Espèces</option><option>Flooz</option><option>Mixx</option><option>Virement</option></select></div>
+      <div class="fg"><label class="fl">Ajouter un article au panier</label>
+        <div style="display:flex;gap:8px">
+          <select class="fs" id="pa-art" style="flex:1"><option value="">Sélectionner un article...</option>${opts}</select>
+          <button class="btn btn-primary" onclick="ajouterAuPanier()">+ Ajouter</button>
+          <button class="btn" onclick="openScanner('vente')" title="Scanner">📷</button>
+        </div>
+      </div>
+      ${window.panier.length>0?`
+      <div class="panier-ligne-header">
+        <span>Article</span><span>Qté</span><span>Prix unit.</span><span>Total</span><span></span>
+      </div>
+      ${window.panier.map((l,i)=>`
+        <div class="panier-ligne">
+          <div style="font-size:12px;font-weight:500;color:var(--text)">${l.nom}</div>
+          <input class="fi" type="number" min="1" max="${l.dispo}" value="${l.qte}"
+            oninput="majLignePanier(${i},'qte',+this.value||1)" style="padding:5px 8px;font-size:12px">
+          <input class="fi" type="number" min="0" value="${l.pu}"
+            oninput="majLignePanier(${i},'pu',+this.value||0)" style="padding:5px 8px;font-size:12px">
+          <div style="font-weight:600;font-size:13px">${F(l.mt)}</div>
+          <button class="del-btn" onclick="retirerDuPanier(${i})">✕</button>
+        </div>`).join('')}
+      <div class="panier-total">
+        <span class="panier-total-lbl">${window.panier.length} article(s) · Total</span>
+        <span class="panier-total-val">${F(totalPanier)}</span>
+      </div>
+      <div class="fr" style="margin-top:14px">
+        <div class="fg"><label class="fl">Client</label><input class="fi" id="pa-client" placeholder="Nom du client"></div>
+        <div class="fg"><label class="fl">Mode paiement</label>
+          <select class="fs" id="pa-mode"><option>Espèces</option><option>Flooz</option><option>Mixx</option><option>Virement</option></select>
+        </div>
         <div class="fg"><label class="fl">Statut</label>
-          <select class="fs" id="vs" onchange="uvf('statut',this.value)"><option value="Payé">Payé</option><option value="Non payé">Crédit</option></select></div>
+          <select class="fs" id="pa-statut"><option value="Payé">Payé</option><option value="Non payé">Crédit</option></select>
+        </div>
       </div>
-      <div class="totbox"><span class="totlbl">Montant total</span><span class="totval">${F(mt)}</span></div>
-      <div style="display:flex;justify-content:flex-end;margin-top:12px">
-        <button class="btn btn-success" onclick="envente()" ${!a?'disabled':''}>✓ Enregistrer la vente</button>
-      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+        <button class="btn btn-success" onclick="validerPanier()">✓ Valider la vente (${F(totalPanier)})</button>
+      </div>`:`<div class="panier-empty">🛒 Panier vide — ajoutez des articles ci-dessus</div>`}
     </div>
+
     <p class="st">Historique des ventes</p>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Date</th><th>Article</th><th>Catég.</th><th>Qté</th><th>Prix unit.</th><th>Montant</th><th>Client</th><th>Mode</th><th>Statut</th><th></th></tr></thead>
-      <tbody>${S.ventes.slice().reverse().map(v=>{const a=ga(v.aid);return`<tr>
-        <td style="font-family:'DM Mono',monospace;font-size:12px">${v.date}</td>
-        <td class="tdm">${a?a.nom:'?'}</td><td>${a?cb(a.cat):''}</td>
-        <td>${N(v.qte)}</td><td>${F(v.pu)}</td><td style="font-weight:600">${F(v.mt)}</td>
-        <td>${v.client||'—'}</td><td><span class="badge bb">${v.mode||'—'}</span></td><td>${sb(v.statut)}</td>
-        <td><div class="td-actions">
-          ${v.statut==='Non payé'?`<button class="btn-icon btn-sm" onclick="payerVente(${v.id})" title="Marquer payé">✓</button>`:''}
-          <button class="btn-icon btn-sm" onclick="printRecu(${v.id})" title="Imprimer reçu">🖨️</button>
-          <button class="btn-icon btn-sm" onclick="printFacture(${v.id})" title="Facture PDF">🧾</button>
-          <button class="btn-icon btn-sm" onclick="delVente(${v.id})" title="Supprimer" style="color:var(--red)">✕</button>
-        </div></td>
-      </tr>`}).join('')}
+      <thead><tr><th>Date</th><th>Articles</th><th>Montant</th><th>Client</th><th>Mode</th><th>Statut</th><th></th></tr></thead>
+      <tbody>${S.ventes.slice().reverse().map(v=>{
+        const lignes=v.lignes||[{aid:v.aid,qte:v.qte,pu:v.pu,mt:v.mt}];
+        const noms=lignes.map(l=>{const a=ga(l.aid);return a?a.nom:'?'}).join(', ');
+        return`<tr>
+          <td style="font-family:'DM Mono',monospace;font-size:12px">${v.date}</td>
+          <td class="tdm" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${noms}">${noms}</td>
+          <td style="font-weight:600">${F(v.mt)}</td>
+          <td>${v.client||'—'}</td>
+          <td><span class="badge bb">${v.mode||'—'}</span></td>
+          <td>${sb(v.statut)}</td>
+          <td><div class="td-actions">
+            ${v.statut==='Non payé'?`<button class="btn-icon btn-sm" onclick="payerVente(${v.id})" title="Marquer payé">✓</button>`:''}
+            <button class="btn-icon btn-sm" onclick="printRecu(${v.id})" title="Reçu">🖨️</button>
+            <button class="btn-icon btn-sm" onclick="printFacture(${v.id})" title="Facture">🧾</button>
+            <button class="btn-icon btn-sm" onclick="delVente(${v.id})" title="Supprimer" style="color:var(--red)">✕</button>
+          </div></td>
+        </tr>`;}).join('')}
       </tbody></table></div>`;
-  if(S.vf.aid){document.getElementById('va').value=S.vf.aid;}
-  document.getElementById('vs').value=S.vf.statut;
-  if(document.getElementById('vm'))document.getElementById('vm').value=S.vf.mode||'Espèces';
 }
-function uvf(k,v){S.vf[k]=v;rVente()}
-function envente(){
-  const a=ga(parseInt(S.vf.aid));if(!a)return;
-  const q=parseInt(S.vf.qte)||1;
-  if(q>sa(a)){toast('❌ Stock insuffisant !');return}
-  a.qv+=q;
-  S.ventes.push({id:genId(),date:D(),aid:a.id,qte:q,pu:a.pv,mt:a.pv*q,statut:S.vf.statut,client:S.vf.client,mode:S.vf.mode||'Espèces'});
-  addHistorique('Sortie',a,q,`Vente à ${S.vf.client||'client anonyme'}`);
-  S.vf={aid:'',qte:1,client:'',statut:'Payé',mode:'Espèces'};
-  saveData();toast('✅ Vente enregistrée');rVente();
+
+function ajouterAuPanier(){
+  const sel=document.getElementById('pa-art');
+  const aid=parseInt(sel.value);if(!aid)return toast('⚠️ Sélectionne un article');
+  const a=ga(aid);if(!a)return;
+  const dispo=sa(a);if(dispo<=0)return toast('❌ Stock insuffisant');
+  const existant=window.panier.findIndex(l=>l.aid===aid);
+  if(existant>=0){
+    if(window.panier[existant].qte>=dispo)return toast('❌ Stock max atteint');
+    window.panier[existant].qte++;
+    window.panier[existant].mt=window.panier[existant].qte*window.panier[existant].pu;
+  }else{
+    window.panier.push({aid:a.id,nom:a.nom,qte:1,pu:a.pv,mt:a.pv,dispo});
+  }
+  rVente();
+}
+function majLignePanier(i,champ,val){
+  if(!window.panier[i])return;
+  window.panier[i][champ]=val;
+  if(champ==='qte'&&val>window.panier[i].dispo){window.panier[i].qte=window.panier[i].dispo;toast('⚠️ Stock max atteint');}
+  window.panier[i].mt=window.panier[i].qte*window.panier[i].pu;
+  // Recalculer total sans re-render complet
+  const total=window.panier.reduce((s,l)=>s+l.mt,0);
+  const el=document.querySelector('.panier-total-val');
+  if(el)el.textContent=F(total);
+  const btn=document.querySelector('.btn-success');
+  if(btn&&btn.textContent.includes('Valider'))btn.textContent=`✓ Valider la vente (${F(total)})`;
+}
+function retirerDuPanier(i){window.panier.splice(i,1);rVente();}
+function viderPanier(){window.panier=[];rVente();}
+
+function validerPanier(){
+  if(!window.panier||window.panier.length===0)return toast('⚠️ Panier vide');
+  const client=document.getElementById('pa-client')?.value||'';
+  const mode=document.getElementById('pa-mode')?.value||'Espèces';
+  const statut=document.getElementById('pa-statut')?.value||'Payé';
+  const mt=window.panier.reduce((s,l)=>s+l.mt,0);
+
+  // Vérifier stocks
+  for(const l of window.panier){
+    const a=ga(l.aid);
+    if(!a||sa(a)<l.qte){toast(`❌ Stock insuffisant pour ${l.nom}`);return;}
+  }
+  // Déduire stocks + historique
+  for(const l of window.panier){
+    const a=ga(l.aid);
+    a.qv+=l.qte;
+    addHistorique('Sortie',a,l.qte,`Vente à ${client||'client anonyme'}`);
+  }
+  const vid=genId();
+  S.ventes.push({
+    id:vid,date:D(),
+    lignes:window.panier.map(l=>({aid:l.aid,qte:l.qte,pu:l.pu,mt:l.mt})),
+    aid:window.panier[0].aid,qte:window.panier[0].qte,pu:window.panier[0].pu,
+    mt,statut,client,mode
+  });
+  window.panier=[];
+  saveData();toast(`✅ Vente de ${F(mt)} enregistrée !`);rVente();
 }
 function payerVente(id){
   const v=S.ventes.find(v=>v.id==id);if(!v)return;
@@ -884,7 +1038,10 @@ function payerVente(id){
 function delVente(id){
   if(!confirm('Supprimer cette vente ?'))return;
   const v=S.ventes.find(v=>v.id==id);
-  if(v){const a=ga(v.aid);if(a)a.qv=Math.max(0,a.qv-v.qte);}
+  if(v){
+    const lignes=v.lignes||[{aid:v.aid,qte:v.qte}];
+    lignes.forEach(l=>{const a=ga(l.aid);if(a)a.qv=Math.max(0,a.qv-l.qte);});
+  }
   S.ventes=S.ventes.filter(v=>v.id!=id);
   saveData();toast('🗑️ Vente supprimée');rVente();
 }
@@ -941,10 +1098,12 @@ function saveAchat(){
   const notes=document.getElementById('mno').value;
   if(!fid||!aid)return toast('❌ Fournisseur et article requis');
   const art=ga(aid);
-  if(art){art.ea=(art.ea||0)+qte;}
+  if(art){
+    art.ea=(art.ea||0)+qte; // stock supplémentaire
+  }
   S.achats.push({id:genId(),date,fid,aid,qte,pu,mt:pu*qte,mode,notes});
   if(art) addHistorique('Entrée',art,qte,`Achat — ${notes||'réappro'}`);
-  saveData();closeModal();toast('✅ Achat enregistré, stock mis à jour');rAchats();
+  saveData();closeModal();toast(`✅ Achat enregistré — stock +${qte} pour ${art?art.nom:'article'}`);rAchats();
 }
 function delAchat(id){
   if(!confirm('Supprimer cet achat ? Le stock sera ajusté.'))return;
@@ -1617,6 +1776,354 @@ async function doLogout(){
   toast('👋 Déconnecté');
 }
 
+// ─── REVENUS SUPPLÉMENTAIRES & CHARGES ───
+let revTab='revenus';
+function rRevenus(){
+  if(!S.revenus)S.revenus=[];
+  if(!S.charges)S.charges=[];
+  const totalRev=S.revenus.reduce((s,r)=>s+r.mt,0);
+  const totalChg=S.charges.reduce((s,c)=>s+c.mt,0);
+  document.getElementById('content').innerHTML=`
+    <div class="g2" style="margin-bottom:16px">
+      <div class="card" style="border-left:3px solid var(--green)">
+        <div class="ct">Total revenus supplémentaires</div>
+        <div class="mv" style="color:var(--green)">${F(totalRev)}</div>
+        <span class="badge bg">${S.revenus.length} entrées</span>
+      </div>
+      <div class="card" style="border-left:3px solid var(--red)">
+        <div class="ct">Total charges fixes</div>
+        <div class="mv" style="color:var(--red)">${F(totalChg)}</div>
+        <span class="badge br">${S.charges.length} entrées</span>
+      </div>
+    </div>
+    <div class="rev-tabs">
+      <button class="rev-tab${revTab==='revenus'?' active':''}" onclick="revTab='revenus';rRevenus()">💵 Revenus supplémentaires</button>
+      <button class="rev-tab${revTab==='charges'?' active':''}" onclick="revTab='charges';rRevenus()">📌 Charges fixes</button>
+    </div>
+    ${revTab==='revenus'?`
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Date</th><th>Description</th><th>Catégorie</th><th>Montant</th><th>Mode</th><th></th></tr></thead>
+      <tbody>${S.revenus.length===0?'<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3)">Aucun revenu enregistré</td></tr>':
+        S.revenus.slice().reverse().map(r=>`<tr>
+          <td>${r.date}</td><td class="tdm">${r.desc}</td>
+          <td><span class="badge bg">${r.cat}</span></td>
+          <td style="font-weight:600;color:var(--green)">${F(r.mt)}</td>
+          <td><span class="badge bb">${r.mode}</span></td>
+          <td><div class="td-actions">
+            <button class="btn-icon btn-sm" onclick="delRevenu(${r.id})" style="color:var(--red)">✕</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody></table></div>`:`
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Description</th><th>Catégorie</th><th>Montant/mois</th><th>Récurrence</th><th></th></tr></thead>
+      <tbody>${S.charges.length===0?'<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text3)">Aucune charge enregistrée</td></tr>':
+        S.charges.map(c=>`<tr>
+          <td class="tdm">${c.desc}</td>
+          <td><span class="badge ba">${c.cat}</span></td>
+          <td style="font-weight:600;color:var(--red)">${F(c.mt)}</td>
+          <td>${c.recurrence||'Mensuel'}</td>
+          <td><div class="td-actions">
+            <button class="btn-icon btn-sm" onclick="delCharge(${c.id})" style="color:var(--red)">✕</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody></table></div>`}`;
+}
+function addRevenu(){
+  modal(`<div class="mft">Ajouter un revenu supplémentaire</div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Date</label><input class="fi" type="date" id="mda" value="${D()}"></div>
+      <div class="fg"><label class="fl">Catégorie</label>
+        <select class="fs" id="mcat"><option>Prestation service</option><option>Transfert/Virement reçu</option><option>Commission</option><option>Location</option><option>Autre</option></select>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Description</label><input class="fi" id="mdesc" placeholder="Ex: Réparation imprimante client..."></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Montant (${(S.parametres&&S.parametres.devise)||'FCFA'})</label><input class="fi" type="number" id="mmt" placeholder="0"></div>
+      <div class="fg"><label class="fl">Mode</label><select class="fs" id="mmo"><option>Espèces</option><option>Flooz</option><option>Mixx</option><option>Virement</option></select></div>
+    </div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-success" onclick="saveRevenu()">Enregistrer</button></div>`);
+}
+function saveRevenu(){
+  const desc=document.getElementById('mdesc').value;
+  const mt=+document.getElementById('mmt').value||0;
+  if(!desc||!mt)return toast('❌ Description et montant requis');
+  if(!S.revenus)S.revenus=[];
+  S.revenus.push({id:genId(),date:document.getElementById('mda').value,desc,cat:document.getElementById('mcat').value,mt,mode:document.getElementById('mmo').value});
+  saveData();closeModal();toast('✅ Revenu enregistré');rRevenus();
+}
+function delRevenu(id){
+  if(!confirm('Supprimer ce revenu ?'))return;
+  S.revenus=S.revenus.filter(r=>r.id!=id);
+  saveData();toast('🗑️ Revenu supprimé');rRevenus();
+}
+function addCharge(){
+  revTab='charges';
+  modal(`<div class="mft">Ajouter une charge fixe</div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Catégorie</label>
+        <select class="fs" id="mcat"><option>Loyer</option><option>Salaire</option><option>Électricité</option><option>Internet</option><option>Transport</option><option>Autre</option></select>
+      </div>
+      <div class="fg"><label class="fl">Récurrence</label>
+        <select class="fs" id="mrec"><option>Mensuel</option><option>Hebdomadaire</option><option>Annuel</option><option>Ponctuel</option></select>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Description</label><input class="fi" id="mdesc" placeholder="Ex: Loyer boutique Lomé..."></div>
+    <div class="fg"><label class="fl">Montant (${(S.parametres&&S.parametres.devise)||'FCFA'})</label><input class="fi" type="number" id="mmt" placeholder="0"></div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-danger" onclick="saveCharge()">Enregistrer</button></div>`);
+}
+function saveCharge(){
+  const desc=document.getElementById('mdesc').value;
+  const mt=+document.getElementById('mmt').value||0;
+  if(!desc||!mt)return toast('❌ Description et montant requis');
+  if(!S.charges)S.charges=[];
+  S.charges.push({id:genId(),desc,cat:document.getElementById('mcat').value,mt,recurrence:document.getElementById('mrec').value});
+  saveData();closeModal();toast('✅ Charge enregistrée');rRevenus();
+}
+function delCharge(id){
+  if(!confirm('Supprimer cette charge ?'))return;
+  S.charges=S.charges.filter(c=>c.id!=id);
+  saveData();toast('🗑️ Charge supprimée');rRevenus();
+}
+
+// ─── RAPPORT D'INVENTAIRE ───
+function rInventaire(){
+  const cats=(S.parametres&&S.parametres.categories)||['Lingerie','Audio-Vidéo','Bureautique'];
+  const totalValPV=S.stock.reduce((s,a)=>s+(sa(a)*a.pv),0);
+  const totalValPA=S.stock.reduce((s,a)=>s+(sa(a)*a.pa),0);
+  const totalArticles=S.stock.reduce((s,a)=>s+sa(a),0);
+  const enAlerte=S.stock.filter(a=>sa(a)<=a.seuil).length;
+  document.getElementById('content').innerHTML=`
+    <div class="inv-summary">
+      <div class="inv-chip"><div class="ct">Articles distincts</div><div class="mv">${N(S.stock.length)}</div></div>
+      <div class="inv-chip"><div class="ct">Qté totale en stock</div><div class="mv">${N(totalArticles)}</div></div>
+      <div class="inv-chip"><div class="ct">Valeur au prix d'achat</div><div class="mv" style="color:var(--purple)">${F(totalValPA)}</div></div>
+      <div class="inv-chip"><div class="ct">Valeur au prix de vente</div><div class="mv" style="color:var(--green)">${F(totalValPV)}</div></div>
+      <div class="inv-chip"><div class="ct">Marge potentielle</div><div class="mv" style="color:var(--teal)">${F(totalValPV-totalValPA)}</div></div>
+      <div class="inv-chip"><div class="ct">Articles en alerte</div><div class="mv" style="color:var(--red)">${N(enAlerte)}</div></div>
+    </div>
+    ${cats.map(cat=>{
+      const arts=S.stock.filter(a=>a.cat===cat);
+      const valPV=arts.reduce((s,a)=>s+(sa(a)*a.pv),0);
+      const valPA=arts.reduce((s,a)=>s+(sa(a)*a.pa),0);
+      return`
+      <p class="st">${cat} — ${F(valPV)} (${arts.length} articles)</p>
+      <div class="tbl-wrap" style="margin-bottom:16px"><table>
+        <thead><tr><th>Code</th><th>Article</th><th>Stock dispo</th><th>Prix achat</th><th>Prix vente</th><th>Val. achat</th><th>Val. vente</th><th>Marge</th><th>Seuil</th><th>Statut</th></tr></thead>
+        <tbody>${arts.map(a=>{
+          const stk=sa(a);
+          const marge=a.pv>0?Math.round((a.pv-a.pa)/a.pv*100):0;
+          const statut=stk<=0?'<span class="badge br">Épuisé</span>':stk<=a.seuil?'<span class="badge ba">Bas</span>':'<span class="badge bg">OK</span>';
+          return`<tr>
+            <td style="font-family:'DM Mono',monospace;font-size:11px">${a.code}</td>
+            <td class="tdm">${a.nom}</td>
+            <td style="font-weight:700;color:${stk<=a.seuil?'var(--red)':'var(--green)'}">${N(stk)}</td>
+            <td>${F(a.pa)}</td><td>${F(a.pv)}</td>
+            <td style="color:var(--purple)">${F(stk*a.pa)}</td>
+            <td style="color:var(--green)">${F(stk*a.pv)}</td>
+            <td><span class="badge bg">${marge}%</span></td>
+            <td style="color:var(--text3)">${N(a.seuil)}</td>
+            <td>${statut}</td>
+          </tr>`;
+        }).join('')}
+        <tr style="background:var(--surface2);font-weight:600">
+          <td colspan="5">Total ${cat}</td>
+          <td style="color:var(--purple)">${F(valPA)}</td>
+          <td style="color:var(--green)">${F(valPV)}</td>
+          <td><span class="badge bt">${valPV>0?Math.round((valPV-valPA)/valPV*100):0}%</span></td>
+          <td colspan="2"></td>
+        </tr>
+        </tbody></table></div>`;
+    }).join('')}`;
+}
+
+// ─── PARAMÈTRES ───
+function rParametres(){
+  if(!S.parametres)S.parametres={nom:'Christ Media',ville:'Lomé, Togo',email:'christmedia176@gmail.com',devise:'FCFA',categories:['Lingerie','Audio-Vidéo','Bureautique']};
+  if(!S.employes)S.employes=[];
+  if(!S.boutiques)S.boutiques=[{id:1,nom:'Christ Media — Lomé',actif:true}];
+  const p=S.parametres;
+  document.getElementById('content').innerHTML=`
+    <div class="param-section">
+      <div class="param-section-title">🏢 Informations de l'entreprise</div>
+      <div class="fg"><label class="fl">Nom de l'entreprise</label>
+        <input class="fi" id="p-nom" value="${p.nom||''}" oninput="majParam('nom',this.value)"></div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Ville / Localisation</label>
+          <input class="fi" id="p-ville" value="${p.ville||''}" oninput="majParam('ville',this.value)"></div>
+        <div class="fg"><label class="fl">Email</label>
+          <input class="fi" id="p-email" value="${p.email||''}" oninput="majParam('email',this.value)"></div>
+      </div>
+      <div class="fg"><label class="fl">Devise</label>
+        <select class="fs" id="p-devise" onchange="majParam('devise',this.value)">
+          ${['FCFA','XOF','USD','EUR','GHS','NGN'].map(d=>`<option${p.devise===d?' selected':''}>${d}</option>`).join('')}
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="sauvegarderParams()" style="margin-top:8px">💾 Sauvegarder</button>
+    </div>
+
+    <div class="param-section">
+      <div class="param-section-title">📂 Catégories de produits</div>
+      ${(p.categories||[]).map((cat,i)=>`
+        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+          <input class="fi" value="${cat}" oninput="majCategorie(${i},this.value)" style="flex:1">
+          <button class="del-btn" onclick="supprimerCategorie(${i})">✕</button>
+        </div>`).join('')}
+      <button class="btn" onclick="ajouterCategorie()">+ Nouvelle catégorie</button>
+    </div>
+
+    <div class="param-section">
+      <div class="param-section-title">🏪 Boutiques / Points de vente</div>
+      ${S.boutiques.map(b=>`
+        <div class="boutique-card${S.boutique_active===b.id?' active':''}" onclick="activerBoutique(${b.id})">
+          <div>
+            <div style="font-weight:600;font-size:13px">${b.nom}</div>
+            ${S.boutique_active===b.id?'<div style="font-size:11px;color:var(--navy);margin-top:2px">✓ Active</div>':''}
+          </div>
+          <button class="btn btn-sm" onclick="event.stopPropagation();supprimerBoutique(${b.id})" style="color:var(--red);border-color:var(--red-light)">Suppr.</button>
+        </div>`).join('')}
+      <button class="btn btn-primary" onclick="ajouterBoutique()">+ Nouvelle boutique</button>
+    </div>
+
+    <div class="param-section">
+      <div class="param-section-title">👥 Employés</div>
+      ${S.employes.length===0?'<div style="color:var(--text3);font-size:13px;margin-bottom:12px">Aucun employé enregistré</div>':''}
+      ${S.employes.map(e=>`
+        <div class="employe-card">
+          <div>
+            <div style="font-weight:600;font-size:13px">${e.nom}</div>
+            <div style="font-size:11px;color:var(--text3)">${e.poste||'Employé'} · ${e.tel||'—'}</div>
+            <div style="font-size:11px;color:var(--green);margin-top:2px">Salaire : ${F(e.salaire||0)}/mois</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm" onclick="editEmploye(${e.id})">✏️</button>
+            <button class="btn btn-sm" onclick="delEmploye(${e.id})" style="color:var(--red)">✕</button>
+          </div>
+        </div>`).join('')}
+      <button class="btn btn-primary" onclick="addEmploye()">+ Ajouter un employé</button>
+    </div>
+
+    <div class="param-section">
+      <div class="param-section-title">🔧 Données & Système</div>
+      <div class="param-row">
+        <div><div class="param-label">Exporter toutes les données</div><div class="param-desc">Sauvegarde JSON complète</div></div>
+        <button class="btn" onclick="exportData()">⬇️ Exporter</button>
+      </div>
+      <div class="param-row">
+        <div><div class="param-label">Importer des données</div><div class="param-desc">Restaurer depuis une sauvegarde</div></div>
+        <button class="btn" onclick="importData()">⬆️ Importer</button>
+      </div>
+      <div class="param-row">
+        <div><div class="param-label">Réinitialiser l'application</div><div class="param-desc" style="color:var(--red)">⚠️ Supprime toutes les données</div></div>
+        <button class="btn btn-danger" onclick="reinitApp()">🗑️ Réinitialiser</button>
+      </div>
+    </div>`;
+}
+
+function majParam(k,v){if(!S.parametres)S.parametres={};S.parametres[k]=v;}
+function sauvegarderParams(){
+  saveData();
+  // Mettre à jour logo sidebar
+  const ln=document.getElementById('logo-name');
+  const ls=document.getElementById('logo-sub');
+  if(ln)ln.textContent=S.parametres.nom||'Christ Media';
+  if(ls)ls.textContent=(S.parametres.ville||'Lomé, Togo');
+  toast('✅ Paramètres sauvegardés');
+}
+function majCategorie(i,val){if(S.parametres&&S.parametres.categories)S.parametres.categories[i]=val;}
+function ajouterCategorie(){
+  if(!S.parametres.categories)S.parametres.categories=[];
+  S.parametres.categories.push('Nouvelle catégorie');
+  saveData();rParametres();
+}
+function supprimerCategorie(i){
+  if(S.parametres.categories.length<=1)return toast('⚠️ Au moins une catégorie requise');
+  S.parametres.categories.splice(i,1);saveData();rParametres();
+}
+function activerBoutique(id){S.boutique_active=id;saveData();rParametres();toast('✅ Boutique activée');}
+function ajouterBoutique(){
+  modal(`<div class="mft">Nouvelle boutique</div>
+    <div class="fg"><label class="fl">Nom de la boutique</label><input class="fi" id="mb-nom" placeholder="Ex: Christ Media — Tsévié"></div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveNvBoutique()">Créer</button></div>`);
+}
+function saveNvBoutique(){
+  const nom=document.getElementById('mb-nom').value;
+  if(!nom)return toast('❌ Nom requis');
+  S.boutiques.push({id:genId(),nom,actif:false});
+  saveData();closeModal();toast('✅ Boutique créée');rParametres();
+}
+function supprimerBoutique(id){
+  if(S.boutiques.length<=1)return toast('⚠️ Au moins une boutique requise');
+  if(S.boutique_active===id)return toast('⚠️ Impossible de supprimer la boutique active');
+  if(!confirm('Supprimer cette boutique ?'))return;
+  S.boutiques=S.boutiques.filter(b=>b.id!==id);saveData();rParametres();
+}
+function addEmploye(){
+  modal(`<div class="mft">Ajouter un employé</div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Nom complet</label><input class="fi" id="me-nom" placeholder="Prénom Nom"></div>
+      <div class="fg"><label class="fl">Poste</label><input class="fi" id="me-poste" placeholder="Vendeur, Caissier..."></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Téléphone</label><input class="fi" id="me-tel" placeholder="9X XX XX XX"></div>
+      <div class="fg"><label class="fl">Salaire/mois (${(S.parametres&&S.parametres.devise)||'FCFA'})</label><input class="fi" type="number" id="me-sal" placeholder="0"></div>
+    </div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveEmploye()">Enregistrer</button></div>`);
+}
+function saveEmploye(){
+  const nom=document.getElementById('me-nom').value;
+  if(!nom)return toast('❌ Nom requis');
+  if(!S.employes)S.employes=[];
+  S.employes.push({id:genId(),nom,poste:document.getElementById('me-poste').value,tel:document.getElementById('me-tel').value,salaire:+document.getElementById('me-sal').value||0});
+  saveData();closeModal();toast('✅ Employé ajouté');rParametres();
+}
+function editEmploye(id){
+  const e=S.employes.find(e=>e.id==id);if(!e)return;
+  modal(`<div class="mft">Modifier — ${e.nom}</div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Nom complet</label><input class="fi" id="me-nom" value="${e.nom}"></div>
+      <div class="fg"><label class="fl">Poste</label><input class="fi" id="me-poste" value="${e.poste||''}"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Téléphone</label><input class="fi" id="me-tel" value="${e.tel||''}"></div>
+      <div class="fg"><label class="fl">Salaire/mois</label><input class="fi" type="number" id="me-sal" value="${e.salaire||0}"></div>
+    </div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="updateEmploye(${id})">Enregistrer</button></div>`);
+}
+function updateEmploye(id){
+  const e=S.employes.find(e=>e.id==id);if(!e)return;
+  e.nom=document.getElementById('me-nom').value;
+  e.poste=document.getElementById('me-poste').value;
+  e.tel=document.getElementById('me-tel').value;
+  e.salaire=+document.getElementById('me-sal').value||0;
+  saveData();closeModal();toast('✅ Employé modifié');rParametres();
+}
+function delEmploye(id){
+  if(!confirm('Supprimer cet employé ?'))return;
+  S.employes=S.employes.filter(e=>e.id!=id);
+  saveData();toast('🗑️ Employé supprimé');rParametres();
+}
+function reinitApp(){
+  if(!confirm('⚠️ ATTENTION : Toutes les données seront supprimées !\n\nEs-tu sûr ?'))return;
+  if(!confirm('Dernière confirmation — vraiment tout supprimer ?'))return;
+  localStorage.removeItem('christmedia_v2');
+  if(fbReady&&db)db.ref('christmedia/data').remove();
+  toast('🗑️ App réinitialisée');
+  setTimeout(()=>location.reload(),1500);
+}
+
+// ─── MISE À JOUR LOGO AU DÉMARRAGE ───
+function majLogo(){
+  const p=S.parametres;
+  if(!p)return;
+  const ln=document.getElementById('logo-name');
+  const ls=document.getElementById('logo-sub');
+  if(ln)ln.textContent=p.nom||'Christ Media';
+  if(ls)ls.textContent=p.ville||'Lomé, Togo';
+}
+
 // ─── EXPORT / IMPORT ───
 function exportData(){
   const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
@@ -1672,6 +2179,7 @@ if('serviceWorker' in navigator){
 }
 
 // ─── INIT ───
+majLogo();
 rDash();
 </script>
 </body>
