@@ -13,7 +13,6 @@
 <link rel="manifest" href="#" id="manifest-link">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -411,10 +410,6 @@ tr:hover .td-actions{opacity:1}
     <div class="ni" onclick="importData()">
       <svg viewBox="0 0 16 16" fill="none"><path d="M8 11V2M5 5l3-3 3 3M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Importer données
-    </div>
-    <div class="ni" onclick="doLogout()" style="color:rgba(255,100,100,.7)">
-      <svg viewBox="0 0 16 16" fill="none"><path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3M10 11l3-3-3-3M13 8H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Déconnexion
     </div>
   </div>
   <div class="sync-bar" id="sync-bar">
@@ -1736,44 +1731,8 @@ function handleScanResult(code){
 // ─── LOGIN / AUTH FIREBASE ───
 let authReady=false;
 async function initAuth(){
-  if(!fbReady)return;
-  try{
-    firebase.auth().onAuthStateChanged(user=>{
-      if(user){
-        document.getElementById('login-screen').style.display='none';
-      }else{
-        document.getElementById('login-screen').style.display='flex';
-      }
-    });
-    authReady=true;
-  }catch(e){
-    // Si Auth pas activé, masquer login
-    document.getElementById('login-screen').style.display='none';
-  }
-}
-async function doLogin(){
-  const email=document.getElementById('login-email').value.trim();
-  const pass=document.getElementById('login-pass').value;
-  const err=document.getElementById('login-err');
-  const loading=document.getElementById('login-loading');
-  err.style.display='none';
-  loading.style.display='block';
-  if(!email||!pass){err.textContent='Email et mot de passe requis.';err.style.display='block';loading.style.display='none';return;}
-  try{
-    await firebase.auth().signInWithEmailAndPassword(email,pass);
-    loading.style.display='none';
-  }catch(e){
-    loading.style.display='none';
-    const msgs={'auth/wrong-password':'Mot de passe incorrect.','auth/user-not-found':'Aucun compte avec cet email.','auth/invalid-email':'Email invalide.','auth/too-many-requests':'Trop de tentatives. Réessaie plus tard.'};
-    err.textContent=msgs[e.code]||'Erreur de connexion. Vérifie tes identifiants.';
-    err.style.display='block';
-  }
-}
-async function doLogout(){
-  if(!confirm('Se déconnecter ?'))return;
-  try{await firebase.auth().signOut();}catch(e){}
-  document.getElementById('login-screen').style.display='flex';
-  toast('👋 Déconnecté');
+  // Auth désactivée — accès direct
+  document.getElementById('login-screen').style.display='none';
 }
 
 // ─── REVENUS SUPPLÉMENTAIRES & CHARGES ───
