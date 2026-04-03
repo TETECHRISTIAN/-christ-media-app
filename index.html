@@ -1027,6 +1027,7 @@ async function manualSync(){
       saveLocal(S);
       setSyncStatus('online','Synchronisé ✓');
       toast('✅ Données synchronisées depuis le cloud');
+      if(!S.session||!S.session.uid){afficherLoginScreen();return;}
       ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,parametres:rParametres})[currentPage]();
     }else{
       await saveToFirebase(S);
@@ -1053,6 +1054,8 @@ let S=loadData();
         if(savedSession&&savedSession.uid) S.session=savedSession; // Restaurer session
         saveLocal(S);
         setSyncStatus('online','Synchronisé ✓');
+        // Ne rafraîchir l'interface QUE si l'utilisateur est connecté
+        if(!S.session||!S.session.uid){afficherLoginScreen();return;}
         ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,parametres:rParametres})[currentPage]();
       }else{
         await saveToFirebase(S);
