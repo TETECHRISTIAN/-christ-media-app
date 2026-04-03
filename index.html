@@ -1170,6 +1170,7 @@ function closeModal(){document.getElementById('modal-root').innerHTML=''}
 
 // ─── DASHBOARD ───
 function rDash(){
+  if(!S||!S.ventes)return;
   const vp=S.ventes.filter(v=>v.statut==='Payé').reduce((s,v)=>s+v.mt,0);
   const vi=S.ventes.filter(v=>v.statut==='Non payé').reduce((s,v)=>s+v.mt,0);
   const dep=S.depenses.reduce((s,d)=>s+d.mt,0);
@@ -3560,6 +3561,12 @@ function verifierPin(){
     majBadgeUtilisateur();
     appliquerAcces(u.role);
     toast(`✅ Bienvenue ${u.nom} !`);
+    if(!S.ventes)S.ventes=[];
+    if(!S.stock)S.stock=[];
+    if(!S.achats)S.achats=[];
+    if(!S.clients)S.clients=[];
+    if(!S.fournisseurs)S.fournisseurs=[];
+    if(!S.depenses)S.depenses=[];
     rDash();
   }else{
     _pinBuffer='';
@@ -4091,17 +4098,20 @@ if('serviceWorker' in navigator){
 }
 
 // ─── INIT ───
+// S'assurer que S a toutes les propriétés requises
+if(!S.ventes)S.ventes=[];
+if(!S.stock)S.stock=[];
+if(!S.achats)S.achats=[];
+if(!S.clients)S.clients=[];
+if(!S.fournisseurs)S.fournisseurs=[];
+if(!S.depenses)S.depenses=[];
+if(!S.utilisateurs||S.utilisateurs.length===0){
+  S.utilisateurs=[{id:1,nom:'Admin',role:'admin',pin:'1234',emoji:'👑',actif:true}];
+}
 majLogo();
 initV9();
-// Afficher login si pas de session active
-if(!S.session||!S.session.uid){
-  afficherLoginScreen();
-}else{
-  document.getElementById('login-screen').style.display='none';
-  majBadgeUtilisateur();
-  appliquerAcces(S.session.role);
-  rDash();
-}
+// Toujours afficher le login au démarrage
+afficherLoginScreen();
 </script>
 </body>
 </html>
