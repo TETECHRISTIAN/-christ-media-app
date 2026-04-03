@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Christ Media">
-<title>Christ Media — All-in-One V9</title>
+<title>Christ Media — All-in-One V10</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
 <link rel="manifest" href="#" id="manifest-link">
@@ -252,6 +252,66 @@ tr:hover .td-actions{opacity:1}
 .facture-tot-final{font-size:16px;font-weight:700;color:#0f1f3d;border-top:2px solid #0f1f3d;padding-top:8px;margin-top:4px}
 .facture-footer{text-align:center;margin-top:24px;font-size:11px;color:#aaa;border-top:1px solid #eee;padding-top:12px}
 
+/* ─── THÈMES ─── */
+body.theme-green{--navy:#1a5c2e;--navy2:#236b35;--navy-bg:#e8f5ed;--navy-light:#a8d5b5}
+body.theme-red{--navy:#8b1a1a;--navy2:#a52020;--navy-bg:#f5e8e8;--navy-light:#d5a8a8}
+body.theme-purple{--navy:#4a1a8b;--navy2:#5a20a5;--navy-bg:#ede8f5;--navy-light:#b8a8d5}
+body.theme-orange{--navy:#8b4a1a;--navy2:#a55a20;--navy-bg:#f5ede8;--navy-light:#d5b8a8}
+body.theme-teal{--navy:#1a5c5c;--navy2:#207070;--navy-bg:#e8f5f5;--navy-light:#a8d5d5}
+
+/* ─── LOGIN MULTI-USER ─── */
+.user-select{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px}
+.user-avatar{background:var(--surface2);border:2px solid var(--border);border-radius:var(--r);padding:16px 12px;text-align:center;cursor:pointer;transition:all .15s}
+.user-avatar:hover{border-color:var(--navy);background:var(--navy-bg)}
+.user-avatar.active{border-color:var(--navy);background:var(--navy-bg)}
+.user-emoji{font-size:32px;margin-bottom:8px}
+.user-name{font-size:13px;font-weight:600;color:var(--text)}
+.user-role{font-size:10px;color:var(--text3);margin-top:2px}
+.pin-dots{display:flex;gap:10px;justify-content:center;margin:16px 0}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border2);background:transparent;transition:background .15s}
+.pin-dot.filled{background:var(--navy);border-color:var(--navy)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:240px;margin:0 auto}
+.pin-key{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:14px;font-size:18px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center}
+.pin-key:hover{background:var(--navy-bg);border-color:var(--navy)}
+.pin-key:active{transform:scale(.95)}
+
+/* ─── WORKSPACE ─── */
+.ws-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .15s}
+.ws-card:hover{border-color:var(--navy);box-shadow:var(--shadow)}
+.ws-card.active{border-color:var(--navy);background:var(--navy-bg)}
+.ws-badge{display:inline-flex;align-items:center;padding:2px 10px;border-radius:12px;font-size:10px;font-weight:700;background:var(--navy-bg);color:var(--navy)}
+.menu-toggle-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.menu-toggle-item:last-child{border-bottom:none}
+
+/* ─── TRANCHES ─── */
+.tranche-row{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.tranche-row:last-child{border-bottom:none}
+.tranche-progress{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:4px}
+.tranche-fill{height:100%;border-radius:3px;transition:width .4s}
+
+/* ─── REÇU AMÉLIORÉ ─── */
+.recu-modern{font-family:'DM Sans',sans-serif;max-width:320px;margin:0 auto;padding:20px}
+.recu-header-logo{text-align:center;padding-bottom:14px;border-bottom:2px solid #0f1f3d;margin-bottom:14px}
+.recu-company{font-size:20px;font-weight:800;color:#0f1f3d}
+.recu-details{font-size:11px;color:#666;margin-top:3px}
+.recu-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:14px;font-size:11px}
+.recu-info-label{color:#999}
+.recu-info-val{font-weight:600;color:#333}
+.recu-items{margin-bottom:12px}
+.recu-item-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;font-size:12px}
+.recu-totaux{background:#f8f8f8;border-radius:6px;padding:10px;margin-bottom:12px}
+.recu-tot-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:#555}
+.recu-tot-final{display:flex;justify-content:space-between;font-size:15px;font-weight:800;color:#0f1f3d;border-top:2px solid #0f1f3d;padding-top:8px;margin-top:6px}
+.recu-paiement{background:#e8f5ed;border-radius:6px;padding:10px;margin-bottom:12px;font-size:12px}
+.recu-signature{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px;padding-top:12px;border-top:1px dashed #ccc;font-size:11px;color:#999}
+.recu-sign-line{border-top:1px solid #ccc;margin-top:20px;padding-top:4px;text-align:center}
+
+/* ─── THÈME PICKER ─── */
+.theme-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}
+.theme-swatch{width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:3px solid transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;font-size:16px}
+.theme-swatch.active{border-color:var(--text);transform:scale(1.1)}
+.color-custom{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
 /* ─── MODE SOMBRE ─── */
 body.dark{
   --bg:#0f1117;--surface:#1a1d26;--surface2:#222533;--surface3:#2a2d3e;
@@ -473,6 +533,11 @@ body.dark th{background:var(--surface3)}
   <div class="logo">
     <div class="logo-name" id="logo-name">Christ Media</div>
     <div class="logo-sub" id="logo-sub">Gestion · Lomé, Togo</div>
+    <div id="current-user-badge" style="display:none;margin-top:8px;background:rgba(255,255,255,.1);border-radius:6px;padding:5px 8px;display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.8)">
+      <span id="cu-emoji">👤</span>
+      <span id="cu-nom">—</span>
+      <span id="cu-role-badge" style="margin-left:auto;font-size:9px;padding:1px 6px;border-radius:8px;background:rgba(255,255,255,.15)">—</span>
+    </div>
   </div>
   <nav class="nav">
     <div class="nav-sec">Principal</div>
@@ -535,6 +600,10 @@ body.dark th{background:var(--surface3)}
       Historique stock
     </div>
     <div class="nav-sec">Système</div>
+    <div class="ni" data-page="workspace" onclick="nav(this,'workspace')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" opacity=".4"/></svg>
+      Espace de travail
+    </div>
     <div class="ni" data-page="comptes" onclick="nav(this,'comptes')">
       <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M1 7h14" stroke="currentColor" stroke-width="1"/><circle cx="4" cy="10.5" r="1" fill="currentColor"/></svg>
       Comptes & Transferts
@@ -664,6 +733,10 @@ body.dark th{background:var(--surface3)}
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           Historique stock
         </div>
+        <div class="mn-dd-item" onclick="nav(document.querySelector('[data-page=workspace]'),'workspace');mnActivate('mn-more')">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
+          Espace de travail
+        </div>
         <div class="mn-dd-item" onclick="nav(document.querySelector('[data-page=comptes]'),'comptes');mnActivate('mn-more')">
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
           Comptes & Transferts
@@ -707,15 +780,44 @@ body.dark th{background:var(--surface3)}
   <div class="scanner-hint">Pointez la caméra vers le code-barres de l'article</div>
   <button class="scanner-close" onclick="closeScanner()">✕ Fermer</button>
 </div>
-<div id="login-screen" class="login-screen" style="display:none">
-  <div class="login-box">
-    <div class="login-logo">⛪ Christ Media</div>
-    <div class="login-sub">Gestion · Lomé, Togo</div>
-    <div class="login-err" id="login-err"></div>
-    <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="login-email" placeholder="christmedia176@gmail.com" value="christmedia176@gmail.com"></div>
-    <div class="fg"><label class="fl">Mot de passe</label><input class="fi" type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="doLogin()">Se connecter</button>
-    <div id="login-loading" style="text-align:center;font-size:12px;color:var(--text3);margin-top:10px;display:none">Connexion en cours...</div>
+<div id="login-screen" class="login-screen">
+  <div class="login-box" style="width:400px">
+    <div id="login-step1">
+      <div class="login-logo" id="login-title">⛪ Christ Media</div>
+      <div class="login-sub" id="login-subtitle">Choisissez votre profil</div>
+      <div class="login-err" id="login-err"></div>
+      <div class="user-select" id="user-select-grid"></div>
+    </div>
+    <div id="login-step2" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <button onclick="retourStep1()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text3)">←</button>
+        <div>
+          <div class="login-logo" style="font-size:16px" id="pin-user-nom"></div>
+          <div class="login-sub">Entrez votre PIN</div>
+        </div>
+      </div>
+      <div class="login-err" id="pin-err"></div>
+      <div class="pin-dots" id="pin-dots">
+        <div class="pin-dot" id="pd0"></div>
+        <div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div>
+        <div class="pin-dot" id="pd3"></div>
+      </div>
+      <div class="pin-pad">
+        <div class="pin-key" onclick="pinTap(1)">1</div>
+        <div class="pin-key" onclick="pinTap(2)">2</div>
+        <div class="pin-key" onclick="pinTap(3)">3</div>
+        <div class="pin-key" onclick="pinTap(4)">4</div>
+        <div class="pin-key" onclick="pinTap(5)">5</div>
+        <div class="pin-key" onclick="pinTap(6)">6</div>
+        <div class="pin-key" onclick="pinTap(7)">7</div>
+        <div class="pin-key" onclick="pinTap(8)">8</div>
+        <div class="pin-key" onclick="pinTap(9)">9</div>
+        <div class="pin-key" style="opacity:.3"></div>
+        <div class="pin-key" onclick="pinTap(0)">0</div>
+        <div class="pin-key" onclick="pinBack()">⌫</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -804,11 +906,20 @@ const defaultData={
     nom:'Christ Media',
     ville:'Lomé, Togo',
     email:'christmedia176@gmail.com',
+    tel:'+228 90 00 00 00',
     devise:'FCFA',
     categories:['Lingerie','Audio-Vidéo','Bureautique'],
     theme:'light',
-    notif_stock:true
-  }
+    theme_color:'default',
+    custom_primary:'#0f1f3d',
+    notif_stock:true,
+    menu_visible:['dashboard','transactions','vente','services','achats','stock','clients','fournisseurs','depenses','tresorerie','revenus','rapports','inventaire','historique','comptes','devis','planning','parametres'],
+    compte_auto:true
+  },
+  utilisateurs:[
+    {id:1,nom:'Christian',role:'admin',pin:'1234',emoji:'👑',actif:true}
+  ],
+  session:{uid:null,role:null,nom:null}
 };
 
 // ─── FIREBASE CONFIG ───
@@ -916,7 +1027,7 @@ async function manualSync(){
       saveLocal(S);
       setSyncStatus('online','Synchronisé ✓');
       toast('✅ Données synchronisées depuis le cloud');
-      ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,comptes:rComptes,devis:rDevis,planning:rPlanning,parametres:rParametres})[currentPage]();
+      ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,parametres:rParametres})[currentPage]();
     }else{
       await saveToFirebase(S);
       toast('✅ Données locales envoyées au cloud');
@@ -933,15 +1044,16 @@ let S=loadData();
 (async()=>{
   const ok=await initFirebase();
   if(ok){
-    await initAuth();
     if(navigator.onLine){
       setSyncStatus('syncing','Chargement cloud...');
       const remote=await loadFromFirebase();
       if(remote&&remote.nid>=S.nid){
+        const savedSession=S.session; // Préserver la session
         S=remote;
+        if(savedSession&&savedSession.uid) S.session=savedSession; // Restaurer session
         saveLocal(S);
         setSyncStatus('online','Synchronisé ✓');
-        ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,comptes:rComptes,devis:rDevis,planning:rPlanning,parametres:rParametres})[currentPage]();
+        ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,parametres:rParametres})[currentPage]();
       }else{
         await saveToFirebase(S);
       }
@@ -997,17 +1109,19 @@ function toast(msg,dur=2200){
 }
 
 // ─── NAVIGATION ───
-const titles={dashboard:'Tableau de bord',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',parametres:'Paramètres'};
+const titles={dashboard:'Tableau de bord',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',parametres:'Paramètres'};
 const actionsMap={
   dashboard:()=>'<button class="btn btn-success" onclick="nav(document.querySelector(\'[data-page=vente]\'),\'vente\')">+ Vente</button>',
+  transactions:()=>'',
   vente:()=>'',
+  services:()=>'<button class="btn btn-primary" onclick="addService()">+ Service</button>',
   achats:()=>'<button class="btn btn-primary" onclick="addAchat()">+ Achat</button>',
   stock:()=>`<div class="search-bar"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><input type="text" placeholder="Rechercher..." oninput="filterStock(this.value)" id="stock-search"></div><button class="btn" onclick="openScanner('stock')" title="Scanner code-barres">📷 Scanner</button><button class="btn btn-primary" onclick="addArticle()">+ Article</button>`,
   clients:()=>'<button class="btn btn-primary" onclick="addClient()">+ Client</button>',
   fournisseurs:()=>'<button class="btn btn-primary" onclick="addFour()">+ Fournisseur</button>',
   depenses:()=>'<button class="btn btn-danger" onclick="addDep()">+ Dépense</button>',
   tresorerie:()=>'',revenus:()=>'<button class="btn btn-success" onclick="addRevenu()">+ Revenu</button> <button class="btn" onclick="addCharge()">+ Charge</button>',rapports:()=>'<button class="btn" onclick="printRapport()">🖨️ Imprimer</button>',
-  historique:()=>'<button class="btn" onclick="clearHistorique()">🗑️ Vider</button>',inventaire:()=>'<button class="btn" onclick="printRapport()">🖨️ Imprimer</button>',comptes:()=>'<button class="btn btn-primary" onclick="addCompte()">+ Compte</button>',devis:()=>'<button class="btn btn-primary" onclick="addDevis()">+ Devis</button>',planning:()=>'<button class="btn btn-primary" onclick="addPlanning()">+ Tâche</button>',parametres:()=>'',
+  historique:()=>'<button class="btn" onclick="clearHistorique()">🗑️ Vider</button>',inventaire:()=>'<button class="btn" onclick="printRapport()">🖨️ Imprimer</button>',workspace:()=>'',comptes:()=>'<button class="btn btn-primary" onclick="addCompte()">+ Compte</button>',devis:()=>'<button class="btn btn-primary" onclick="addDevis()">+ Devis</button>',planning:()=>'<button class="btn btn-primary" onclick="addPlanning()">+ Tâche</button>',parametres:()=>''
 };
 
 let currentPage='dashboard';
@@ -1017,7 +1131,7 @@ function nav(el,page){
   document.getElementById('topbar-title').textContent=titles[page]||'';
   document.getElementById('topbar-actions').innerHTML=actionsMap[page]?actionsMap[page]():'';
   currentPage=page;
-  ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,comptes:rComptes,devis:rDevis,planning:rPlanning,parametres:rParametres})[page]();
+  ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,parametres:rParametres})[page]();
   closeMobileSidebar();
   document.getElementById('mn-dropdown').classList.remove('open');
 }
@@ -1228,7 +1342,8 @@ function rVente(){
           <td>${sb(v.statut)}</td>
           <td><div class="td-actions">
             ${v.statut==='Non payé'?`<button class="btn-icon btn-sm" onclick="payerVente(${v.id})" title="Marquer payé">✓</button><button class="btn-icon btn-sm" onclick="gererAcompte(${v.id})" title="Acompte">💰</button>`:''}
-            <button class="btn-icon btn-sm" onclick="printRecu(${v.id})" title="Reçu">🖨️</button>
+            <button class="btn-icon btn-sm" onclick="demanderMontantRecu(${v.id})" title="Reçu">🖨️</button>
+            <button class="btn-icon btn-sm" onclick="configurerTranches(${v.id})" title="Tranches">💳</button>
             <button class="btn-icon btn-sm" onclick="printFacture(${v.id})" title="Facture">🧾</button>
             <button class="btn-icon btn-sm" onclick="partagerWhatsApp(${v.id},'recu')" title="WhatsApp">📱</button>
             <button class="btn-icon btn-sm" onclick="delVente(${v.id})" title="Supprimer" style="color:var(--red)">✕</button>
@@ -1305,7 +1420,11 @@ function validerPanier(){
   });
   window.panier=[];
   window.remise={type:'%',val:0};
+  // Créditer le compte selon le mode
+  crediterCompte(mode,mt);
   saveData();toast(`✅ Vente de ${F(mt)} enregistrée !`);rVente();
+  // Proposer impression avec montant reçu
+  setTimeout(()=>{if(confirm('Imprimer le reçu ?'))demanderMontantRecu(vid);},300);
 }
 function payerVente(id){
   const v=S.ventes.find(v=>v.id==id);if(!v)return;
@@ -1344,7 +1463,10 @@ function rAchats(){
             <td style="font-weight:600;color:var(--red)">${F(ac.mt)}</td>
             <td><span class="badge bb">${ac.mode}</span></td>
             <td style="color:var(--text3);font-size:12px">${ac.notes||'—'}</td>
-            <td><div class="td-actions"><button class="btn-icon btn-sm" onclick="delAchat(${ac.id})" style="color:var(--red)">✕</button></div></td>
+            <td><div class="td-actions">
+              ${ac.statut==='À payer'?`<button class="btn-icon btn-sm" onclick="configurerTranchesAchat(${ac.id})" title="Tranches paiement">💳</button>`:''}
+              <button class="btn-icon btn-sm" onclick="delAchat(${ac.id})" style="color:var(--red)">✕</button>
+            </div></td>
           </tr>`;
         }).join('')}
       </tbody></table></div>`;
@@ -2102,10 +2224,7 @@ function handleScanResult(code){
 
 // ─── LOGIN / AUTH FIREBASE ───
 let authReady=false;
-async function initAuth(){
-  // Auth désactivée — accès direct
-  document.getElementById('login-screen').style.display='none';
-}
+// initAuth remplacé par V10
 
 // ─── REVENUS SUPPLÉMENTAIRES & CHARGES ───
 let revTab='revenus';
@@ -3371,12 +3490,550 @@ function saveAcompte(vid){
 
 // ─── INIT V9 ───
 function initV9(){
-  appliquerTheme();
+  appliquerThemeComplet();
   majNotifBadge();
-  // Raccourci clavier
-  document.addEventListener('keydown',e=>{
-    if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();ouvrirRecherche();}
+  appliquerMenusVisibles();
+}
+
+// ─── SYSTÈME LOGIN MULTI-USERS ───
+let _pinBuffer='';
+let _loginUid=null;
+
+function afficherLoginScreen(){
+  document.getElementById('login-screen').style.display='flex';
+  renderUserGrid();
+}
+
+function renderUserGrid(){
+  const grid=document.getElementById('user-select-grid');
+  if(!grid)return;
+  const users=S.utilisateurs||[{id:1,nom:'Admin',role:'admin',pin:'0000',emoji:'👑',actif:true}];
+  grid.innerHTML=users.filter(u=>u.actif!==false).map(u=>`
+    <div class="user-avatar" onclick="selectUser(${u.id})">
+      <div class="user-emoji">${u.emoji||'👤'}</div>
+      <div class="user-name">${u.nom}</div>
+      <div class="user-role">${u.role==='admin'?'Administrateur':'Employé'}</div>
+    </div>`).join('');
+}
+
+function selectUser(uid){
+  const u=(S.utilisateurs||[]).find(u=>u.id==uid);
+  if(!u)return;
+  _loginUid=uid;
+  _pinBuffer='';
+  document.getElementById('login-step1').style.display='none';
+  document.getElementById('login-step2').style.display='block';
+  document.getElementById('pin-user-nom').textContent=u.emoji+' '+u.nom;
+  majPinDots();
+}
+
+function retourStep1(){
+  _loginUid=null;_pinBuffer='';
+  document.getElementById('login-step1').style.display='block';
+  document.getElementById('login-step2').style.display='none';
+  document.getElementById('pin-err').textContent='';
+}
+
+function pinTap(n){
+  if(_pinBuffer.length>=4)return;
+  _pinBuffer+=String(n);
+  majPinDots();
+  if(_pinBuffer.length===4) setTimeout(verifierPin,150);
+}
+function pinBack(){
+  _pinBuffer=_pinBuffer.slice(0,-1);
+  majPinDots();
+}
+function majPinDots(){
+  for(let i=0;i<4;i++){
+    const el=document.getElementById('pd'+i);
+    if(el)el.classList.toggle('filled',i<_pinBuffer.length);
+  }
+}
+function verifierPin(){
+  const u=(S.utilisateurs||[]).find(u=>u.id==_loginUid);
+  if(!u)return;
+  if(_pinBuffer===String(u.pin)){
+    // Connexion réussie
+    S.session={uid:u.id,role:u.role,nom:u.nom,emoji:u.emoji||'👤'};
+    document.getElementById('login-screen').style.display='none';
+    majBadgeUtilisateur();
+    appliquerAcces(u.role);
+    toast(`✅ Bienvenue ${u.nom} !`);
+    rDash();
+  }else{
+    _pinBuffer='';
+    majPinDots();
+    const err=document.getElementById('pin-err');
+    if(err){err.textContent='PIN incorrect. Réessayez.';err.style.display='block';}
+    setTimeout(()=>{if(err)err.style.display='none';},2000);
+  }
+}
+
+function majBadgeUtilisateur(){
+  const s=S.session;
+  const badge=document.getElementById('current-user-badge');
+  if(!badge||!s||!s.uid)return;
+  badge.style.display='flex';
+  document.getElementById('cu-emoji').textContent=s.emoji||'👤';
+  document.getElementById('cu-nom').textContent=s.nom||'';
+  document.getElementById('cu-role-badge').textContent=s.role==='admin'?'Admin':'Employé';
+}
+
+function appliquerAcces(role){
+  // Masquer certains menus pour les employés
+  if(role!=='admin'){
+    const menusCaches=['tresorerie','revenus','rapports','inventaire','comptes','devis','planning','parametres','workspace'];
+    document.querySelectorAll('.ni[data-page]').forEach(el=>{
+      const page=el.getAttribute('data-page');
+      if(menusCaches.includes(page)) el.style.display='none';
+    });
+    document.querySelectorAll('.mn-dd-item').forEach(el=>{
+      const onclick=el.getAttribute('onclick')||'';
+      if(menusCaches.some(m=>onclick.includes("'"+m+"'"))){el.style.display='none';}
+    });
+  }
+}
+
+function doLogout(){
+  if(!confirm('Se déconnecter ?'))return;
+  S.session={uid:null,role:null,nom:null};
+  // Réafficher tous les menus
+  document.querySelectorAll('.ni[data-page],.mn-dd-item').forEach(el=>el.style.display='');
+  document.getElementById('current-user-badge').style.display='none';
+  afficherLoginScreen();
+}
+
+// Remplacer initAuth
+async function initAuth(){
+  // Afficher login si pas de session
+  if(!S.session||!S.session.uid){
+    afficherLoginScreen();
+  }else{
+    document.getElementById('login-screen').style.display='none';
+    majBadgeUtilisateur();
+    appliquerAcces(S.session.role);
+  }
+}
+
+// ─── WORKSPACE ───
+function rWorkspace(){
+  const p=S.parametres||{};
+  const themes=[
+    {id:'default',label:'Classique',color:'#0f1f3d',emoji:'🔵'},
+    {id:'green',label:'Forêt',color:'#1a5c2e',emoji:'🟢'},
+    {id:'red',label:'Rubis',color:'#8b1a1a',emoji:'🔴'},
+    {id:'purple',label:'Violet',color:'#4a1a8b',emoji:'🟣'},
+    {id:'orange',label:'Ambré',color:'#8b4a1a',emoji:'🟠'},
+    {id:'teal',label:'Océan',color:'#1a5c5c',emoji:'🩵'},
+  ];
+  const allMenus=[
+    {id:'dashboard',label:'Tableau de bord',icon:'📊'},
+    {id:'transactions',label:'Transactions',icon:'📋'},
+    {id:'vente',label:'Ventes',icon:'🛒'},
+    {id:'services',label:'Services',icon:'⭐'},
+    {id:'achats',label:'Achats',icon:'📦'},
+    {id:'stock',label:'Stock',icon:'🏪'},
+    {id:'clients',label:'Clients',icon:'👥'},
+    {id:'fournisseurs',label:'Fournisseurs',icon:'🚚'},
+    {id:'depenses',label:'Dépenses',icon:'💸'},
+    {id:'tresorerie',label:'Trésorerie',icon:'💳'},
+    {id:'revenus',label:'Revenus & Charges',icon:'💵'},
+    {id:'rapports',label:'Rapports',icon:'📈'},
+    {id:'inventaire',label:'Inventaire',icon:'📋'},
+    {id:'historique',label:'Historique stock',icon:'⏱️'},
+    {id:'comptes',label:'Comptes',icon:'🏦'},
+    {id:'devis',label:'Devis',icon:'📄'},
+    {id:'planning',label:'Planning',icon:'📅'},
+  ];
+  const visible=p.menu_visible||allMenus.map(m=>m.id);
+
+  document.getElementById('content').innerHTML=`
+    <div class="g2">
+      <div>
+        <p class="st">🎨 Thème de couleur</p>
+        <div class="param-section">
+          <div class="theme-grid">
+            ${themes.map(t=>`
+              <div class="theme-swatch${(p.theme_color||'default')===t.id?' active':''}"
+                style="background:${t.color}" onclick="appliquerThemeCouleur('${t.id}')"
+                title="${t.label}">${(p.theme_color||'default')===t.id?'✓':''}</div>`).join('')}
+          </div>
+          <div class="param-row">
+            <div><div class="param-label">Couleur personnalisée</div></div>
+            <div class="color-custom">
+              <input type="color" id="custom-color" value="${p.custom_primary||'#0f1f3d'}"
+                oninput="appliquerCouleurCustom(this.value)" style="width:48px;height:36px;border-radius:6px;border:1px solid var(--border2);cursor:pointer">
+              <button class="btn btn-sm" onclick="appliquerCouleurCustom(document.getElementById('custom-color').value)">Appliquer</button>
+            </div>
+          </div>
+          <div class="param-row">
+            <div><div class="param-label">Mode sombre</div></div>
+            <div class="toggle${document.body.classList.contains('dark')?' on':''}" onclick="toggleDark();rWorkspace()"></div>
+          </div>
+        </div>
+
+        <p class="st">👥 Gestion des utilisateurs</p>
+        <div class="param-section">
+          ${(S.utilisateurs||[]).map(u=>`
+            <div class="employe-card">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:24px">${u.emoji||'👤'}</span>
+                <div>
+                  <div style="font-weight:600">${u.nom}</div>
+                  <div style="font-size:11px;color:var(--text3)">${u.role==='admin'?'👑 Admin':'👤 Employé'} · PIN: ${'•'.repeat(String(u.pin).length)}</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-sm" onclick="editUserWS(${u.id})">✏️</button>
+                ${u.id!==1?`<button class="btn btn-sm" onclick="delUserWS(${u.id})" style="color:var(--red)">✕</button>`:''}
+              </div>
+            </div>`).join('')}
+          <button class="btn btn-primary" onclick="addUserWS()" style="margin-top:8px">+ Ajouter utilisateur</button>
+        </div>
+      </div>
+
+      <div>
+        <p class="st">📐 Menus visibles</p>
+        <div class="param-section">
+          <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Cochez les menus à afficher dans la sidebar</div>
+          ${allMenus.map(m=>`
+            <div class="menu-toggle-item">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span>${m.icon}</span>
+                <span style="font-size:13px">${m.label}</span>
+              </div>
+              <div class="toggle${visible.includes(m.id)?' on':''}" onclick="toggleMenuVisib('${m.id}')"></div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+function appliquerThemeCouleur(themeId){
+  // Retirer tous les thèmes
+  ['green','red','purple','orange','teal'].forEach(t=>document.body.classList.remove('theme-'+t));
+  if(themeId!=='default') document.body.classList.add('theme-'+themeId);
+  if(!S.parametres)S.parametres={};
+  S.parametres.theme_color=themeId;
+  saveData();toast('🎨 Thème appliqué');rWorkspace();
+}
+
+function appliquerCouleurCustom(color){
+  document.documentElement.style.setProperty('--navy',color);
+  // Calculer navy2 (légèrement plus clair)
+  if(!S.parametres)S.parametres={};
+  S.parametres.custom_primary=color;
+  S.parametres.theme_color='custom';
+  saveData();toast('🎨 Couleur personnalisée appliquée');
+}
+
+function toggleMenuVisib(menuId){
+  if(!S.parametres)S.parametres={};
+  if(!S.parametres.menu_visible)S.parametres.menu_visible=['dashboard','vente','achats','stock','clients'];
+  const idx=S.parametres.menu_visible.indexOf(menuId);
+  if(idx>=0) S.parametres.menu_visible.splice(idx,1);
+  else S.parametres.menu_visible.push(menuId);
+  appliquerMenusVisibles();
+  saveData();rWorkspace();
+}
+
+function appliquerMenusVisibles(){
+  const visible=(S.parametres&&S.parametres.menu_visible)||null;
+  if(!visible)return;
+  document.querySelectorAll('.ni[data-page]').forEach(el=>{
+    const page=el.getAttribute('data-page');
+    // Ne pas cacher les menus déjà cachés par les droits
+    if(S.session&&S.session.role!=='admin')return;
+    el.style.display=visible.includes(page)?'':'none';
   });
+}
+
+function addUserWS(){
+  modal(`<div class="mft">➕ Nouvel utilisateur</div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Prénom / Nom</label><input class="fi" id="wu-nom" placeholder="Ex: Marie"></div>
+      <div class="fg"><label class="fl">Rôle</label>
+        <select class="fs" id="wu-role"><option value="employe">Employé</option><option value="admin">Admin</option></select>
+      </div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">PIN (4 chiffres)</label><input class="fi" type="number" id="wu-pin" placeholder="1234" maxlength="4"></div>
+      <div class="fg"><label class="fl">Emoji avatar</label><input class="fi" id="wu-emoji" placeholder="👤" maxlength="2"></div>
+    </div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveUserWS()">Créer</button></div>`);
+}
+function saveUserWS(){
+  const nom=document.getElementById('wu-nom').value;
+  const pin=document.getElementById('wu-pin').value;
+  if(!nom||!pin||pin.length!==4)return toast('❌ Nom et PIN 4 chiffres requis');
+  if(!S.utilisateurs)S.utilisateurs=[];
+  S.utilisateurs.push({id:genId(),nom,role:document.getElementById('wu-role').value,pin,emoji:document.getElementById('wu-emoji').value||'👤',actif:true});
+  saveData();closeModal();toast('✅ Utilisateur créé');rWorkspace();
+}
+function editUserWS(id){
+  const u=(S.utilisateurs||[]).find(u=>u.id==id);if(!u)return;
+  modal(`<div class="mft">✏️ Modifier — ${u.nom}</div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Nom</label><input class="fi" id="wu-nom" value="${u.nom}"></div>
+      <div class="fg"><label class="fl">Rôle</label>
+        <select class="fs" id="wu-role"><option value="employe"${u.role==='employe'?' selected':''}>Employé</option><option value="admin"${u.role==='admin'?' selected':''}>Admin</option></select>
+      </div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Nouveau PIN</label><input class="fi" type="number" id="wu-pin" placeholder="${'•'.repeat(String(u.pin).length)}" maxlength="4"></div>
+      <div class="fg"><label class="fl">Emoji</label><input class="fi" id="wu-emoji" value="${u.emoji||'👤'}" maxlength="2"></div>
+    </div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="updateUserWS(${id})">Enregistrer</button></div>`);
+}
+function updateUserWS(id){
+  const u=(S.utilisateurs||[]).find(u=>u.id==id);if(!u)return;
+  u.nom=document.getElementById('wu-nom').value;
+  u.role=document.getElementById('wu-role').value;
+  u.emoji=document.getElementById('wu-emoji').value||'👤';
+  const newPin=document.getElementById('wu-pin').value;
+  if(newPin&&newPin.length===4)u.pin=newPin;
+  saveData();closeModal();toast('✅ Utilisateur modifié');rWorkspace();
+}
+function delUserWS(id){
+  if(!confirm('Supprimer cet utilisateur ?'))return;
+  S.utilisateurs=S.utilisateurs.filter(u=>u.id!=id);
+  saveData();toast('🗑️ Utilisateur supprimé');rWorkspace();
+}
+
+// ─── THÈME AU DÉMARRAGE ───
+function appliquerThemeComplet(){
+  appliquerTheme(); // dark/light
+  const p=S.parametres;
+  if(!p)return;
+  ['green','red','purple','orange','teal'].forEach(t=>document.body.classList.remove('theme-'+t));
+  if(p.theme_color&&p.theme_color!=='default'&&p.theme_color!=='custom'){
+    document.body.classList.add('theme-'+p.theme_color);
+  }
+  if(p.theme_color==='custom'&&p.custom_primary){
+    document.documentElement.style.setProperty('--navy',p.custom_primary);
+  }
+  appliquerMenusVisibles();
+}
+
+// ─── REÇU AMÉLIORÉ AVEC DATE/HEURE ───
+function getDateHeure(){
+  const now=new Date();
+  const date=now.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const heure=now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  return{date,heure,full:`${date} à ${heure}`};
+}
+
+function printRecu(vid){
+  const v=S.ventes.find(v=>v.id==vid);if(!v)return;
+  const lignes=v.lignes||[{aid:v.aid,qte:v.qte,pu:v.pu,mt:v.mt}];
+  const {date,heure}=getDateHeure();
+  const p=S.parametres||{};
+  const vendeur=S.session?.nom||p.nom||'Christ Media';
+  const recuDiv=document.getElementById('recu-print');
+  recuDiv.innerHTML=`
+    <div class="recu-modern">
+      <div class="recu-header-logo">
+        <div class="recu-company">${p.nom||'Christ Media'}</div>
+        <div class="recu-details">${p.ville||'Lomé, Togo'} · ${p.tel||''}</div>
+        <div class="recu-details">${p.email||''}</div>
+      </div>
+      <div style="text-align:center;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:700;color:#0f1f3d">REÇU DE VENTE</div>
+        <div style="font-size:11px;color:#999">N° ${String(v.id).padStart(5,'0')}</div>
+      </div>
+      <div class="recu-info-grid">
+        <div><div class="recu-info-label">Date</div><div class="recu-info-val">${v.date}</div></div>
+        <div><div class="recu-info-label">Heure</div><div class="recu-info-val">${heure}</div></div>
+        <div><div class="recu-info-label">Client</div><div class="recu-info-val">${v.client||'Client anonyme'}</div></div>
+        <div><div class="recu-info-label">Vendeur</div><div class="recu-info-val">${vendeur}</div></div>
+      </div>
+      <div class="recu-items">
+        ${lignes.map(l=>{const a=ga(l.aid);return`
+          <div class="recu-item-row">
+            <span>${a?a.nom:'Article'} × ${l.qte}</span>
+            <span style="font-weight:600">${F(l.mt)}</span>
+          </div>`}).join('')}
+      </div>
+      <div class="recu-totaux">
+        <div class="recu-tot-row"><span>Sous-total</span><span>${F(v.sousTotal||v.mt)}</span></div>
+        ${v.remise&&v.remise>0?`<div class="recu-tot-row" style="color:#8a5200"><span>Remise</span><span>−${F(v.remise)}</span></div>`:''}
+        <div class="recu-tot-final"><span>TOTAL</span><span>${F(v.mt)}</span></div>
+      </div>
+      <div class="recu-paiement">
+        <div style="font-weight:700;margin-bottom:6px;color:#1d6b3c">💳 Paiement</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+          <div><span style="color:#666">Mode:</span> <strong>${v.mode||'—'}</strong></div>
+          <div><span style="color:#666">Statut:</span> <strong style="color:${v.statut==='Payé'?'#1d6b3c':'#8a5200'}">${v.statut}</strong></div>
+          ${v.montant_recu?`<div><span style="color:#666">Reçu:</span> <strong>${F(v.montant_recu)}</strong></div>`:''}
+          ${v.monnaie?`<div><span style="color:#666">Monnaie:</span> <strong>${F(v.monnaie)}</strong></div>`:''}
+        </div>
+        ${v.acomptes&&v.acomptes.length>0?`<div style="margin-top:6px;font-size:11px;color:#666">Versements: ${v.acomptes.map(a=>`${F(a.mt)} (${a.mode})`).join(' · ')}</div>`:''}
+      </div>
+      <div class="recu-signature">
+        <div><div class="recu-sign-line">Signature client</div></div>
+        <div><div class="recu-sign-line">Cachet / Vendeur</div></div>
+      </div>
+      <div style="text-align:center;font-size:10px;color:#aaa;margin-top:14px;border-top:1px dashed #ddd;padding-top:10px">
+        Merci pour votre confiance · ${p.nom||'Christ Media'} · ${p.ville||'Lomé, Togo'}
+      </div>
+    </div>`;
+  window.print();
+}
+
+// ─── MODAL MONTANT REÇU AVANT IMPRESSION ───
+function demanderMontantRecu(vid){
+  const v=S.ventes.find(v=>v.id==vid);if(!v)return;
+  modal(`<div class="mft">💰 Détails de paiement — Reçu</div>
+    <div class="total-preview" style="margin-bottom:14px">
+      <div class="total-preview-final"><span>TOTAL À PAYER</span><span>${F(v.mt)}</span></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Montant reçu du client</label><input class="fi" type="number" id="mr-recu" value="${v.mt}" oninput="calcMonnaie(${v.mt})"></div>
+      <div class="fg"><label class="fl">Monnaie à rendre</label><input class="fi" type="number" id="mr-monnaie" readonly style="background:var(--green-bg);color:var(--green);font-weight:700"></div>
+    </div>
+    <div class="fg"><label class="fl">Notes supplémentaires</label><input class="fi" id="mr-notes" placeholder="Ex: Payé en 2 billets de 5000..."></div>
+    <div class="mff">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="imprimerAvecMontant(${vid})">🖨️ Imprimer reçu</button>
+      <button class="btn" onclick="partagerWAAvecMontant(${vid})">📱 WhatsApp</button>
+    </div>`);
+  calcMonnaie(v.mt);
+}
+function calcMonnaie(total){
+  const recu=+document.getElementById('mr-recu')?.value||0;
+  const monnaie=Math.max(0,recu-total);
+  const el=document.getElementById('mr-monnaie');
+  if(el){el.value=monnaie;el.style.color=monnaie>=0?'var(--green)':'var(--red)';}
+}
+function imprimerAvecMontant(vid){
+  const v=S.ventes.find(v=>v.id==vid);if(!v)return;
+  v.montant_recu=+document.getElementById('mr-recu').value||v.mt;
+  v.monnaie=Math.max(0,v.montant_recu-v.mt);
+  v.notes_recu=document.getElementById('mr-notes').value;
+  saveData();closeModal();printRecu(vid);
+}
+function partagerWAAvecMontant(vid){
+  const v=S.ventes.find(v=>v.id==vid);if(!v)return;
+  v.montant_recu=+document.getElementById('mr-recu').value||v.mt;
+  v.monnaie=Math.max(0,v.montant_recu-v.mt);
+  saveData();closeModal();partagerWhatsApp(vid,'recu');
+}
+
+// ─── ALLOCATION COMPTE AUTO ───
+function getCompteParMode(mode){
+  if(!S.comptes||S.comptes.length===0)return null;
+  // Correspondance auto mode → compte
+  const map={'Espèces':['caisse','espèces','cash'],'Flooz':['flooz'],'Mixx':['mixx'],'Virement':['banque','virement','vbank']};
+  const keys=map[mode]||[];
+  const found=S.comptes.find(c=>keys.some(k=>c.nom.toLowerCase().includes(k)||c.type.toLowerCase().includes(k)));
+  return found||S.comptes[0];
+}
+
+function crediterCompte(mode, montant){
+  if(!S.parametres?.compte_auto)return;
+  const compte=getCompteParMode(mode);
+  if(compte){
+    compte.solde=(compte.solde||0)+montant;
+    toast(`💳 ${F(montant)} crédité sur "${compte.nom}"`);
+  }
+}
+function debiterCompte(mode, montant){
+  if(!S.parametres?.compte_auto)return;
+  const compte=getCompteParMode(mode);
+  if(compte) compte.solde=(compte.solde||0)-montant;
+}
+
+// ─── PAIEMENTS PAR TRANCHES (VENTES) ───
+function configurerTranches(vid){
+  const v=S.ventes.find(v=>v.id==vid);
+  if(!v)return;
+  if(!v.tranches)v.tranches=[];
+  const totalPaye=v.tranches.reduce((s,t)=>s+t.mt,0);
+  const restant=v.mt-totalPaye;
+  modal(`<div class="mft">💳 Paiement par tranches — ${v.client||'Client'}</div>
+    <div class="total-preview" style="margin-bottom:12px">
+      <div class="total-preview-row"><span>Montant total</span><span>${F(v.mt)}</span></div>
+      <div class="total-preview-row" style="color:var(--green)"><span>Déjà payé</span><span>${F(totalPaye)}</span></div>
+      <div class="total-preview-final"><span>Restant dû</span><span style="color:${restant>0?'var(--red)':'var(--green)'}">${F(restant)}</span></div>
+    </div>
+    <div class="tranche-progress"><div class="tranche-fill" style="width:${v.mt>0?Math.min(100,Math.round(totalPaye/v.mt*100)):0}%;background:var(--green)"></div></div>
+    <div style="font-size:11px;color:var(--text3);text-align:right;margin-bottom:12px">${v.mt>0?Math.round(totalPaye/v.mt*100):0}% payé</div>
+    ${v.tranches.map((t,i)=>`
+      <div class="tranche-row">
+        <span style="font-size:12px;flex:1">${t.date} · ${t.mode}</span>
+        <span style="font-weight:600;color:var(--green)">${F(t.mt)}</span>
+      </div>`).join('')}
+    ${restant>0?`
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;margin-bottom:8px">Nouveau versement</div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Montant</label><input class="fi" type="number" id="tr-mt" placeholder="${restant}" max="${restant}"></div>
+        <div class="fg"><label class="fl">Mode</label><select class="fs" id="tr-mode"><option>Espèces</option><option>Flooz</option><option>Mixx</option><option>Virement</option></select></div>
+      </div>
+    </div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Fermer</button>
+      <button class="btn btn-success" onclick="saveTranche(${vid})">Enregistrer versement</button></div>
+    `:`<div style="text-align:center;color:var(--green);font-weight:600;padding:12px">✅ Entièrement payé</div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Fermer</button></div>`}
+  `);
+}
+
+function saveTranche(vid){
+  const v=S.ventes.find(v=>v.id==vid);if(!v)return;
+  const mt=+document.getElementById('tr-mt').value||0;
+  const mode=document.getElementById('tr-mode').value;
+  if(mt<=0)return toast('❌ Montant invalide');
+  if(!v.tranches)v.tranches=[];
+  v.tranches.push({date:D(),mt,mode});
+  crediterCompte(mode,mt);
+  const totalPaye=v.tranches.reduce((s,t)=>s+t.mt,0);
+  if(totalPaye>=v.mt){v.statut='Payé';toast(`✅ Vente soldée ! Total payé: ${F(totalPaye)}`);}
+  else toast(`✅ Versement: ${F(mt)} · Reste: ${F(v.mt-totalPaye)}`);
+  saveData();closeModal();rVente();
+}
+
+// ─── PAIEMENTS PAR TRANCHES (ACHATS) ───
+function configurerTranchesAchat(acid){
+  const ac=S.achats.find(a=>a.id==acid);if(!ac)return;
+  if(!ac.tranches)ac.tranches=[];
+  const totalPaye=ac.tranches.reduce((s,t)=>s+t.mt,0);
+  const restant=ac.mt-totalPaye;
+  modal(`<div class="mft">💳 Tranches achat — ${S.stock.find(a=>a.id==ac.aid)?.nom||'Article'}</div>
+    <div class="total-preview" style="margin-bottom:12px">
+      <div class="total-preview-row"><span>Total achat</span><span>${F(ac.mt)}</span></div>
+      <div class="total-preview-row" style="color:var(--green)"><span>Déjà payé</span><span>${F(totalPaye)}</span></div>
+      <div class="total-preview-final"><span>Restant</span><span style="color:${restant>0?'var(--red)':'var(--green)'}">${F(restant)}</span></div>
+    </div>
+    ${ac.tranches.map(t=>`<div class="tranche-row"><span style="font-size:12px;flex:1">${t.date} · ${t.mode}</span><span style="font-weight:600;color:var(--red)">−${F(t.mt)}</span></div>`).join('')}
+    ${restant>0?`
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <div class="fr">
+        <div class="fg"><label class="fl">Montant</label><input class="fi" type="number" id="tra-mt" placeholder="${restant}" max="${restant}"></div>
+        <div class="fg"><label class="fl">Mode</label><select class="fs" id="tra-mode"><option>Espèces</option><option>Flooz</option><option>Mixx</option><option>Virement</option></select></div>
+      </div>
+    </div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Fermer</button>
+      <button class="btn btn-danger" onclick="saveTrancheAchat(${acid})">Enregistrer paiement</button></div>
+    `:`<div style="text-align:center;color:var(--green);font-weight:600;padding:12px">✅ Achat entièrement réglé</div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Fermer</button></div>`}
+  `);
+}
+
+function saveTrancheAchat(acid){
+  const ac=S.achats.find(a=>a.id==acid);if(!ac)return;
+  const mt=+document.getElementById('tra-mt').value||0;
+  const mode=document.getElementById('tra-mode').value;
+  if(mt<=0)return toast('❌ Montant invalide');
+  if(!ac.tranches)ac.tranches=[];
+  ac.tranches.push({date:D(),mt,mode});
+  debiterCompte(mode,mt);
+  const totalPaye=ac.tranches.reduce((s,t)=>s+t.mt,0);
+  if(totalPaye>=ac.mt){ac.statut='Payé';toast(`✅ Achat soldé !`);}
+  else toast(`✅ Versement: ${F(mt)} · Reste: ${F(ac.mt-totalPaye)}`);
+  saveData();closeModal();rAchats();
 }
 
 // ─── EXPORT / IMPORT ───
@@ -3436,7 +4093,15 @@ if('serviceWorker' in navigator){
 // ─── INIT ───
 majLogo();
 initV9();
-rDash();
+// Afficher login si pas de session active
+if(!S.session||!S.session.uid){
+  afficherLoginScreen();
+}else{
+  document.getElementById('login-screen').style.display='none';
+  majBadgeUtilisateur();
+  appliquerAcces(S.session.role);
+  rDash();
+}
 </script>
 </body>
 </html>
