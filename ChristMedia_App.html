@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Christ Media — Gestion</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#f8f7f4;--surface:#fff;--surface2:#f1efe8;
+--text:#1a1a18;--text2:#5f5e5a;--text3:#888780;
+--border:#e0ded6;--border2:#c8c6be;
+--blue:#185fa5;--blue-bg:#e6f1fb;--blue-light:#b5d4f4;
+--green:#3b6d11;--green-bg:#eaf3de;--green-light:#c0dd97;
+--red:#a32d2d;--red-bg:#fcebeb;--red-light:#f7c1c1;
+--amber:#854f0b;--amber-bg:#faeeda;--amber-light:#fac775;
+--teal:#0f6e56;--teal-bg:#e1f5ee;
+--pink:#993556;--pink-bg:#fbeaf0;
+--r:10px;--rs:6px;
+}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.logo{padding:20px 16px 16px;border-bottom:1px solid var(--border)}
+.logo-name{font-size:16px;font-weight:600}
+.logo-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.nav{flex:1;padding:12px 8px;overflow-y:auto}
+.nav-sec{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;padding:12px 8px 6px}
+.ni{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--rs);cursor:pointer;color:var(--text2);font-size:13px;margin-bottom:2px;transition:all .15s}
+.ni:hover{background:var(--surface2);color:var(--text)}
+.ni.active{background:var(--blue-bg);color:var(--blue);font-weight:500}
+.ni svg{width:15px;height:15px;flex-shrink:0}
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.topbar{padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10}
+.topbar-title{font-size:15px;font-weight:600}
+.topbar-actions{display:flex;gap:8px}
+.btn{padding:6px 14px;border-radius:var(--rs);border:1px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer;font-size:13px;font-weight:500;transition:all .15s}
+.btn:hover{background:var(--surface2)}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-primary:hover{opacity:.88}
+.btn-success{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-success:hover{opacity:.88}
+.btn-danger{background:var(--red);color:#fff;border-color:var(--red)}
+.page{padding:24px;flex:1}
+.hidden{display:none!important}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.ct{font-size:11px;color:var(--text3);font-weight:500;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.mv{font-size:24px;font-weight:600}
+.ms{font-size:12px;color:var(--text3);margin-top:3px}
+.badge{display:inline-flex;align-items:center;font-size:11px;padding:2px 9px;border-radius:20px;margin-top:5px;font-weight:500}
+.bg{background:var(--green-bg);color:var(--green)}
+.br{background:var(--red-bg);color:var(--red)}
+.ba{background:var(--amber-bg);color:var(--amber)}
+.bb{background:var(--blue-bg);color:var(--blue)}
+.bt{background:var(--teal-bg);color:var(--teal)}
+.bp{background:var(--pink-bg);color:var(--pink)}
+.st{font-size:15px;font-weight:600;margin:24px 0 14px}
+.st:first-child{margin-top:0}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;background:var(--surface2);border-bottom:1px solid var(--border)}
+td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.tdm{color:var(--text);font-weight:500}
+.fg{margin-bottom:14px}
+.fl{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px}
+.fi{width:100%;padding:7px 12px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--surface);color:var(--text);font-size:13px;outline:none}
+.fi:focus{border-color:var(--blue)}
+.fs{width:100%;padding:7px 12px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--surface);color:var(--text);font-size:13px;outline:none}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.alert{padding:10px 14px;border-radius:var(--rs);font-size:13px;margin-bottom:14px}
+.alert-r{background:var(--red-bg);color:var(--red);border:1px solid var(--red-light)}
+.alert-a{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-light)}
+.alert-g{background:var(--green-bg);color:var(--green);border:1px solid var(--green-light)}
+.sbar{height:5px;border-radius:3px;background:var(--surface2);overflow:hidden;margin-top:4px}
+.sfill{height:100%;border-radius:3px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:200}
+.modal{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:24px;width:480px;max-height:85vh;overflow-y:auto}
+.mft{font-size:15px;font-weight:600;margin-bottom:18px}
+.mff{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
+.cat-l{background:var(--pink-bg);color:var(--pink);display:inline-flex;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.cat-a{background:var(--blue-bg);color:var(--blue);display:inline-flex;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.cat-b{background:var(--teal-bg);color:var(--teal);display:inline-flex;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.vrf{background:var(--surface);border:2px solid var(--green-light);border-radius:var(--r);padding:20px;margin-bottom:22px}
+.vrt{font-size:14px;font-weight:600;color:var(--green);margin-bottom:14px}
+.totbox{background:var(--green-bg);border-radius:var(--rs);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.totlbl{font-size:13px;color:var(--green);font-weight:500}
+.totval{font-size:22px;font-weight:700;color:var(--green)}
+.pbar{height:7px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-top:7px}
+.pfill{height:100%;border-radius:4px;transition:width .4s}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-name">Christ Media</div>
+    <div class="logo-sub">Gestion d'entreprise · Lomé</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-sec">Principal</div>
+    <div class="ni active" data-page="dashboard" onclick="nav(this,'dashboard')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".6"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".6"/></svg>
+      Tableau de bord
+    </div>
+    <div class="ni" data-page="vente" onclick="nav(this,'vente')">
+      <svg viewBox="0 0 16 16" fill="none"><circle cx="6" cy="12" r="1.5" fill="currentColor"/><circle cx="11" cy="12" r="1.5" fill="currentColor"/><path d="M1 2h2l2.4 7h5.6l1.6-5H5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Vente Rapide
+    </div>
+    <div class="nav-sec">Gestion</div>
+    <div class="ni" data-page="stock" onclick="nav(this,'stock')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="6" width="14" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 6V4a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Stock
+    </div>
+    <div class="ni" data-page="clients" onclick="nav(this,'clients')">
+      <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Clients
+    </div>
+    <div class="ni" data-page="fournisseurs" onclick="nav(this,'fournisseurs')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="10" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M11 7h2.5l1.5 3v3h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="14" r="1.5" fill="currentColor"/><circle cx="11" cy="14" r="1.5" fill="currentColor"/></svg>
+      Fournisseurs
+    </div>
+    <div class="ni" data-page="depenses" onclick="nav(this,'depenses')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M1 7h14" stroke="currentColor" stroke-width="1.5"/><circle cx="5" cy="10.5" r="1" fill="currentColor" opacity=".6"/><circle cx="8" cy="10.5" r="1" fill="currentColor" opacity=".4"/></svg>
+      Dépenses
+    </div>
+    <div class="nav-sec">Analyse</div>
+    <div class="ni" data-page="rapports" onclick="nav(this,'rapports')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M2 14L5 9l3 3 3-5 3 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Rapports
+    </div>
+  </nav>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Tableau de bord</div>
+    <div class="topbar-actions" id="topbar-actions">
+      <button class="btn btn-success" onclick="nav(document.querySelector('[data-page=vente]'),'vente')">+ Vente rapide</button>
+    </div>
+  </div>
+  <div class="page" id="content"></div>
+</div>
+</div>
+
+<div id="modal-root"></div>
+
+<script>
+const F=n=>Math.round(n).toLocaleString('fr-FR')+' FCFA';
+const N=n=>Math.round(n).toLocaleString('fr-FR');
+const D=()=>new Date().toISOString().split('T')[0];
+
+let S={
+  stock:[
+    {id:1,code:'LNG001',nom:'Soutien-gorge noir T85',cat:'Lingerie',pa:800,pv:1500,si:20,qv:3,seuil:5},
+    {id:2,code:'LNG002',nom:'Culotte coton T38',cat:'Lingerie',pa:300,pv:700,si:50,qv:10,seuil:8},
+    {id:3,code:'LNG003',nom:'Ensemble lingerie rouge',cat:'Lingerie',pa:1500,pv:3500,si:15,qv:2,seuil:3},
+    {id:4,code:'LNG004',nom:'Body dentelle blanc',cat:'Lingerie',pa:2000,pv:4500,si:10,qv:1,seuil:2},
+    {id:5,code:'LNG005',nom:'Slip homme pack 3',cat:'Lingerie',pa:600,pv:1200,si:30,qv:5,seuil:5},
+    {id:6,code:'AV001',nom:'Câble HDMI 1.5m',cat:'Audio-Vidéo',pa:500,pv:1200,si:25,qv:5,seuil:5},
+    {id:7,code:'AV002',nom:'Télécommande universelle',cat:'Audio-Vidéo',pa:800,pv:2000,si:15,qv:3,seuil:3},
+    {id:8,code:'AV003',nom:'Écouteurs intra-auriculaires',cat:'Audio-Vidéo',pa:1000,pv:2500,si:20,qv:7,seuil:4},
+    {id:9,code:'AV004',nom:'Batterie externe 10000mAh',cat:'Audio-Vidéo',pa:3000,pv:7000,si:8,qv:2,seuil:2},
+    {id:10,code:'AV005',nom:'Flash USB 16Go',cat:'Audio-Vidéo',pa:700,pv:1500,si:30,qv:6,seuil:5},
+    {id:11,code:'BUR001',nom:'Stylo bille boîte 12',cat:'Bureautique',pa:500,pv:1000,si:40,qv:8,seuil:8},
+    {id:12,code:'BUR002',nom:'Rame papier A4',cat:'Bureautique',pa:1200,pv:2500,si:20,qv:4,seuil:4},
+    {id:13,code:'BUR003',nom:'Cartouche encre noire',cat:'Bureautique',pa:3500,pv:7000,si:5,qv:2,seuil:2},
+    {id:14,code:'BUR004',nom:'Cahier grand format',cat:'Bureautique',pa:400,pv:800,si:35,qv:8,seuil:6},
+    {id:15,code:'BUR005',nom:'Toner imprimante laser',cat:'Bureautique',pa:8000,pv:15000,si:3,qv:1,seuil:1},
+  ],
+  ventes:[
+    {id:1,date:'2026-03-20',aid:1,qte:2,pu:1500,mt:3000,statut:'Payé',client:'Marie Kodjovi'},
+    {id:2,date:'2026-03-21',aid:6,qte:3,pu:1200,mt:3600,statut:'Payé',client:'Jean Amégavie'},
+    {id:3,date:'2026-03-22',aid:11,qte:4,pu:1000,mt:4000,statut:'Payé',client:'Kofi Mensah'},
+    {id:4,date:'2026-03-23',aid:8,qte:2,pu:2500,mt:5000,statut:'Non payé',client:'Ama Sossou'},
+    {id:5,date:'2026-03-24',aid:3,qte:1,pu:3500,mt:3500,statut:'Payé',client:'Fatou Diallo'},
+    {id:6,date:'2026-03-25',aid:14,qte:5,pu:800,mt:4000,statut:'Payé',client:'Kojo Atsu'},
+  ],
+  clients:[
+    {id:1,nom:'Marie Kodjovi',tel:'90 12 34 56',secteur:'Lingerie',solde:0,statut:'Régulier',notes:''},
+    {id:2,nom:'Jean Amégavie',tel:'91 23 45 67',secteur:'Audio-Vidéo',solde:0,statut:'Régulier',notes:''},
+    {id:3,nom:'Ama Sossou',tel:'92 34 56 78',secteur:'Lingerie',solde:5000,statut:'Débiteur',notes:'Doit 5000 FCFA'},
+    {id:4,nom:'Kofi Mensah',tel:'93 45 67 89',secteur:'Bureautique',solde:0,statut:'Régulier',notes:''},
+    {id:5,nom:'Fatou Diallo',tel:'94 56 78 90',secteur:'Lingerie',solde:0,statut:'VIP',notes:'Bonne cliente'},
+  ],
+  fournisseurs:[
+    {id:1,nom:'Mode Afrique SARL',tel:'90 11 00 01',secteur:'Lingerie',dette:15000,statut:'Actif'},
+    {id:2,nom:'TechnoTogo',tel:'90 11 00 02',secteur:'Audio-Vidéo',dette:0,statut:'Actif'},
+    {id:3,nom:'BureauPlus Lomé',tel:'90 11 00 03',secteur:'Bureautique',dette:8500,statut:'Actif'},
+  ],
+  depenses:[
+    {id:1,date:'2026-03-15',four:'Mode Afrique SARL',cat:'Lingerie',mt:25000,mode:'Flooz',notes:'Réappro lingerie'},
+    {id:2,date:'2026-03-18',four:'TechnoTogo',cat:'Audio-Vidéo',mt:18000,mode:'Mixx',notes:'Câbles et accessoires'},
+    {id:3,date:'2026-03-20',four:'BureauPlus Lomé',cat:'Bureautique',mt:12000,mode:'Espèces',notes:'Papeterie'},
+  ],
+  nid:200,
+  vf:{aid:'',qte:1,client:'',statut:'Payé'}
+};
+
+const sa=a=>a.si-a.qv;
+const ga=id=>S.stock.find(a=>a.id==id);
+const cb=cat=>{const m={'Lingerie':'cat-l','Audio-Vidéo':'cat-a','Bureautique':'cat-b'};return`<span class="${m[cat]||'cat-b'}">${cat}</span>`};
+const sb=s=>{const m={'Payé':'bg','Non payé':'br','Débiteur':'br','Régulier':'bt','Actif':'bg','VIP':'bp'};return`<span class="badge ${m[s]||'bb'}">${s}</span>`};
+
+const titles={'dashboard':'Tableau de bord','vente':'Vente Rapide','stock':'Gestion du Stock','clients':'Clients','fournisseurs':'Fournisseurs','depenses':'Dépenses','rapports':'Rapports & Analyses'};
+const actions={
+  dashboard:()=>'<button class="btn btn-success" onclick="nav(document.querySelector(\'[data-page=vente]\'),\'vente\')">+ Vente rapide</button>',
+  stock:()=>'<button class="btn btn-primary" onclick="addArticle()">+ Ajouter article</button>',
+  clients:()=>'<button class="btn btn-primary" onclick="addClient()">+ Ajouter client</button>',
+  fournisseurs:()=>'<button class="btn btn-primary" onclick="addFour()">+ Ajouter fournisseur</button>',
+  depenses:()=>'<button class="btn btn-danger" onclick="addDep()">+ Dépense</button>',
+};
+
+function nav(el,page){
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('topbar-title').textContent=titles[page]||'';
+  document.getElementById('topbar-actions').innerHTML=actions[page]?actions[page]():'';
+  ({dashboard:rDash,vente:rVente,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,rapports:rRap})[page]();
+}
+
+function rDash(){
+  const vp=S.ventes.filter(v=>v.statut==='Payé').reduce((s,v)=>s+v.mt,0);
+  const vi=S.ventes.filter(v=>v.statut==='Non payé').reduce((s,v)=>s+v.mt,0);
+  const dep=S.depenses.reduce((s,d)=>s+d.mt,0);
+  const solde=vp-dep;
+  const sv=S.stock.reduce((s,a)=>s+(sa(a)*a.pv),0);
+  const al=S.stock.filter(a=>sa(a)<=a.seuil);
+  const vc=cat=>S.ventes.filter(v=>{const a=ga(v.aid);return a&&a.cat===cat&&v.statut==='Payé'}).reduce((s,v)=>s+v.mt,0);
+  const vl=vc('Lingerie'),vav=vc('Audio-Vidéo'),vb=vc('Bureautique'),vt=vp||1;
+
+  document.getElementById('content').innerHTML=`
+    ${al.length?`<div class="alert alert-r">⚠️ Stock bas : ${al.map(a=>`${a.nom} (${sa(a)} restants)`).join(' · ')}</div>`:''}
+    <p class="st">Vue d'ensemble</p>
+    <div class="g4">
+      <div class="card"><div class="ct">Solde net</div><div class="mv">${F(solde)}</div><span class="badge ${solde>=0?'bg':'br'}">${solde>=0?'Bénéfice':'Déficit'}</span></div>
+      <div class="card"><div class="ct">Ventes payées</div><div class="mv">${F(vp)}</div><span class="badge bg">${S.ventes.filter(v=>v.statut==='Payé').length} ventes</span></div>
+      <div class="card"><div class="ct">Créances</div><div class="mv">${F(vi+S.clients.reduce((s,c)=>s+c.solde,0))}</div><span class="badge ba">À encaisser</span></div>
+      <div class="card"><div class="ct">Valeur stock</div><div class="mv">${F(sv)}</div><span class="badge bb">${S.stock.length} articles</span></div>
+    </div>
+    <p class="st">Ventes par secteur</p>
+    <div class="g3">
+      <div class="card"><div class="ct">Lingerie</div><div class="mv">${F(vl)}</div><div class="pbar"><div class="pfill" style="width:${Math.round(vl/vt*100)}%;background:#993556"></div></div><div class="ms">${Math.round(vl/vt*100)}% du CA</div></div>
+      <div class="card"><div class="ct">Audio-Vidéo</div><div class="mv">${F(vav)}</div><div class="pbar"><div class="pfill" style="width:${Math.round(vav/vt*100)}%;background:#185fa5"></div></div><div class="ms">${Math.round(vav/vt*100)}% du CA</div></div>
+      <div class="card"><div class="ct">Bureautique</div><div class="mv">${F(vb)}</div><div class="pbar"><div class="pfill" style="width:${Math.round(vb/vt*100)}%;background:#0f6e56"></div></div><div class="ms">${Math.round(vb/vt*100)}% du CA</div></div>
+    </div>
+    <div class="g2">
+      <div>
+        <p class="st">Dernières ventes</p>
+        <div class="card" style="padding:0;overflow:hidden"><table><thead><tr><th>Date</th><th>Article</th><th>Montant</th><th>Statut</th></tr></thead><tbody>
+          ${S.ventes.slice().reverse().slice(0,6).map(v=>{const a=ga(v.aid);return`<tr><td>${v.date}</td><td class="tdm">${a?a.nom:'?'}</td><td>${F(v.mt)}</td><td>${sb(v.statut)}</td></tr>`}).join('')}
+        </tbody></table></div>
+      </div>
+      <div>
+        <p class="st">Alertes stock</p>
+        <div class="card" style="padding:0;overflow:hidden"><table><thead><tr><th>Article</th><th>Stock</th><th>Seuil</th></tr></thead><tbody>
+          ${S.stock.sort((a,b)=>sa(a)-sa(b)).slice(0,6).map(a=>{
+            const s=sa(a),c=s<=a.seuil?'var(--red)':s<=a.seuil*2?'var(--amber)':'var(--green)';
+            return`<tr><td class="tdm">${a.nom}</td><td style="color:${c};font-weight:600">${N(s)}</td><td style="color:var(--text3)">${N(a.seuil)}</td></tr>`}).join('')}
+        </tbody></table></div>
+      </div>
+    </div>
+    <p class="st">Finances résumé</p>
+    <div class="g3">
+      <div class="card"><div class="ct">Total dépenses</div><div class="mv" style="color:var(--red)">${F(dep)}</div><span class="badge br">${S.depenses.length} opérations</span></div>
+      <div class="card"><div class="ct">Dettes fournisseurs</div><div class="mv" style="color:var(--amber)">${F(S.fournisseurs.reduce((s,f)=>s+f.dette,0))}</div><span class="badge ba">À régler</span></div>
+      <div class="card"><div class="ct">Clients débiteurs</div><div class="mv">${N(S.clients.filter(c=>c.solde>0).length)}</div><span class="badge ba">${F(S.clients.reduce((s,c)=>s+c.solde,0))}</span></div>
+    </div>`;
+}
+
+function rVente(){
+  const a=S.vf.aid?ga(parseInt(S.vf.aid)):null;
+  const mt=a?a.pv*S.vf.qte:0;
+  const opts=S.stock.filter(a=>sa(a)>0).map(a=>`<option value="${a.id}">[${a.code}] ${a.nom} — ${F(a.pv)}</option>`).join('');
+  document.getElementById('content').innerHTML=`
+    <div class="vrf">
+      <div class="vrt">Nouvelle vente</div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Article en stock</label>
+          <select class="fs" id="va" onchange="uvf('aid',this.value)"><option value="">Sélectionner...</option>${opts}</select></div>
+        <div class="fg"><label class="fl">Client</label><input class="fi" id="vc" placeholder="Nom du client" value="${S.vf.client}" oninput="uvf('client',this.value)"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Quantité${a?` (${N(sa(a))} en stock)`:''}</label>
+          <input class="fi" type="number" id="vq" min="1" max="${a?sa(a):999}" value="${S.vf.qte}" oninput="uvf('qte',parseInt(this.value)||1)"></div>
+        <div class="fg"><label class="fl">Paiement</label>
+          <select class="fs" id="vs" onchange="uvf('statut',this.value)"><option value="Payé">Payé</option><option value="Non payé">Non payé (crédit)</option></select></div>
+      </div>
+      <div class="totbox"><span class="totlbl">Montant total</span><span class="totval">${F(mt)}</span></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px">
+        <button class="btn btn-success" onclick="envente()" ${!a?'disabled':''}>Enregistrer</button>
+      </div>
+    </div>
+    <p class="st">Historique des ventes</p>
+    <div class="card" style="padding:0;overflow:hidden"><table>
+      <thead><tr><th>Date</th><th>Article</th><th>Catégorie</th><th>Qté</th><th>Prix unit.</th><th>Montant</th><th>Client</th><th>Statut</th></tr></thead>
+      <tbody>${S.ventes.slice().reverse().map(v=>{const a=ga(v.aid);return`<tr><td>${v.date}</td><td class="tdm">${a?a.nom:'?'}</td><td>${a?cb(a.cat):''}</td><td>${N(v.qte)}</td><td>${F(v.pu)}</td><td style="font-weight:600">${F(v.mt)}</td><td>${v.client||'—'}</td><td>${sb(v.statut)}</td></tr>`}).join('')}
+      </tbody></table></div>`;
+  if(S.vf.aid) document.getElementById('va').value=S.vf.aid;
+  document.getElementById('vs').value=S.vf.statut;
+}
+
+function uvf(k,v){S.vf[k]=v;rVente()}
+function envente(){
+  const a=ga(parseInt(S.vf.aid));if(!a)return;
+  const q=parseInt(S.vf.qte)||1;
+  if(q>sa(a)){alert('Stock insuffisant !');return}
+  a.qv+=q;
+  S.ventes.push({id:S.nid++,date:D(),aid:a.id,qte:q,pu:a.pv,mt:a.pv*q,statut:S.vf.statut,client:S.vf.client});
+  S.vf={aid:'',qte:1,client:'',statut:'Payé'};
+  rVente();
+}
+
+function rStock(){
+  const al=S.stock.filter(a=>sa(a)<=a.seuil);
+  document.getElementById('content').innerHTML=`
+    ${al.length?`<div class="alert alert-a">⚠️ ${al.length} article(s) à réapprovisionner : ${al.map(a=>a.nom).join(' · ')}</div>`:''}
+    <div class="card" style="padding:0;overflow:hidden"><table>
+      <thead><tr><th>Code</th><th>Article</th><th>Catégorie</th><th>Prix achat</th><th>Prix vente</th><th>Marge</th><th>Vendu</th><th>Stock restant</th><th>Valeur</th></tr></thead>
+      <tbody>${S.stock.map(a=>{
+        const s=sa(a),p=Math.round(s/Math.max(a.si,1)*100),c=s<=a.seuil?'var(--red)':s<=a.seuil*2?'var(--amber)':'var(--green)';
+        const mg=Math.round((a.pv-a.pa)/a.pv*100);
+        return`<tr><td style="font-family:monospace;font-size:12px">${a.code}</td><td class="tdm">${a.nom}</td><td>${cb(a.cat)}</td><td>${F(a.pa)}</td><td>${F(a.pv)}</td><td><span class="badge bg">${mg}%</span></td><td>${N(a.qv)}</td>
+          <td><span style="color:${c};font-weight:600">${N(s)}</span><div class="sbar"><div class="sfill" style="width:${p}%;background:${c}"></div></div></td>
+          <td>${F(s*a.pv)}</td></tr>`}).join('')}
+      </tbody></table></div>
+    <div class="g3" style="margin-top:18px">
+      <div class="card"><div class="ct">Valeur totale stock</div><div class="mv">${F(S.stock.reduce((s,a)=>s+(sa(a)*a.pv),0))}</div></div>
+      <div class="card"><div class="ct">Articles en rupture</div><div class="mv" style="color:var(--red)">${N(S.stock.filter(a=>sa(a)===0).length)}</div></div>
+      <div class="card"><div class="ct">Stock bas</div><div class="mv" style="color:var(--amber)">${N(S.stock.filter(a=>sa(a)>0&&sa(a)<=a.seuil).length)}</div></div>
+    </div>`;
+}
+
+function addArticle(){
+  modal(`<div class="mft">Ajouter un article</div>
+    <div class="fr"><div class="fg"><label class="fl">Code</label><input class="fi" id="mc" placeholder="LNG006"></div>
+    <div class="fg"><label class="fl">Catégorie</label><select class="fs" id="mcat"><option>Lingerie</option><option>Audio-Vidéo</option><option>Bureautique</option></select></div></div>
+    <div class="fg"><label class="fl">Nom de l'article</label><input class="fi" id="mn" placeholder="Description complète"></div>
+    <div class="fr"><div class="fg"><label class="fl">Prix achat (FCFA)</label><input class="fi" type="number" id="mpa" placeholder="0"></div>
+    <div class="fg"><label class="fl">Prix vente (FCFA)</label><input class="fi" type="number" id="mpv" placeholder="0"></div></div>
+    <div class="fr"><div class="fg"><label class="fl">Stock initial</label><input class="fi" type="number" id="msi" placeholder="0"></div>
+    <div class="fg"><label class="fl">Seuil alerte</label><input class="fi" type="number" id="mse" placeholder="5"></div></div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveArt()">Ajouter</button></div>`);
+}
+function saveArt(){
+  const c=document.getElementById('mc').value,n=document.getElementById('mn').value;
+  if(!c||!n)return alert('Code et nom requis');
+  S.stock.push({id:S.nid++,code:c,nom:n,cat:document.getElementById('mcat').value,pa:+document.getElementById('mpa').value||0,pv:+document.getElementById('mpv').value||0,si:+document.getElementById('msi').value||0,qv:0,seuil:+document.getElementById('mse').value||5});
+  closeModal();rStock();
+}
+
+function rClients(){
+  document.getElementById('content').innerHTML=`
+    <div class="card" style="padding:0;overflow:hidden"><table>
+      <thead><tr><th>Nom</th><th>Téléphone</th><th>Secteur</th><th>Solde dû</th><th>Statut</th><th>Notes</th></tr></thead>
+      <tbody>${S.clients.length===0?'<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3)">Aucun client</td></tr>':
+        S.clients.map(c=>`<tr><td class="tdm">${c.nom}</td><td>${c.tel}</td><td>${cb(c.secteur)}</td>
+          <td style="color:${c.solde>0?'var(--red)':'var(--text2)'};font-weight:${c.solde>0?'600':'400'}">${c.solde>0?F(c.solde):'—'}</td>
+          <td>${sb(c.statut)}</td><td style="color:var(--text3);font-size:12px">${c.notes||'—'}</td></tr>`).join('')}
+      </tbody></table></div>
+    <div class="g3" style="margin-top:18px">
+      <div class="card"><div class="ct">Total clients</div><div class="mv">${N(S.clients.length)}</div></div>
+      <div class="card"><div class="ct">Débiteurs</div><div class="mv" style="color:var(--red)">${N(S.clients.filter(c=>c.solde>0).length)}</div></div>
+      <div class="card"><div class="ct">Total créances</div><div class="mv">${F(S.clients.reduce((s,c)=>s+c.solde,0))}</div></div>
+    </div>`;
+}
+function addClient(){
+  modal(`<div class="mft">Ajouter un client</div>
+    <div class="fg"><label class="fl">Nom complet</label><input class="fi" id="mn" placeholder="Nom du client"></div>
+    <div class="fr"><div class="fg"><label class="fl">Téléphone</label><input class="fi" id="mt" placeholder="90 00 00 00"></div>
+    <div class="fg"><label class="fl">Secteur</label><select class="fs" id="ms"><option>Lingerie</option><option>Audio-Vidéo</option><option>Bureautique</option></select></div></div>
+    <div class="fr"><div class="fg"><label class="fl">Solde dû (FCFA)</label><input class="fi" type="number" id="mso" value="0"></div>
+    <div class="fg"><label class="fl">Statut</label><select class="fs" id="mst"><option>Régulier</option><option>VIP</option><option>Débiteur</option></select></div></div>
+    <div class="fg"><label class="fl">Notes</label><input class="fi" id="mno" placeholder="Remarques..."></div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveCli()">Ajouter</button></div>`);
+}
+function saveCli(){
+  const n=document.getElementById('mn').value;if(!n)return alert('Nom requis');
+  S.clients.push({id:S.nid++,nom:n,tel:document.getElementById('mt').value,secteur:document.getElementById('ms').value,solde:+document.getElementById('mso').value||0,statut:document.getElementById('mst').value,notes:document.getElementById('mno').value});
+  closeModal();rClients();
+}
+
+function rFour(){
+  document.getElementById('content').innerHTML=`
+    <div class="card" style="padding:0;overflow:hidden"><table>
+      <thead><tr><th>Nom</th><th>Téléphone</th><th>Secteur</th><th>Dette</th><th>Statut</th></tr></thead>
+      <tbody>${S.fournisseurs.map(f=>`<tr><td class="tdm">${f.nom}</td><td>${f.tel}</td><td>${cb(f.secteur)}</td>
+        <td style="color:${f.dette>0?'var(--red)':'var(--text2)'};font-weight:${f.dette>0?'600':'400'}">${f.dette>0?F(f.dette):'—'}</td>
+        <td>${sb(f.statut)}</td></tr>`).join('')}
+      </tbody></table></div>
+    <div class="g2" style="margin-top:18px">
+      <div class="card"><div class="ct">Total fournisseurs</div><div class="mv">${N(S.fournisseurs.length)}</div></div>
+      <div class="card"><div class="ct">Total dettes</div><div class="mv" style="color:var(--red)">${F(S.fournisseurs.reduce((s,f)=>s+f.dette,0))}</div></div>
+    </div>`;
+}
+function addFour(){
+  modal(`<div class="mft">Ajouter un fournisseur</div>
+    <div class="fg"><label class="fl">Nom</label><input class="fi" id="mn" placeholder="Nom du fournisseur"></div>
+    <div class="fr"><div class="fg"><label class="fl">Téléphone</label><input class="fi" id="mt" placeholder="90 00 00 00"></div>
+    <div class="fg"><label class="fl">Secteur</label><select class="fs" id="ms"><option>Lingerie</option><option>Audio-Vidéo</option><option>Bureautique</option></select></div></div>
+    <div class="fg"><label class="fl">Dette initiale (FCFA)</label><input class="fi" type="number" id="md" value="0"></div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveFour()">Ajouter</button></div>`);
+}
+function saveFour(){
+  const n=document.getElementById('mn').value;if(!n)return alert('Nom requis');
+  S.fournisseurs.push({id:S.nid++,nom:n,tel:document.getElementById('mt').value,secteur:document.getElementById('ms').value,dette:+document.getElementById('md').value||0,statut:'Actif'});
+  closeModal();rFour();
+}
+
+function rDep(){
+  const tot=S.depenses.reduce((s,d)=>s+d.mt,0);
+  document.getElementById('content').innerHTML=`
+    <div class="card" style="padding:0;overflow:hidden"><table>
+      <thead><tr><th>Date</th><th>Fournisseur</th><th>Catégorie</th><th>Montant</th><th>Mode</th><th>Notes</th></tr></thead>
+      <tbody>${S.depenses.slice().reverse().map(d=>`<tr><td>${d.date}</td><td class="tdm">${d.four}</td><td>${cb(d.cat)}</td>
+        <td style="font-weight:600;color:var(--red)">${F(d.mt)}</td><td><span class="badge bb">${d.mode}</span></td>
+        <td style="color:var(--text3);font-size:12px">${d.notes||'—'}</td></tr>`).join('')}
+        <tr style="background:var(--surface2)"><td colspan="3" style="font-weight:600;color:var(--text)">Total</td>
+          <td style="font-weight:700;color:var(--red)">${F(tot)}</td><td></td><td></td></tr>
+      </tbody></table></div>`;
+}
+function addDep(){
+  modal(`<div class="mft">Enregistrer une dépense</div>
+    <div class="fg"><label class="fl">Fournisseur</label><input class="fi" id="mf" placeholder="Nom du fournisseur"></div>
+    <div class="fr"><div class="fg"><label class="fl">Catégorie</label><select class="fs" id="mc"><option>Lingerie</option><option>Audio-Vidéo</option><option>Bureautique</option><option>Frais généraux</option></select></div>
+    <div class="fg"><label class="fl">Mode paiement</label><select class="fs" id="mm"><option>Flooz</option><option>Mixx</option><option>Espèces</option><option>Virement</option></select></div></div>
+    <div class="fg"><label class="fl">Montant (FCFA)</label><input class="fi" type="number" id="mt" placeholder="0"></div>
+    <div class="fg"><label class="fl">Notes</label><input class="fi" id="mno" placeholder="Description..."></div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-danger" onclick="saveDep()">Enregistrer</button></div>`);
+}
+function saveDep(){
+  const f=document.getElementById('mf').value,mt=+document.getElementById('mt').value;
+  if(!f||!mt)return alert('Fournisseur et montant requis');
+  S.depenses.push({id:S.nid++,date:D(),four:f,cat:document.getElementById('mc').value,mt,mode:document.getElementById('mm').value,notes:document.getElementById('mno').value});
+  closeModal();rDep();
+}
+
+function rRap(){
+  const vp=S.ventes.filter(v=>v.statut==='Payé').reduce((s,v)=>s+v.mt,0);
+  const dep=S.depenses.reduce((s,d)=>s+d.mt,0);
+  const solde=vp-dep;
+  const sv=S.stock.reduce((s,a)=>s+(sa(a)*a.pv),0);
+  const sc=S.stock.reduce((s,a)=>s+(sa(a)*a.pa),0);
+  const mg=sv>0?Math.round((sv-sc)/sv*100):0;
+  document.getElementById('content').innerHTML=`
+    <p class="st">Bilan financier</p>
+    <div class="g4">
+      <div class="card"><div class="ct">Chiffre d'affaires</div><div class="mv">${F(vp)}</div></div>
+      <div class="card"><div class="ct">Dépenses totales</div><div class="mv" style="color:var(--red)">${F(dep)}</div></div>
+      <div class="card"><div class="ct">Résultat net</div><div class="mv" style="color:${solde>=0?'var(--green)':'var(--red)'}">${F(solde)}</div></div>
+      <div class="card"><div class="ct">Marge stock</div><div class="mv">${mg}%</div></div>
+    </div>
+    <p class="st">Performance par secteur</p>
+    <div class="g3">${['Lingerie','Audio-Vidéo','Bureautique'].map(cat=>{
+      const v=S.ventes.filter(v=>{const a=ga(v.aid);return a&&a.cat===cat&&v.statut==='Payé'}).reduce((s,v)=>s+v.mt,0);
+      const arts=S.stock.filter(a=>a.cat===cat);
+      const stk=arts.reduce((s,a)=>s+(sa(a)*a.pv),0);
+      const nb=S.ventes.filter(v=>{const a=ga(v.aid);return a&&a.cat===cat}).length;
+      return`<div class="card"><div class="ct">${cat}</div><div class="mv">${F(v)}</div><div class="ms">${N(nb)} ventes · Stock: ${F(stk)}</div></div>`;
+    }).join('')}</div>
+    <p class="st">Top articles vendus</p>
+    <div class="card" style="padding:0;overflow:hidden"><table>
+      <thead><tr><th>Article</th><th>Catégorie</th><th>Qté vendue</th><th>Revenu</th><th>Marge unit.</th><th>Stock restant</th></tr></thead>
+      <tbody>${S.stock.slice().sort((a,b)=>b.qv-a.qv).slice(0,10).map(a=>`<tr>
+        <td class="tdm">${a.nom}</td><td>${cb(a.cat)}</td><td style="font-weight:600">${N(a.qv)}</td>
+        <td>${F(a.qv*a.pv)}</td><td><span class="badge bg">${Math.round((a.pv-a.pa)/a.pv*100)}%</span></td>
+        <td style="color:${sa(a)<=a.seuil?'var(--red)':'var(--green)'}">${N(sa(a))}</td></tr>`).join('')}
+      </tbody></table></div>`;
+}
+
+function modal(html){document.getElementById('modal-root').innerHTML=`<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal">${html}</div></div>`}
+function closeModal(){document.getElementById('modal-root').innerHTML=''}
+
+rDash();
+</script>
+</body>
+</html>
