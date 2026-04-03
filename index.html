@@ -10,7 +10,9 @@
 <title>Christ Media — All-in-One V10</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
-<link rel="manifest" href="#" id="manifest-link">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
@@ -940,7 +942,11 @@ function initFirebase(){
   return new Promise(resolve=>{
     if(typeof firebase==='undefined'){resolve(false);return;}
     try{
-      firebaseApp = firebase.initializeApp(firebaseConfig);
+      if(firebase.apps && firebase.apps.length > 0){
+        firebaseApp = firebase.apps[0];
+      } else {
+        firebaseApp = firebase.initializeApp(firebaseConfig);
+      }
       db = firebase.database();
       fbReady = true;
       resolve(true);
@@ -1027,7 +1033,6 @@ async function manualSync(){
       saveLocal(S);
       setSyncStatus('online','Synchronisé ✓');
       toast('✅ Données synchronisées depuis le cloud');
-      if(!S.session||!S.session.uid){afficherLoginScreen();return;}
       ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,parametres:rParametres})[currentPage]();
     }else{
       await saveToFirebase(S);
@@ -1042,25 +1047,18 @@ async function manualSync(){
 // ─── INIT FIREBASE ASYNC ───
 let S=loadData();
 
-// Afficher login immédiatement - Firebase se charge en arrière-plan
-if(!S.session||!S.session.uid){
-  afficherLoginScreen();
-}
-
-(async()=>{
+async function startFirebaseSync(){
   const ok=await initFirebase();
   if(ok){
     if(navigator.onLine){
       setSyncStatus('syncing','Chargement cloud...');
       const remote=await loadFromFirebase();
       if(remote&&remote.nid>=S.nid){
-        const savedSession=S.session; // Préserver la session
+        const savedSession=S.session;
         S=remote;
-        if(savedSession&&savedSession.uid) S.session=savedSession; // Restaurer session
+        if(savedSession&&savedSession.uid) S.session=savedSession;
         saveLocal(S);
         setSyncStatus('online','Synchronisé ✓');
-        // Ne rafraîchir l'interface QUE si l'utilisateur est connecté
-        if(!S.session||!S.session.uid){afficherLoginScreen();return;}
         ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,parametres:rParametres})[currentPage]();
       }else{
         await saveToFirebase(S);
@@ -1071,23 +1069,12 @@ if(!S.session||!S.session.uid){
   }else{
     setSyncStatus('offline','Local uniquement');
   }
-})();
+}
 
-function loadFirebaseScripts(){
-  return new Promise(resolve=>{
-    if(typeof firebase!=='undefined'){resolve();return;}
-    const s1=document.createElement('script');
-    s1.src='https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
-    s1.onload=()=>{
-      const s2=document.createElement('script');
-      s2.src='https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js';
-      s2.onload=resolve;
-      s2.onerror=resolve;
-      document.head.appendChild(s2);
-    };
-    s1.onerror=resolve;
-    document.head.appendChild(s1);
-  });
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', startFirebaseSync);
+} else {
+  setTimeout(startFirebaseSync, 100);
 }
 
 // ─── ONLINE/OFFLINE LISTENERS ───
@@ -1324,8 +1311,8 @@ function rVente(){
 
       <div class="fr" style="margin-top:14px">
         <div class="fg"><label class="fl">Client</label><input class="fi" id="pa-client" placeholder="Nom du client"></div>
-        <div class="fg"><label class="fl">Mode paiement</label>
-          <select class="fs" id="pa-mode"><option>Espèces</option><option>Flooz</option><option>Mixx</option><option>Virement</option></select>
+        <div class="fg"><label class="fl">Compte encaissement</label>
+          ${selectComptes('pa-mode', premierCompteId())}
         </div>
         <div class="fg"><label class="fl">Statut</label>
           <select class="fs" id="pa-statut"><option value="Payé">✅ Payé</option><option value="Non payé">⏳ À percevoir</option></select>
@@ -1347,7 +1334,7 @@ function rVente(){
           <td class="tdm" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${noms}">${noms}</td>
           <td style="font-weight:600">${F(v.mt)}</td>
           <td>${v.client||'—'}</td>
-          <td><span class="badge bb">${v.mode||'—'}</span></td>
+          <td><span class="badge bb">${v.cid ? nomCompte(v.cid) : (v.mode||'—')}</span></td>
           <td>${sb(v.statut)}</td>
           <td><div class="td-actions">
             ${v.statut==='Non payé'?`<button class="btn-icon btn-sm" onclick="payerVente(${v.id})" title="Marquer payé">✓</button><button class="btn-icon btn-sm" onclick="gererAcompte(${v.id})" title="Acompte">💰</button>`:''}
@@ -1402,7 +1389,8 @@ function viderPanier(){window.panier=[];rVente();}
 function validerPanier(){
   if(!window.panier||window.panier.length===0)return toast('⚠️ Panier vide');
   const client=document.getElementById('pa-client')?.value||'';
-  const mode=document.getElementById('pa-mode')?.value||'Espèces';
+  const cid=document.getElementById('pa-mode')?.value||premierCompteId();
+  const mode=nomCompte(cid);
   const statut=document.getElementById('pa-statut')?.value||'Payé';
   const sousTotal=window.panier.reduce((s,l)=>s+l.mt,0);
   const remiseMt=window.remise.type==='%'?Math.round(sousTotal*window.remise.val/100):Math.min(window.remise.val||0,sousTotal);
@@ -1429,15 +1417,32 @@ function validerPanier(){
   });
   window.panier=[];
   window.remise={type:'%',val:0};
-  // Créditer le compte selon le mode
-  crediterCompte(mode,mt);
+  if(statut==='Payé') crediterCompte(cid, mt);
   saveData();toast(`✅ Vente de ${F(mt)} enregistrée !`);rVente();
   // Proposer impression avec montant reçu
   setTimeout(()=>{if(confirm('Imprimer le reçu ?'))demanderMontantRecu(vid);},300);
 }
 function payerVente(id){
   const v=S.ventes.find(v=>v.id==id);if(!v)return;
-  v.statut='Payé';saveData();toast('✅ Vente marquée payée');rVente();
+  modal(`<div class="mft">✅ Encaisser la vente</div>
+    <div class="total-preview" style="margin-bottom:14px">
+      <div class="total-preview-row"><span>Client</span><span>${v.client||'—'}</span></div>
+      <div class="total-preview-final"><span>Montant à encaisser</span><span>${F(v.mt)}</span></div>
+    </div>
+    <div class="fg"><label class="fl">Compte encaissement</label>${selectComptes('pv-cid', premierCompteId())}</div>
+    <div class="mff">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-success" onclick="confirmerPaiementVente(${id})">✓ Confirmer encaissement</button>
+    </div>`);
+}
+function confirmerPaiementVente(id){
+  const v=S.ventes.find(v=>v.id==id);if(!v)return;
+  const cid=document.getElementById('pv-cid').value;
+  v.statut='Payé';
+  v.cid=cid;
+  v.mode=nomCompte(cid);
+  crediterCompte(cid,v.mt);
+  saveData();closeModal();toast('✅ Vente encaissée sur "'+nomCompte(cid)+'"');rVente();
 }
 function delVente(id){
   if(!confirm('Supprimer cette vente ?'))return;
@@ -1470,7 +1475,7 @@ function rAchats(){
             <td>${ar?ar.nom:'?'}</td>
             <td>${N(ac.qte)}</td><td>${F(ac.pu)}</td>
             <td style="font-weight:600;color:var(--red)">${F(ac.mt)}</td>
-            <td><span class="badge bb">${ac.mode}</span></td>
+            <td><span class="badge bb">${ac.cid ? nomCompte(ac.cid) : (ac.mode||'—')}</span></td>
             <td style="color:var(--text3);font-size:12px">${ac.notes||'—'}</td>
             <td><div class="td-actions">
               ${ac.statut==='À payer'?`<button class="btn-icon btn-sm" onclick="configurerTranchesAchat(${ac.id})" title="Tranches paiement">💳</button>`:''}
@@ -1497,7 +1502,7 @@ function addAchat(){
     <div class="fr3">
       <div class="fg"><label class="fl">Quantité</label><input class="fi" type="number" id="mqte" value="1" min="1"></div>
       <div class="fg"><label class="fl">Prix unitaire (FCFA)</label><input class="fi" type="number" id="mpu" placeholder="0"></div>
-      <div class="fg"><label class="fl">Mode paiement</label><select class="fs" id="mmo"><option>Espèces</option><option>Flooz</option><option>Mixx</option><option>Virement</option><option>À crédit</option></select></div>
+      <div class="fg"><label class="fl">Compte débit</label>${selectComptes('mmo', premierCompteId())}</div>
     </div>
     <div class="fg"><label class="fl">Notes</label><input class="fi" id="mno" placeholder="Description..."></div>
     <div class="fg"><label class="fl">Statut paiement</label>
@@ -1525,16 +1530,18 @@ function saveAchat(){
   const aid=+document.getElementById('maid').value;
   const qte=+document.getElementById('mqte').value||1;
   const pu=+document.getElementById('mpu').value||0;
-  const mode=document.getElementById('mmo').value;
+  const cid=document.getElementById('mmo').value;
+  const mode=nomCompte(cid);
   const date=document.getElementById('mda').value;
   const notes=document.getElementById('mno').value;
   if(!fid||!aid)return toast('❌ Fournisseur et article requis');
   const art=ga(aid);
   if(art){
-    art.ea=(art.ea||0)+qte; // stock supplémentaire
+    art.ea=(art.ea||0)+qte;
   }
   const statut_achat=document.getElementById('mstatut')?.value||'Payé';
-  S.achats.push({id:genId(),date,fid,aid,qte,pu,mt:pu*qte,mode,notes,statut:statut_achat});
+  S.achats.push({id:genId(),date,fid,aid,qte,pu,mt:pu*qte,mode,cid,notes,statut:statut_achat});
+  if(statut_achat==='Payé') debiterCompte(cid, pu*qte);
   if(art) addHistorique('Entrée',art,qte,`Achat — ${notes||'réappro'}`);
   saveData();closeModal();toast(`✅ Achat enregistré — stock +${qte} pour ${art?art.nom:'article'}`);rAchats();
 }
@@ -1819,7 +1826,7 @@ function rDep(){
         <td style="font-family:'DM Mono',monospace;font-size:12px">${d.date}</td>
         <td class="tdm">${d.four}</td><td>${cb(d.cat)}</td>
         <td style="font-weight:600;color:var(--red)">${F(d.mt)}</td>
-        <td><span class="badge bb">${d.mode}</span></td>
+        <td><span class="badge bb">${d.cid ? nomCompte(d.cid) : (d.mode||'—')}</span></td>
         <td style="color:var(--text3);font-size:12px">${d.notes||'—'}</td>
         <td><div class="td-actions">
           <button class="btn-icon btn-sm" onclick="editDep(${d.id})">✏️</button>
@@ -1835,7 +1842,7 @@ function addDep(){
     <div class="fr"><div class="fg"><label class="fl">Fournisseur</label><input class="fi" id="mf" placeholder="Nom du fournisseur"></div>
     <div class="fg"><label class="fl">Date</label><input class="fi" type="date" id="mda" value="${D()}"></div></div>
     <div class="fr"><div class="fg"><label class="fl">Catégorie</label><select class="fs" id="mc"><option>Lingerie</option><option>Audio-Vidéo</option><option>Bureautique</option><option>Loyer</option><option>Transport</option><option>Électricité</option><option>Salaires</option><option>Frais généraux</option></select></div>
-    <div class="fg"><label class="fl">Mode paiement</label><select class="fs" id="mm"><option>Espèces</option><option>Flooz</option><option>Mixx</option><option>Virement</option></select></div></div>
+    <div class="fg"><label class="fl">Compte débit</label>${selectComptes('mm', premierCompteId())}</div></div>
     <div class="fg"><label class="fl">Montant (FCFA)</label><input class="fi" type="number" id="mt" placeholder="0"></div>
     <div class="fg"><label class="fl">Notes</label><input class="fi" id="mno" placeholder="Description..."></div>
     <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-danger" onclick="saveDep()">Enregistrer</button></div>`);
@@ -1843,7 +1850,10 @@ function addDep(){
 function saveDep(){
   const f=document.getElementById('mf').value,mt=+document.getElementById('mt').value;
   if(!f||!mt)return toast('❌ Fournisseur et montant requis');
-  S.depenses.push({id:genId(),date:document.getElementById('mda').value||D(),four:f,cat:document.getElementById('mc').value,mt,mode:document.getElementById('mm').value,notes:document.getElementById('mno').value});
+  const cid=document.getElementById('mm').value;
+  const mode=nomCompte(cid);
+  S.depenses.push({id:genId(),date:document.getElementById('mda').value||D(),four:f,cat:document.getElementById('mc').value,mt,mode,cid,notes:document.getElementById('mno').value});
+  debiterCompte(cid,mt);
   saveData();closeModal();toast('✅ Dépense enregistrée');rDep();
 }
 function editDep(id){
@@ -1852,16 +1862,22 @@ function editDep(id){
     <div class="fr"><div class="fg"><label class="fl">Fournisseur</label><input class="fi" id="mf" value="${d.four}"></div>
     <div class="fg"><label class="fl">Date</label><input class="fi" type="date" id="mda" value="${d.date}"></div></div>
     <div class="fr"><div class="fg"><label class="fl">Catégorie</label><select class="fs" id="mc"><option${d.cat==='Lingerie'?' selected':''}>Lingerie</option><option${d.cat==='Audio-Vidéo'?' selected':''}>Audio-Vidéo</option><option${d.cat==='Bureautique'?' selected':''}>Bureautique</option><option${d.cat==='Loyer'?' selected':''}>Loyer</option><option${d.cat==='Transport'?' selected':''}>Transport</option><option${d.cat==='Électricité'?' selected':''}>Électricité</option><option${d.cat==='Salaires'?' selected':''}>Salaires</option><option${d.cat==='Frais généraux'?' selected':''}>Frais généraux</option></select></div>
-    <div class="fg"><label class="fl">Mode</label><select class="fs" id="mm"><option${d.mode==='Espèces'?' selected':''}>Espèces</option><option${d.mode==='Flooz'?' selected':''}>Flooz</option><option${d.mode==='Mixx'?' selected':''}>Mixx</option><option${d.mode==='Virement'?' selected':''}>Virement</option></select></div></div>
+    <div class="fg"><label class="fl">Compte débit</label>${selectComptes('mm', d.cid||premierCompteId())}</div></div>
     <div class="fg"><label class="fl">Montant (FCFA)</label><input class="fi" type="number" id="mt" value="${d.mt}"></div>
     <div class="fg"><label class="fl">Notes</label><input class="fi" id="mno" value="${d.notes||''}"></div>
     <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-danger" onclick="updateDep(${id})">Enregistrer</button></div>`);
 }
 function updateDep(id){
   const d=S.depenses.find(d=>d.id==id);if(!d)return;
+  const oldMt=d.mt, oldCid=d.cid;
   d.four=document.getElementById('mf').value;d.date=document.getElementById('mda').value;
-  d.cat=document.getElementById('mc').value;d.mode=document.getElementById('mm').value;
+  d.cat=document.getElementById('mc').value;
+  d.cid=document.getElementById('mm').value;
+  d.mode=nomCompte(d.cid);
   d.mt=+document.getElementById('mt').value||0;d.notes=document.getElementById('mno').value;
+  // Ajuster les soldes : rembourser l'ancien, débiter le nouveau
+  if(oldCid) crediterCompte(oldCid, oldMt);
+  debiterCompte(d.cid, d.mt);
   saveData();closeModal();toast('✅ Dépense modifiée');rDep();
 }
 function delDep(id){
@@ -1986,7 +2002,7 @@ function printRecu(vid){
       <div class="recu-row"><span>Article</span><span>${a?a.nom:'Article supprimé'}</span></div>
       <div class="recu-row"><span>Quantité</span><span>${v.qte}</span></div>
       <div class="recu-row"><span>Prix unitaire</span><span>${F(v.pu)}</span></div>
-      <div class="recu-row"><span>Mode de paiement</span><span>${v.mode}</span></div>
+      <div class="recu-row"><span>Mode de paiement</span><span>${v.cid ? nomCompte(v.cid) : (v.mode||'—')}</span></div>
       <div class="recu-row"><span>Statut</span><span>${v.statut}</span></div>
     </div>
     <div class="recu-total">Total : ${F(v.mt)}</div>
@@ -2123,17 +2139,19 @@ function reglerDette(fid){
   modal(`<div class="mft">Régler dette — ${f.nom}</div>
     <div class="fg"><label class="fl">Montant à régler (FCFA) — Dette actuelle : ${F(f.dette)}</label>
       <input class="fi" type="number" id="mmt" value="${f.dette}" max="${f.dette}"></div>
-    <div class="fg"><label class="fl">Mode paiement</label>
-      <select class="fs" id="mmo"><option>Espèces</option><option>Flooz</option><option>Mixx</option><option>Virement</option></select></div>
+    <div class="fg"><label class="fl">Compte débit</label>
+      ${selectComptes('mmo', premierCompteId())}</div>
     <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button>
       <button class="btn btn-success" onclick="saveReglementDette(${fid})">Confirmer paiement</button></div>`);
 }
 function saveReglementDette(fid){
   const f=S.fournisseurs.find(f=>f.id==fid);if(!f)return;
   const mt=+document.getElementById('mmt').value||0;
-  const mode=document.getElementById('mmo').value;
+  const cid=document.getElementById('mmo').value;
+  const mode=nomCompte(cid);
   f.dette=Math.max(0,f.dette-mt);
-  S.depenses.push({id:genId(),date:D(),four:f.nom,cat:'Règlement dette',mt,mode,notes:`Règlement dette — ${f.nom}`});
+  S.depenses.push({id:genId(),date:D(),four:f.nom,cat:'Règlement dette',mt,mode,cid,notes:`Règlement dette — ${f.nom}`});
+  debiterCompte(cid,mt);
   saveData();closeModal();toast(`✅ Dette réglée : ${F(mt)}`);rTresorerie();
 }
 
@@ -2183,7 +2201,7 @@ function printFacture(vid){
     </table>
     <div class="facture-totaux">
       <div class="facture-tot-row"><span>Sous-total</span><span>${F(v.mt)}</span></div>
-      <div class="facture-tot-row"><span>Mode de paiement</span><span>${v.mode}</span></div>
+      <div class="facture-tot-row"><span>Mode de paiement</span><span>${v.cid ? nomCompte(v.cid) : (v.mode||'—')}</span></div>
       <div class="facture-tot-row facture-tot-final"><span>TOTAL</span><span>${F(v.mt)}</span></div>
     </div>
     <div class="facture-footer">Merci pour votre confiance · Christ Media · Lomé, Togo</div>`;
@@ -2267,7 +2285,7 @@ function rRevenus(){
           <td>${r.date}</td><td class="tdm">${r.desc}</td>
           <td><span class="badge bg">${r.cat}</span></td>
           <td style="font-weight:600;color:var(--green)">${F(r.mt)}</td>
-          <td><span class="badge bb">${r.mode}</span></td>
+          <td><span class="badge bb">${r.cid ? nomCompte(r.cid) : (r.mode||'—')}</span></td>
           <td><div class="td-actions">
             <button class="btn-icon btn-sm" onclick="delRevenu(${r.id})" style="color:var(--red)">✕</button>
           </div></td>
@@ -2298,7 +2316,7 @@ function addRevenu(){
     <div class="fg"><label class="fl">Description</label><input class="fi" id="mdesc" placeholder="Ex: Réparation imprimante client..."></div>
     <div class="fr">
       <div class="fg"><label class="fl">Montant (${(S.parametres&&S.parametres.devise)||'FCFA'})</label><input class="fi" type="number" id="mmt" placeholder="0"></div>
-      <div class="fg"><label class="fl">Mode</label><select class="fs" id="mmo"><option>Espèces</option><option>Flooz</option><option>Mixx</option><option>Virement</option></select></div>
+      <div class="fg"><label class="fl">Compte encaissement</label>${selectComptes('mmo', premierCompteId())}</div>
     </div>
     <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-success" onclick="saveRevenu()">Enregistrer</button></div>`);
 }
@@ -2306,8 +2324,10 @@ function saveRevenu(){
   const desc=document.getElementById('mdesc').value;
   const mt=+document.getElementById('mmt').value||0;
   if(!desc||!mt)return toast('❌ Description et montant requis');
+  const cid=document.getElementById('mmo').value;
   if(!S.revenus)S.revenus=[];
-  S.revenus.push({id:genId(),date:document.getElementById('mda').value,desc,cat:document.getElementById('mcat').value,mt,mode:document.getElementById('mmo').value});
+  S.revenus.push({id:genId(),date:document.getElementById('mda').value,desc,cat:document.getElementById('mcat').value,mt,mode:nomCompte(cid),cid});
+  crediterCompte(cid,mt);
   saveData();closeModal();toast('✅ Revenu enregistré');rRevenus();
 }
 function delRevenu(id){
@@ -2777,7 +2797,7 @@ function rTransactions(){
           <div class="txn-icon txn-${t._type==='vente'?'vente':t._type==='achat'?'achat':t._type==='depense'?'dep':t._type==='revenu'?'rev':'service'}">${t._icon}</div>
           <div style="flex:1">
             <div style="font-weight:500;font-size:13px">${desc}</div>
-            <div style="font-size:11px;color:var(--text3)">${t.date} · ${t.client||t.four||t.cat||''} · ${t.mode||''}</div>
+            <div style="font-size:11px;color:var(--text3)">${t.date} · ${t.client||t.four||t.cat||''} · ${t.cid ? nomCompte(t.cid) : (t.mode||'')}</div>
           </div>
           <div style="text-align:right">
             <div style="font-weight:700;font-size:14px">${montant}</div>
@@ -2824,7 +2844,7 @@ function rServices(){
         S.ventes_services.slice().reverse().map(v=>`<tr>
           <td>${v.date}</td><td class="tdm">${v.nom_service}</td>
           <td>${v.client||'—'}</td><td style="font-weight:600">${F(v.mt)}</td>
-          <td><span class="badge bb">${v.mode}</span></td><td>${sb(v.statut)}</td>
+          <td><span class="badge bb">${v.cid ? nomCompte(v.cid) : (v.mode||'—')}</span></td><td>${sb(v.statut)}</td>
           <td><div class="td-actions">
             ${v.statut==='Non payé'?`<button class="btn-icon btn-sm" onclick="payerService(${v.id})">✓</button>`:''}
             <button class="btn-icon btn-sm" onclick="delVenteService(${v.id})" style="color:var(--red)">✕</button>
@@ -2884,8 +2904,8 @@ function vendrService(id){
       <div class="fg"><label class="fl">Quantité</label><input class="fi" type="number" id="ms-qte" value="1" min="1" oninput="previewServiceTotal(${sv.prix})"></div>
       <div class="fg"><label class="fl">Prix unitaire</label><input class="fi" type="number" id="ms-pu" value="${sv.prix}" oninput="previewServiceTotal(0)"></div>
     </div>
-    <div class="fg"><label class="fl">Mode paiement</label>
-      <select class="fs" id="ms-mode"><option>Espèces</option><option>Flooz</option><option>Mixx</option><option>Virement</option></select>
+    <div class="fg"><label class="fl">Compte encaissement</label>
+      ${selectComptes('ms-mode', premierCompteId())}
     </div>
     <div class="fg"><label class="fl">Statut</label>
       <select class="fs" id="ms-statut"><option value="Payé">✅ Payé</option><option value="Non payé">⏳ À percevoir</option></select>
@@ -2906,19 +2926,42 @@ function saveVenteService(id){
   const sv=S.services.find(s=>s.id==id);if(!sv)return;
   const qte=+document.getElementById('ms-qte').value||1;
   const pu=+document.getElementById('ms-pu').value||sv.prix;
+  const cid=document.getElementById('ms-mode').value;
+  const statut=document.getElementById('ms-statut').value;
+  const mt=qte*pu;
   if(!S.ventes_services)S.ventes_services=[];
   S.ventes_services.push({
     id:genId(),date:D(),sid:id,nom_service:sv.nom,
     client:document.getElementById('ms-client').value,
-    qte,pu,mt:qte*pu,
-    mode:document.getElementById('ms-mode').value,
-    statut:document.getElementById('ms-statut').value
+    qte,pu,mt,
+    mode:nomCompte(cid),cid,
+    statut
   });
-  saveData();closeModal();toast(`✅ Prestation enregistrée : ${F(qte*pu)}`);rServices();
+  if(statut==='Payé') crediterCompte(cid, mt);
+  saveData();closeModal();toast(`✅ Prestation enregistrée : ${F(mt)}`);rServices();
 }
 function payerService(id){
   const v=S.ventes_services.find(v=>v.id==id);if(!v)return;
-  v.statut='Payé';saveData();toast('✅ Prestation marquée payée');rServices();
+  modal(`<div class="mft">✅ Encaisser la prestation</div>
+    <div class="total-preview" style="margin-bottom:14px">
+      <div class="total-preview-row"><span>Service</span><span>${v.nom_service||'—'}</span></div>
+      <div class="total-preview-row"><span>Client</span><span>${v.client||'—'}</span></div>
+      <div class="total-preview-final"><span>Montant à encaisser</span><span>${F(v.mt)}</span></div>
+    </div>
+    <div class="fg"><label class="fl">Compte encaissement</label>${selectComptes('ps-cid', premierCompteId())}</div>
+    <div class="mff">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-success" onclick="confirmerPaiementService(${id})">✓ Confirmer encaissement</button>
+    </div>`);
+}
+function confirmerPaiementService(id){
+  const v=S.ventes_services.find(v=>v.id==id);if(!v)return;
+  const cid=document.getElementById('ps-cid').value;
+  v.statut='Payé';
+  v.cid=cid;
+  v.mode=nomCompte(cid);
+  crediterCompte(cid,v.mt);
+  saveData();closeModal();toast('✅ Prestation encaissée sur "'+nomCompte(cid)+'"');rServices();
 }
 function delVenteService(id){
   if(!confirm('Supprimer cette prestation ?'))return;
@@ -3479,7 +3522,7 @@ function gererAcompte(vid){
     ${v.acomptes.length>0?`<div style="margin-bottom:12px">${v.acomptes.map(a=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border)"><span>${a.date} · ${a.mode}</span><span style="font-weight:600;color:var(--green)">+${F(a.mt)}</span></div>`).join('')}</div>`:''}
     ${restant>0?`
     <div class="fg"><label class="fl">Nouveau versement</label><input class="fi" type="number" id="ac-mt" placeholder="0" max="${restant}"></div>
-    <div class="fg"><label class="fl">Mode</label><select class="fs" id="ac-mode"><option>Espèces</option><option>Flooz</option><option>Mixx</option><option>Virement</option></select></div>
+    <div class="fg"><label class="fl">Compte encaissement</label>${selectComptes('ac-mode', premierCompteId())}</div>
     <div class="mff"><button class="btn" onclick="closeModal()">Fermer</button>
       <button class="btn btn-success" onclick="saveAcompte(${vid})">Enregistrer versement</button></div>`:'<div style="text-align:center;color:var(--green);font-weight:600;margin-top:8px">✅ Entièrement payé</div><div class="mff"><button class="btn" onclick="closeModal()">Fermer</button></div>'}
   `);
@@ -3487,10 +3530,12 @@ function gererAcompte(vid){
 function saveAcompte(vid){
   const v=S.ventes.find(v=>v.id==vid);if(!v)return;
   const mt=+document.getElementById('ac-mt').value||0;
-  const mode=document.getElementById('ac-mode').value;
+  const cid=document.getElementById('ac-mode').value;
+  const mode=nomCompte(cid);
   if(mt<=0)return toast('❌ Montant invalide');
   if(!v.acomptes)v.acomptes=[];
-  v.acomptes.push({date:D(),mt,mode});
+  v.acomptes.push({date:D(),mt,mode,cid});
+  crediterCompte(cid,mt);
   const totalPaye=v.acomptes.reduce((s,a)=>s+a.mt,0);
   if(totalPaye>=v.mt){v.statut='Payé';toast('✅ Vente entièrement payée !');}
   else toast(`✅ Versement enregistré : ${F(mt)} (Reste: ${F(v.mt-totalPaye)})`);
@@ -3880,12 +3925,12 @@ function printRecu(vid){
       <div class="recu-paiement">
         <div style="font-weight:700;margin-bottom:6px;color:#1d6b3c">💳 Paiement</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
-          <div><span style="color:#666">Mode:</span> <strong>${v.mode||'—'}</strong></div>
+          <div><span style="color:#666">Mode:</span> <strong>${v.cid ? nomCompte(v.cid) : (v.mode||'—')}</strong></div>
           <div><span style="color:#666">Statut:</span> <strong style="color:${v.statut==='Payé'?'#1d6b3c':'#8a5200'}">${v.statut}</strong></div>
           ${v.montant_recu?`<div><span style="color:#666">Reçu:</span> <strong>${F(v.montant_recu)}</strong></div>`:''}
           ${v.monnaie?`<div><span style="color:#666">Monnaie:</span> <strong>${F(v.monnaie)}</strong></div>`:''}
         </div>
-        ${v.acomptes&&v.acomptes.length>0?`<div style="margin-top:6px;font-size:11px;color:#666">Versements: ${v.acomptes.map(a=>`${F(a.mt)} (${a.mode})`).join(' · ')}</div>`:''}
+        ${v.acomptes&&v.acomptes.length>0?`<div style="margin-top:6px;font-size:11px;color:#666">Versements: ${v.acomptes.map(a=>`${F(a.mt)} (${a.cid?nomCompte(a.cid):a.mode})`).join(' · ')}</div>`:''}
       </div>
       <div class="recu-signature">
         <div><div class="recu-sign-line">Signature client</div></div>
@@ -3938,27 +3983,39 @@ function partagerWAAvecMontant(vid){
 }
 
 // ─── ALLOCATION COMPTE AUTO ───
-function getCompteParMode(mode){
-  if(!S.comptes||S.comptes.length===0)return null;
-  // Correspondance auto mode → compte
-  const map={'Espèces':['caisse','espèces','cash'],'Flooz':['flooz'],'Mixx':['mixx'],'Virement':['banque','virement','vbank']};
-  const keys=map[mode]||[];
-  const found=S.comptes.find(c=>keys.some(k=>c.nom.toLowerCase().includes(k)||c.type.toLowerCase().includes(k)));
-  return found||S.comptes[0];
+// ─── HELPERS COMPTES ───
+// Génère le <select> des comptes (valeur = compte.id)
+function selectComptes(idSelect, compteIdSelectionne){
+  if(!S.comptes||S.comptes.length===0) return `<select class="fs" id="${idSelect}"><option value="">— Aucun compte —</option></select>`;
+  const opts=S.comptes.map(c=>`<option value="${c.id}"${c.id==compteIdSelectionne?' selected':''}>${c.nom} · ${F(c.solde)}</option>`).join('');
+  return `<select class="fs" id="${idSelect}">${opts}</select>`;
 }
 
-function crediterCompte(mode, montant){
-  if(!S.parametres?.compte_auto)return;
-  const compte=getCompteParMode(mode);
+// Retourne le nom d'affichage d'un compte par son id
+function nomCompte(cid){
+  const c=S.comptes&&S.comptes.find(c=>c.id==cid);
+  return c?c.nom:cid||'—';
+}
+
+// Premier compte disponible
+function premierCompteId(){
+  return S.comptes&&S.comptes.length>0?S.comptes[0].id:null;
+}
+
+function crediterCompte(cid, montant){
+  if(!S.comptes)return;
+  const compte=S.comptes.find(c=>c.id==cid);
   if(compte){
     compte.solde=(compte.solde||0)+montant;
     toast(`💳 ${F(montant)} crédité sur "${compte.nom}"`);
   }
 }
-function debiterCompte(mode, montant){
-  if(!S.parametres?.compte_auto)return;
-  const compte=getCompteParMode(mode);
-  if(compte) compte.solde=(compte.solde||0)-montant;
+function debiterCompte(cid, montant){
+  if(!S.comptes)return;
+  const compte=S.comptes.find(c=>c.id==cid);
+  if(compte){
+    compte.solde=(compte.solde||0)-montant;
+  }
 }
 
 // ─── PAIEMENTS PAR TRANCHES (VENTES) ───
@@ -3986,7 +4043,7 @@ function configurerTranches(vid){
       <div style="font-size:12px;font-weight:600;margin-bottom:8px">Nouveau versement</div>
       <div class="fr">
         <div class="fg"><label class="fl">Montant</label><input class="fi" type="number" id="tr-mt" placeholder="${restant}" max="${restant}"></div>
-        <div class="fg"><label class="fl">Mode</label><select class="fs" id="tr-mode"><option>Espèces</option><option>Flooz</option><option>Mixx</option><option>Virement</option></select></div>
+        <div class="fg"><label class="fl">Compte encaissement</label>${selectComptes('tr-mode', premierCompteId())}</div>
       </div>
     </div>
     <div class="mff"><button class="btn" onclick="closeModal()">Fermer</button>
@@ -3999,11 +4056,12 @@ function configurerTranches(vid){
 function saveTranche(vid){
   const v=S.ventes.find(v=>v.id==vid);if(!v)return;
   const mt=+document.getElementById('tr-mt').value||0;
-  const mode=document.getElementById('tr-mode').value;
+  const cid=document.getElementById('tr-mode').value;
+  const mode=nomCompte(cid);
   if(mt<=0)return toast('❌ Montant invalide');
   if(!v.tranches)v.tranches=[];
-  v.tranches.push({date:D(),mt,mode});
-  crediterCompte(mode,mt);
+  v.tranches.push({date:D(),mt,mode,cid});
+  crediterCompte(cid,mt);
   const totalPaye=v.tranches.reduce((s,t)=>s+t.mt,0);
   if(totalPaye>=v.mt){v.statut='Payé';toast(`✅ Vente soldée ! Total payé: ${F(totalPaye)}`);}
   else toast(`✅ Versement: ${F(mt)} · Reste: ${F(v.mt-totalPaye)}`);
@@ -4027,7 +4085,7 @@ function configurerTranchesAchat(acid){
     <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
       <div class="fr">
         <div class="fg"><label class="fl">Montant</label><input class="fi" type="number" id="tra-mt" placeholder="${restant}" max="${restant}"></div>
-        <div class="fg"><label class="fl">Mode</label><select class="fs" id="tra-mode"><option>Espèces</option><option>Flooz</option><option>Mixx</option><option>Virement</option></select></div>
+        <div class="fg"><label class="fl">Compte débit</label>${selectComptes('tra-mode', premierCompteId())}</div>
       </div>
     </div>
     <div class="mff"><button class="btn" onclick="closeModal()">Fermer</button>
@@ -4040,11 +4098,12 @@ function configurerTranchesAchat(acid){
 function saveTrancheAchat(acid){
   const ac=S.achats.find(a=>a.id==acid);if(!ac)return;
   const mt=+document.getElementById('tra-mt').value||0;
-  const mode=document.getElementById('tra-mode').value;
+  const cid=document.getElementById('tra-mode').value;
+  const mode=nomCompte(cid);
   if(mt<=0)return toast('❌ Montant invalide');
   if(!ac.tranches)ac.tranches=[];
-  ac.tranches.push({date:D(),mt,mode});
-  debiterCompte(mode,mt);
+  ac.tranches.push({date:D(),mt,mode,cid});
+  debiterCompte(cid,mt);
   const totalPaye=ac.tranches.reduce((s,t)=>s+t.mt,0);
   if(totalPaye>=ac.mt){ac.statut='Payé';toast(`✅ Achat soldé !`);}
   else toast(`✅ Versement: ${F(mt)} · Reste: ${F(ac.mt-totalPaye)}`);
@@ -4093,16 +4152,23 @@ function installPWA(){
 }
 
 // ─── SERVICE WORKER (PWA offline) ───
-const swCode=`
-const CACHE='christmedia-v2';
-const FILES=['/'];
-self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES))));
-self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
-`;
 if('serviceWorker' in navigator){
-  const blob=new Blob([swCode],{type:'application/javascript'});
-  const url=URL.createObjectURL(blob);
-  navigator.serviceWorker.register(url).catch(()=>{});
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => {
+        console.log('SW enregistré:', reg.scope);
+        // Vérifier les mises à jour
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if(newWorker.state === 'installed' && navigator.serviceWorker.controller){
+              toast('🔄 Mise à jour disponible — rechargez l\'app');
+            }
+          });
+        });
+      })
+      .catch(err => console.warn('SW échec:', err));
+  });
 }
 
 // ─── INIT ───
@@ -4118,6 +4184,8 @@ if(!S.utilisateurs||S.utilisateurs.length===0){
 }
 majLogo();
 initV9();
+// Toujours afficher le login au démarrage
+afficherLoginScreen();
 </script>
 </body>
 </html>
