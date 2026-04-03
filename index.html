@@ -1042,6 +1042,11 @@ async function manualSync(){
 // ─── INIT FIREBASE ASYNC ───
 let S=loadData();
 
+// Afficher login immédiatement - Firebase se charge en arrière-plan
+if(!S.session||!S.session.uid){
+  afficherLoginScreen();
+}
+
 (async()=>{
   const ok=await initFirebase();
   if(ok){
@@ -4113,8 +4118,6 @@ if(!S.utilisateurs||S.utilisateurs.length===0){
 }
 majLogo();
 initV9();
-// Toujours afficher le login au démarrage
-afficherLoginScreen();
 </script>
 </body>
 </html>
