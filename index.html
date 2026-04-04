@@ -291,22 +291,56 @@ body.theme-teal{--navy:#1a5c5c;--navy2:#207070;--navy-bg:#e8f5f5;--navy-light:#a
 .tranche-progress{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:4px}
 .tranche-fill{height:100%;border-radius:3px;transition:width .4s}
 
-/* ─── REÇU AMÉLIORÉ ─── */
-.recu-modern{font-family:'DM Sans',sans-serif;max-width:320px;margin:0 auto;padding:20px}
-.recu-header-logo{text-align:center;padding-bottom:14px;border-bottom:2px solid #0f1f3d;margin-bottom:14px}
-.recu-company{font-size:20px;font-weight:800;color:#0f1f3d}
-.recu-details{font-size:11px;color:#666;margin-top:3px}
-.recu-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:14px;font-size:11px}
-.recu-info-label{color:#999}
-.recu-info-val{font-weight:600;color:#333}
-.recu-items{margin-bottom:12px}
-.recu-item-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;font-size:12px}
-.recu-totaux{background:#f8f8f8;border-radius:6px;padding:10px;margin-bottom:12px}
-.recu-tot-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:#555}
-.recu-tot-final{display:flex;justify-content:space-between;font-size:15px;font-weight:800;color:#0f1f3d;border-top:2px solid #0f1f3d;padding-top:8px;margin-top:6px}
-.recu-paiement{background:#e8f5ed;border-radius:6px;padding:10px;margin-bottom:12px;font-size:12px}
-.recu-signature{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px;padding-top:12px;border-top:1px dashed #ccc;font-size:11px;color:#999}
-.recu-sign-line{border-top:1px solid #ccc;margin-top:20px;padding-top:4px;text-align:center}
+/* ─── REÇU PREMIUM ─── */
+.recu-modern{font-family:'DM Sans',sans-serif;max-width:340px;margin:0 auto;background:#fff;overflow:hidden}
+.recu-header{background:linear-gradient(135deg,#0f1f3d 0%,#1a3260 100%);color:#fff;padding:22px 20px 18px;position:relative;overflow:hidden}
+.recu-header::before{content:'';position:absolute;top:-30px;right:-30px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.06)}
+.recu-header::after{content:'';position:absolute;bottom:-20px;left:-10px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.04)}
+.recu-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.recu-logo-icon{width:38px;height:38px;background:rgba(255,255,255,.15);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;border:1px solid rgba(255,255,255,.2)}
+.recu-company{font-size:17px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.recu-details{font-size:10px;color:rgba(255,255,255,.55);margin-top:1px}
+.recu-badge-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.12)}
+.recu-type{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.45)}
+.recu-num{font-size:12px;font-weight:700;color:#fff;font-family:'DM Mono',monospace;background:rgba(255,255,255,.12);padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.15)}
+.recu-zigzag{height:12px;background:radial-gradient(circle at 6px 0,#f5f4f0 6px,transparent 6px),radial-gradient(circle at 18px 0,#f5f4f0 6px,transparent 6px);background-size:24px 12px;background-color:#0f1f3d}
+.recu-body{padding:16px 20px 4px}
+.recu-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+.recu-meta-cell{background:#f7f6f3;border-radius:7px;padding:7px 10px;border:1px solid #eeecea}
+.recu-meta-label{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#aaa;margin-bottom:2px}
+.recu-meta-val{font-size:12px;font-weight:600;color:#1a1a2e}
+.recu-caissier{background:linear-gradient(135deg,#e8edf5,#eef2fa);border:1px solid #c5d0e8;border-radius:9px;padding:9px 12px;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.recu-caissier-icon{font-size:22px;flex-shrink:0}
+.recu-caissier-label{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#8090b0}
+.recu-caissier-name{font-size:13px;font-weight:700;color:#0f1f3d;margin-top:1px}
+.recu-caissier-role{font-size:10px;color:#8090b0;margin-top:1px}
+.recu-articles-titre{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #efefef;display:flex;justify-content:space-between}
+.recu-item-row{display:flex;align-items:center;padding:7px 0;border-bottom:1px dashed #f0eeec}
+.recu-item-row:last-child{border-bottom:none}
+.recu-item-nom{font-size:12px;color:#333;font-weight:500;flex:1}
+.recu-item-qte{font-size:11px;color:#aaa;margin:0 8px;white-space:nowrap;background:#f0eeec;padding:1px 7px;border-radius:10px}
+.recu-item-mt{font-size:12px;font-weight:700;color:#1a1a2e;white-space:nowrap}
+.recu-totaux{background:#f7f6f3;border-radius:8px;padding:10px 12px;margin:12px 0;border:1px solid #eeecea}
+.recu-tot-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;color:#888}
+.recu-tot-remise{color:#8a5200;font-weight:600}
+.recu-tot-final{display:flex;justify-content:space-between;align-items:center;padding:8px 0 0;margin-top:6px;border-top:2px solid #0f1f3d}
+.recu-tot-final-lbl{font-size:12px;font-weight:700;color:#0f1f3d;letter-spacing:.5px;text-transform:uppercase}
+.recu-tot-final-val{font-size:22px;font-weight:900;color:#0f1f3d;letter-spacing:-1px}
+.recu-paiement{border:1px solid #c8e6d0;background:linear-gradient(135deg,#f0faf4,#e8f5ed);border-radius:9px;padding:10px 12px;margin-bottom:12px}
+.recu-paiement-titre{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1d6b3c;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.recu-paiement-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px}
+.recu-paiement-item label{display:block;color:#7aa887;font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px}
+.recu-paiement-item strong{color:#1a1a2e;font-size:12px}
+.recu-statut-paye{display:inline-flex;align-items:center;gap:3px;background:#1d6b3c;color:#fff;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700}
+.recu-statut-attente{display:inline-flex;align-items:center;gap:3px;background:#8a5200;color:#fff;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700}
+.recu-versements{margin-top:7px;padding-top:7px;border-top:1px dashed #c8e6d0;font-size:10px;color:#5a8a6a}
+.recu-signature{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px;padding:14px 0 10px;border-top:1px dashed #ddd}
+.recu-sign-bloc{text-align:center}
+.recu-sign-label{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#ccc;margin-bottom:18px}
+.recu-sign-line{border-top:1px solid #ddd;padding-top:5px;font-size:9px;color:#bbb}
+.recu-footer-strip{background:#0f1f3d;padding:10px 20px;text-align:center;margin:4px 0 0}
+.recu-footer-strip p{font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.3px;margin:0}
+.recu-footer-strip strong{color:rgba(255,255,255,.75);font-size:11px}
 
 /* ─── THÈME PICKER ─── */
 .theme-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}
@@ -1311,7 +1345,7 @@ function rVente(){
 
       <div class="fr" style="margin-top:14px">
         <div class="fg"><label class="fl">Client</label><input class="fi" id="pa-client" placeholder="Nom du client"></div>
-        <div class="fg"><label class="fl">Compte encaissement</label>
+        <div class="fg"><label class="fl">Mode paiement</label>
           ${selectComptes('pa-mode', premierCompteId())}
         </div>
         <div class="fg"><label class="fl">Statut</label>
@@ -1334,7 +1368,7 @@ function rVente(){
           <td class="tdm" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${noms}">${noms}</td>
           <td style="font-weight:600">${F(v.mt)}</td>
           <td>${v.client||'—'}</td>
-          <td><span class="badge bb">${v.cid ? nomCompte(v.cid) : (v.mode||'—')}</span></td>
+          <td><span class="badge bb">${v.cid?nomCompte(v.cid):(v.mode||'—')}</span></td>
           <td>${sb(v.statut)}</td>
           <td><div class="td-actions">
             ${v.statut==='Non payé'?`<button class="btn-icon btn-sm" onclick="payerVente(${v.id})" title="Marquer payé">✓</button><button class="btn-icon btn-sm" onclick="gererAcompte(${v.id})" title="Acompte">💰</button>`:''}
@@ -1413,11 +1447,15 @@ function validerPanier(){
     lignes:window.panier.map(l=>({aid:l.aid,qte:l.qte,pu:l.pu,mt:l.mt,typePrix:l.typePrix})),
     aid:window.panier[0].aid,qte:window.panier[0].qte,pu:window.panier[0].pu,
     mt,sousTotal,remise:remiseMt,typePrix:window.typePrix||'detail',
-    statut,client,mode
+    statut,client,mode,cid,
+    caissier_uid:S.session?.uid||null,
+    caissier_nom:S.session?.nom||null,
+    caissier_emoji:S.session?.emoji||'👤',
+    caissier_role:S.session?.role||null
   });
   window.panier=[];
   window.remise={type:'%',val:0};
-  if(statut==='Payé') crediterCompte(cid, mt);
+  if(statut==='Payé') crediterCompte(cid,mt);
   saveData();toast(`✅ Vente de ${F(mt)} enregistrée !`);rVente();
   // Proposer impression avec montant reçu
   setTimeout(()=>{if(confirm('Imprimer le reçu ?'))demanderMontantRecu(vid);},300);
@@ -1432,15 +1470,13 @@ function payerVente(id){
     <div class="fg"><label class="fl">Compte encaissement</label>${selectComptes('pv-cid', premierCompteId())}</div>
     <div class="mff">
       <button class="btn" onclick="closeModal()">Annuler</button>
-      <button class="btn btn-success" onclick="confirmerPaiementVente(${id})">✓ Confirmer encaissement</button>
+      <button class="btn btn-success" onclick="confirmerPaiementVente(${id})">✓ Confirmer</button>
     </div>`);
 }
 function confirmerPaiementVente(id){
   const v=S.ventes.find(v=>v.id==id);if(!v)return;
   const cid=document.getElementById('pv-cid').value;
-  v.statut='Payé';
-  v.cid=cid;
-  v.mode=nomCompte(cid);
+  v.statut='Payé';v.cid=cid;v.mode=nomCompte(cid);
   crediterCompte(cid,v.mt);
   saveData();closeModal();toast('✅ Vente encaissée sur "'+nomCompte(cid)+'"');rVente();
 }
@@ -1475,7 +1511,7 @@ function rAchats(){
             <td>${ar?ar.nom:'?'}</td>
             <td>${N(ac.qte)}</td><td>${F(ac.pu)}</td>
             <td style="font-weight:600;color:var(--red)">${F(ac.mt)}</td>
-            <td><span class="badge bb">${ac.cid ? nomCompte(ac.cid) : (ac.mode||'—')}</span></td>
+            <td><span class="badge bb">${ac.cid?nomCompte(ac.cid):(ac.mode||'—')}</span></td>
             <td style="color:var(--text3);font-size:12px">${ac.notes||'—'}</td>
             <td><div class="td-actions">
               ${ac.statut==='À payer'?`<button class="btn-icon btn-sm" onclick="configurerTranchesAchat(${ac.id})" title="Tranches paiement">💳</button>`:''}
@@ -1536,12 +1572,10 @@ function saveAchat(){
   const notes=document.getElementById('mno').value;
   if(!fid||!aid)return toast('❌ Fournisseur et article requis');
   const art=ga(aid);
-  if(art){
-    art.ea=(art.ea||0)+qte;
-  }
+  if(art){art.ea=(art.ea||0)+qte;}
   const statut_achat=document.getElementById('mstatut')?.value||'Payé';
   S.achats.push({id:genId(),date,fid,aid,qte,pu,mt:pu*qte,mode,cid,notes,statut:statut_achat});
-  if(statut_achat==='Payé') debiterCompte(cid, pu*qte);
+  if(statut_achat==='Payé') debiterCompte(cid,pu*qte);
   if(art) addHistorique('Entrée',art,qte,`Achat — ${notes||'réappro'}`);
   saveData();closeModal();toast(`✅ Achat enregistré — stock +${qte} pour ${art?art.nom:'article'}`);rAchats();
 }
@@ -1826,7 +1860,7 @@ function rDep(){
         <td style="font-family:'DM Mono',monospace;font-size:12px">${d.date}</td>
         <td class="tdm">${d.four}</td><td>${cb(d.cat)}</td>
         <td style="font-weight:600;color:var(--red)">${F(d.mt)}</td>
-        <td><span class="badge bb">${d.cid ? nomCompte(d.cid) : (d.mode||'—')}</span></td>
+        <td><span class="badge bb">${d.cid?nomCompte(d.cid):(d.mode||'—')}</span></td>
         <td style="color:var(--text3);font-size:12px">${d.notes||'—'}</td>
         <td><div class="td-actions">
           <button class="btn-icon btn-sm" onclick="editDep(${d.id})">✏️</button>
@@ -1869,15 +1903,13 @@ function editDep(id){
 }
 function updateDep(id){
   const d=S.depenses.find(d=>d.id==id);if(!d)return;
-  const oldMt=d.mt, oldCid=d.cid;
+  const oldMt=d.mt,oldCid=d.cid;
   d.four=document.getElementById('mf').value;d.date=document.getElementById('mda').value;
   d.cat=document.getElementById('mc').value;
-  d.cid=document.getElementById('mm').value;
-  d.mode=nomCompte(d.cid);
+  d.cid=document.getElementById('mm').value;d.mode=nomCompte(d.cid);
   d.mt=+document.getElementById('mt').value||0;d.notes=document.getElementById('mno').value;
-  // Ajuster les soldes : rembourser l'ancien, débiter le nouveau
-  if(oldCid) crediterCompte(oldCid, oldMt);
-  debiterCompte(d.cid, d.mt);
+  if(oldCid) crediterCompte(oldCid,oldMt);
+  debiterCompte(d.cid,d.mt);
   saveData();closeModal();toast('✅ Dépense modifiée');rDep();
 }
 function delDep(id){
@@ -2002,7 +2034,7 @@ function printRecu(vid){
       <div class="recu-row"><span>Article</span><span>${a?a.nom:'Article supprimé'}</span></div>
       <div class="recu-row"><span>Quantité</span><span>${v.qte}</span></div>
       <div class="recu-row"><span>Prix unitaire</span><span>${F(v.pu)}</span></div>
-      <div class="recu-row"><span>Mode de paiement</span><span>${v.cid ? nomCompte(v.cid) : (v.mode||'—')}</span></div>
+      <div class="recu-row"><span>Mode de paiement</span><span>${v.mode}</span></div>
       <div class="recu-row"><span>Statut</span><span>${v.statut}</span></div>
     </div>
     <div class="recu-total">Total : ${F(v.mt)}</div>
@@ -2147,11 +2179,10 @@ function reglerDette(fid){
 function saveReglementDette(fid){
   const f=S.fournisseurs.find(f=>f.id==fid);if(!f)return;
   const mt=+document.getElementById('mmt').value||0;
-  const cid=document.getElementById('mmo').value;
-  const mode=nomCompte(cid);
+  const cid_d=document.getElementById('mmo').value;
   f.dette=Math.max(0,f.dette-mt);
-  S.depenses.push({id:genId(),date:D(),four:f.nom,cat:'Règlement dette',mt,mode,cid,notes:`Règlement dette — ${f.nom}`});
-  debiterCompte(cid,mt);
+  S.depenses.push({id:genId(),date:D(),four:f.nom,cat:'Règlement dette',mt,mode:nomCompte(cid_d),cid:cid_d,notes:`Règlement dette — ${f.nom}`});
+  debiterCompte(cid_d,mt);
   saveData();closeModal();toast(`✅ Dette réglée : ${F(mt)}`);rTresorerie();
 }
 
@@ -2201,7 +2232,7 @@ function printFacture(vid){
     </table>
     <div class="facture-totaux">
       <div class="facture-tot-row"><span>Sous-total</span><span>${F(v.mt)}</span></div>
-      <div class="facture-tot-row"><span>Mode de paiement</span><span>${v.cid ? nomCompte(v.cid) : (v.mode||'—')}</span></div>
+      <div class="facture-tot-row"><span>Mode de paiement</span><span>${v.cid?nomCompte(v.cid):(v.mode||'—')}</span></div>
       <div class="facture-tot-row facture-tot-final"><span>TOTAL</span><span>${F(v.mt)}</span></div>
     </div>
     <div class="facture-footer">Merci pour votre confiance · Christ Media · Lomé, Togo</div>`;
@@ -2285,7 +2316,7 @@ function rRevenus(){
           <td>${r.date}</td><td class="tdm">${r.desc}</td>
           <td><span class="badge bg">${r.cat}</span></td>
           <td style="font-weight:600;color:var(--green)">${F(r.mt)}</td>
-          <td><span class="badge bb">${r.cid ? nomCompte(r.cid) : (r.mode||'—')}</span></td>
+          <td><span class="badge bb">${r.cid?nomCompte(r.cid):(r.mode||'—')}</span></td>
           <td><div class="td-actions">
             <button class="btn-icon btn-sm" onclick="delRevenu(${r.id})" style="color:var(--red)">✕</button>
           </div></td>
@@ -2324,10 +2355,10 @@ function saveRevenu(){
   const desc=document.getElementById('mdesc').value;
   const mt=+document.getElementById('mmt').value||0;
   if(!desc||!mt)return toast('❌ Description et montant requis');
-  const cid=document.getElementById('mmo').value;
+  const cid_rev=document.getElementById('mmo').value;
   if(!S.revenus)S.revenus=[];
-  S.revenus.push({id:genId(),date:document.getElementById('mda').value,desc,cat:document.getElementById('mcat').value,mt,mode:nomCompte(cid),cid});
-  crediterCompte(cid,mt);
+  S.revenus.push({id:genId(),date:document.getElementById('mda').value,desc,cat:document.getElementById('mcat').value,mt,mode:nomCompte(cid_rev),cid:cid_rev});
+  crediterCompte(cid_rev,mt);
   saveData();closeModal();toast('✅ Revenu enregistré');rRevenus();
 }
 function delRevenu(id){
@@ -2797,7 +2828,7 @@ function rTransactions(){
           <div class="txn-icon txn-${t._type==='vente'?'vente':t._type==='achat'?'achat':t._type==='depense'?'dep':t._type==='revenu'?'rev':'service'}">${t._icon}</div>
           <div style="flex:1">
             <div style="font-weight:500;font-size:13px">${desc}</div>
-            <div style="font-size:11px;color:var(--text3)">${t.date} · ${t.client||t.four||t.cat||''} · ${t.cid ? nomCompte(t.cid) : (t.mode||'')}</div>
+            <div style="font-size:11px;color:var(--text3)">${t.date} · ${t.client||t.four||t.cat||''} · ${t.cid?nomCompte(t.cid):(t.mode||'')}</div>
           </div>
           <div style="text-align:right">
             <div style="font-weight:700;font-size:14px">${montant}</div>
@@ -2844,7 +2875,7 @@ function rServices(){
         S.ventes_services.slice().reverse().map(v=>`<tr>
           <td>${v.date}</td><td class="tdm">${v.nom_service}</td>
           <td>${v.client||'—'}</td><td style="font-weight:600">${F(v.mt)}</td>
-          <td><span class="badge bb">${v.cid ? nomCompte(v.cid) : (v.mode||'—')}</span></td><td>${sb(v.statut)}</td>
+          <td><span class="badge bb">${v.cid?nomCompte(v.cid):(v.mode||'—')}</span></td><td>${sb(v.statut)}</td>
           <td><div class="td-actions">
             ${v.statut==='Non payé'?`<button class="btn-icon btn-sm" onclick="payerService(${v.id})">✓</button>`:''}
             <button class="btn-icon btn-sm" onclick="delVenteService(${v.id})" style="color:var(--red)">✕</button>
@@ -2926,19 +2957,17 @@ function saveVenteService(id){
   const sv=S.services.find(s=>s.id==id);if(!sv)return;
   const qte=+document.getElementById('ms-qte').value||1;
   const pu=+document.getElementById('ms-pu').value||sv.prix;
-  const cid=document.getElementById('ms-mode').value;
-  const statut=document.getElementById('ms-statut').value;
-  const mt=qte*pu;
   if(!S.ventes_services)S.ventes_services=[];
+  const cid_svc=document.getElementById('ms-mode').value;
+  const statut_svc=document.getElementById('ms-statut').value;
+  const mt_svc=qte*pu;
   S.ventes_services.push({
     id:genId(),date:D(),sid:id,nom_service:sv.nom,
     client:document.getElementById('ms-client').value,
-    qte,pu,mt,
-    mode:nomCompte(cid),cid,
-    statut
+    qte,pu,mt:mt_svc,mode:nomCompte(cid_svc),cid:cid_svc,statut:statut_svc
   });
-  if(statut==='Payé') crediterCompte(cid, mt);
-  saveData();closeModal();toast(`✅ Prestation enregistrée : ${F(mt)}`);rServices();
+  if(statut_svc==='Payé') crediterCompte(cid_svc,mt_svc);
+  saveData();closeModal();toast(`✅ Prestation enregistrée : ${F(mt_svc)}`);rServices();
 }
 function payerService(id){
   const v=S.ventes_services.find(v=>v.id==id);if(!v)return;
@@ -2946,20 +2975,18 @@ function payerService(id){
     <div class="total-preview" style="margin-bottom:14px">
       <div class="total-preview-row"><span>Service</span><span>${v.nom_service||'—'}</span></div>
       <div class="total-preview-row"><span>Client</span><span>${v.client||'—'}</span></div>
-      <div class="total-preview-final"><span>Montant à encaisser</span><span>${F(v.mt)}</span></div>
+      <div class="total-preview-final"><span>Montant</span><span>${F(v.mt)}</span></div>
     </div>
     <div class="fg"><label class="fl">Compte encaissement</label>${selectComptes('ps-cid', premierCompteId())}</div>
     <div class="mff">
       <button class="btn" onclick="closeModal()">Annuler</button>
-      <button class="btn btn-success" onclick="confirmerPaiementService(${id})">✓ Confirmer encaissement</button>
+      <button class="btn btn-success" onclick="confirmerPaiementService(${id})">✓ Confirmer</button>
     </div>`);
 }
 function confirmerPaiementService(id){
   const v=S.ventes_services.find(v=>v.id==id);if(!v)return;
   const cid=document.getElementById('ps-cid').value;
-  v.statut='Payé';
-  v.cid=cid;
-  v.mode=nomCompte(cid);
+  v.statut='Payé';v.cid=cid;v.mode=nomCompte(cid);
   crediterCompte(cid,v.mt);
   saveData();closeModal();toast('✅ Prestation encaissée sur "'+nomCompte(cid)+'"');rServices();
 }
@@ -3530,12 +3557,13 @@ function gererAcompte(vid){
 function saveAcompte(vid){
   const v=S.ventes.find(v=>v.id==vid);if(!v)return;
   const mt=+document.getElementById('ac-mt').value||0;
-  const cid=document.getElementById('ac-mode').value;
-  const mode=nomCompte(cid);
+  const mode=document.getElementById('ac-mode').value;
   if(mt<=0)return toast('❌ Montant invalide');
   if(!v.acomptes)v.acomptes=[];
-  v.acomptes.push({date:D(),mt,mode,cid});
-  crediterCompte(cid,mt);
+  const cid_ac=document.getElementById('ac-mode').value;
+  const mode_ac=nomCompte(cid_ac);
+  v.acomptes.push({date:D(),mt,mode:mode_ac,cid:cid_ac});
+  crediterCompte(cid_ac,mt);
   const totalPaye=v.acomptes.reduce((s,a)=>s+a.mt,0);
   if(totalPaye>=v.mt){v.statut='Payé';toast('✅ Vente entièrement payée !');}
   else toast(`✅ Versement enregistré : ${F(mt)} (Reste: ${F(v.mt-totalPaye)})`);
@@ -3891,53 +3919,85 @@ function printRecu(vid){
   const lignes=v.lignes||[{aid:v.aid,qte:v.qte,pu:v.pu,mt:v.mt}];
   const {date,heure}=getDateHeure();
   const p=S.parametres||{};
-  const vendeur=S.session?.nom||p.nom||'Christ Media';
-  const recuDiv=document.getElementById('recu-print');
-  recuDiv.innerHTML=`
+  const caissierNom=v.caissier_nom||S.session?.nom||p.nom||'Christ Media';
+  const caissierEmoji=v.caissier_emoji||S.session?.emoji||'👤';
+  const caissierRole=v.caissier_role||S.session?.role||'admin';
+  const roleLabel=caissierRole==='admin'?'Administrateur':'Caissier';
+  const compteNom=v.cid?nomCompte(v.cid):(v.mode||'—');
+  document.getElementById('recu-print').innerHTML=`
     <div class="recu-modern">
-      <div class="recu-header-logo">
-        <div class="recu-company">${p.nom||'Christ Media'}</div>
-        <div class="recu-details">${p.ville||'Lomé, Togo'} · ${p.tel||''}</div>
-        <div class="recu-details">${p.email||''}</div>
-      </div>
-      <div style="text-align:center;margin-bottom:12px">
-        <div style="font-size:13px;font-weight:700;color:#0f1f3d">REÇU DE VENTE</div>
-        <div style="font-size:11px;color:#999">N° ${String(v.id).padStart(5,'0')}</div>
-      </div>
-      <div class="recu-info-grid">
-        <div><div class="recu-info-label">Date</div><div class="recu-info-val">${v.date}</div></div>
-        <div><div class="recu-info-label">Heure</div><div class="recu-info-val">${heure}</div></div>
-        <div><div class="recu-info-label">Client</div><div class="recu-info-val">${v.client||'Client anonyme'}</div></div>
-        <div><div class="recu-info-label">Vendeur</div><div class="recu-info-val">${vendeur}</div></div>
-      </div>
-      <div class="recu-items">
-        ${lignes.map(l=>{const a=ga(l.aid);return`
-          <div class="recu-item-row">
-            <span>${a?a.nom:'Article'} × ${l.qte}</span>
-            <span style="font-weight:600">${F(l.mt)}</span>
-          </div>`}).join('')}
-      </div>
-      <div class="recu-totaux">
-        <div class="recu-tot-row"><span>Sous-total</span><span>${F(v.sousTotal||v.mt)}</span></div>
-        ${v.remise&&v.remise>0?`<div class="recu-tot-row" style="color:#8a5200"><span>Remise</span><span>−${F(v.remise)}</span></div>`:''}
-        <div class="recu-tot-final"><span>TOTAL</span><span>${F(v.mt)}</span></div>
-      </div>
-      <div class="recu-paiement">
-        <div style="font-weight:700;margin-bottom:6px;color:#1d6b3c">💳 Paiement</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
-          <div><span style="color:#666">Mode:</span> <strong>${v.cid ? nomCompte(v.cid) : (v.mode||'—')}</strong></div>
-          <div><span style="color:#666">Statut:</span> <strong style="color:${v.statut==='Payé'?'#1d6b3c':'#8a5200'}">${v.statut}</strong></div>
-          ${v.montant_recu?`<div><span style="color:#666">Reçu:</span> <strong>${F(v.montant_recu)}</strong></div>`:''}
-          ${v.monnaie?`<div><span style="color:#666">Monnaie:</span> <strong>${F(v.monnaie)}</strong></div>`:''}
+      <div class="recu-header">
+        <div class="recu-logo-row">
+          <div class="recu-logo-icon">⛪</div>
+          <div>
+            <div class="recu-company">${p.nom||'Christ Media'}</div>
+            <div class="recu-details">${p.ville||'Lomé, Togo'}${p.tel?' · '+p.tel:''}</div>
+          </div>
         </div>
-        ${v.acomptes&&v.acomptes.length>0?`<div style="margin-top:6px;font-size:11px;color:#666">Versements: ${v.acomptes.map(a=>`${F(a.mt)} (${a.cid?nomCompte(a.cid):a.mode})`).join(' · ')}</div>`:''}
+        <div class="recu-badge-row">
+          <span class="recu-type">Reçu de vente</span>
+          <span class="recu-num">N° ${String(v.id).padStart(5,'0')}</span>
+        </div>
       </div>
-      <div class="recu-signature">
-        <div><div class="recu-sign-line">Signature client</div></div>
-        <div><div class="recu-sign-line">Cachet / Vendeur</div></div>
+      <div class="recu-zigzag"></div>
+      <div class="recu-body">
+        <div class="recu-meta">
+          <div class="recu-meta-cell"><div class="recu-meta-label">Date</div><div class="recu-meta-val">${v.date}</div></div>
+          <div class="recu-meta-cell"><div class="recu-meta-label">Heure</div><div class="recu-meta-val">${heure}</div></div>
+          <div class="recu-meta-cell" style="grid-column:span 2"><div class="recu-meta-label">Client</div><div class="recu-meta-val">${v.client||'Client anonyme'}</div></div>
+        </div>
+        <div class="recu-caissier">
+          <div class="recu-caissier-icon">${caissierEmoji}</div>
+          <div>
+            <div class="recu-caissier-label">Servi par</div>
+            <div class="recu-caissier-name">${caissierNom}</div>
+            <div class="recu-caissier-role">${roleLabel}</div>
+          </div>
+        </div>
+        <div class="recu-articles-titre"><span>Articles</span><span>${lignes.length} art.</span></div>
+        <div style="margin-bottom:4px">
+          ${lignes.map(l=>{const a=ga(l.aid);return`
+            <div class="recu-item-row">
+              <span class="recu-item-nom">${a?a.nom:'Article supprimé'}</span>
+              <span class="recu-item-qte">×${l.qte}</span>
+              <span class="recu-item-mt">${F(l.mt)}</span>
+            </div>`}).join('')}
+        </div>
+        <div class="recu-totaux">
+          ${v.sousTotal&&v.sousTotal!==v.mt?`<div class="recu-tot-row"><span>Sous-total</span><span>${F(v.sousTotal)}</span></div>`:''}
+          ${v.remise&&v.remise>0?`<div class="recu-tot-row recu-tot-remise"><span>🎯 Remise</span><span>−${F(v.remise)}</span></div>`:''}
+          <div class="recu-tot-final">
+            <span class="recu-tot-final-lbl">Total</span>
+            <span class="recu-tot-final-val">${F(v.mt)}</span>
+          </div>
+        </div>
+        <div class="recu-paiement">
+          <div class="recu-paiement-titre">💳 Paiement</div>
+          <div class="recu-paiement-grid">
+            <div class="recu-paiement-item"><label>Compte</label><strong>${compteNom}</strong></div>
+            <div class="recu-paiement-item"><label>Statut</label><strong><span class="${v.statut==='Payé'?'recu-statut-paye':'recu-statut-attente'}">${v.statut==='Payé'?'✓ Payé':'⏳ En attente'}</span></strong></div>
+            ${v.montant_recu&&v.montant_recu>0?`
+            <div class="recu-paiement-item"><label>Reçu du client</label><strong>${F(v.montant_recu)}</strong></div>
+            <div class="recu-paiement-item"><label>Monnaie rendue</label><strong>${F(v.monnaie||0)}</strong></div>`:''}
+          </div>
+          ${v.tranches&&v.tranches.length>0?`<div class="recu-versements">Tranches : ${v.tranches.map(t=>`${F(t.mt)} — ${t.cid?nomCompte(t.cid):t.mode}`).join(' · ')}</div>`:''}
+          ${v.acomptes&&v.acomptes.length>0?`<div class="recu-versements">Versements : ${v.acomptes.map(a=>`${F(a.mt)} — ${a.cid?nomCompte(a.cid):a.mode}`).join(' · ')}</div>`:''}
+          ${v.notes_recu?`<div style="margin-top:6px;font-size:10px;color:#5a8a6a;font-style:italic">${v.notes_recu}</div>`:''}
+        </div>
+        <div class="recu-signature">
+          <div class="recu-sign-bloc">
+            <div class="recu-sign-label">Signature client</div>
+            <div class="recu-sign-line">Lu et approuvé</div>
+          </div>
+          <div class="recu-sign-bloc">
+            <div class="recu-sign-label">Cachet vendeur</div>
+            <div class="recu-sign-line">${caissierNom}</div>
+          </div>
+        </div>
       </div>
-      <div style="text-align:center;font-size:10px;color:#aaa;margin-top:14px;border-top:1px dashed #ddd;padding-top:10px">
-        Merci pour votre confiance · ${p.nom||'Christ Media'} · ${p.ville||'Lomé, Togo'}
+      <div class="recu-footer-strip">
+        <p><strong>Merci pour votre confiance !</strong></p>
+        <p>${p.nom||'Christ Media'} · ${p.ville||'Lomé, Togo'}${p.email?' · '+p.email:''}</p>
       </div>
     </div>`;
   window.print();
@@ -3984,38 +4044,26 @@ function partagerWAAvecMontant(vid){
 
 // ─── ALLOCATION COMPTE AUTO ───
 // ─── HELPERS COMPTES ───
-// Génère le <select> des comptes (valeur = compte.id)
 function selectComptes(idSelect, compteIdSelectionne){
   if(!S.comptes||S.comptes.length===0) return `<select class="fs" id="${idSelect}"><option value="">— Aucun compte —</option></select>`;
   const opts=S.comptes.map(c=>`<option value="${c.id}"${c.id==compteIdSelectionne?' selected':''}>${c.nom} · ${F(c.solde)}</option>`).join('');
   return `<select class="fs" id="${idSelect}">${opts}</select>`;
 }
-
-// Retourne le nom d'affichage d'un compte par son id
 function nomCompte(cid){
   const c=S.comptes&&S.comptes.find(c=>c.id==cid);
   return c?c.nom:cid||'—';
 }
-
-// Premier compte disponible
 function premierCompteId(){
   return S.comptes&&S.comptes.length>0?S.comptes[0].id:null;
 }
-
 function crediterCompte(cid, montant){
   if(!S.comptes)return;
   const compte=S.comptes.find(c=>c.id==cid);
-  if(compte){
-    compte.solde=(compte.solde||0)+montant;
-    toast(`💳 ${F(montant)} crédité sur "${compte.nom}"`);
-  }
-}
+  if(compte){compte.solde=(compte.solde||0)+montant;toast(`💳 ${F(montant)} crédité sur "${compte.nom}"`);}}
 function debiterCompte(cid, montant){
   if(!S.comptes)return;
   const compte=S.comptes.find(c=>c.id==cid);
-  if(compte){
-    compte.solde=(compte.solde||0)-montant;
-  }
+  if(compte) compte.solde=(compte.solde||0)-montant;
 }
 
 // ─── PAIEMENTS PAR TRANCHES (VENTES) ───
