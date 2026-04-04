@@ -261,14 +261,17 @@ body.theme-purple{--navy:#4a1a8b;--navy2:#5a20a5;--navy-bg:#ede8f5;--navy-light:
 body.theme-orange{--navy:#8b4a1a;--navy2:#a55a20;--navy-bg:#f5ede8;--navy-light:#d5b8a8}
 body.theme-teal{--navy:#1a5c5c;--navy2:#207070;--navy-bg:#e8f5f5;--navy-light:#a8d5d5}
 
-/* ─── LOGIN MULTI-USER ─── */
-.user-select{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px}
-.user-avatar{background:var(--surface2);border:2px solid var(--border);border-radius:var(--r);padding:16px 12px;text-align:center;cursor:pointer;transition:all .15s}
-.user-avatar:hover{border-color:var(--navy);background:var(--navy-bg)}
-.user-avatar.active{border-color:var(--navy);background:var(--navy-bg)}
-.user-emoji{font-size:32px;margin-bottom:8px}
-.user-name{font-size:13px;font-weight:600;color:var(--text)}
-.user-role{font-size:10px;color:var(--text3);margin-top:2px}
+/* ─── LOGIN EMAIL ─── */
+.login-form-group{margin-bottom:14px}
+.login-input-wrap{position:relative}
+.login-input-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none}
+.login-fi{width:100%;padding:10px 12px 10px 38px;border:1.5px solid var(--border2);border-radius:var(--rs);background:var(--surface);color:var(--text);font-size:14px;outline:none;font-family:inherit;transition:border .15s}
+.login-fi:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(15,31,61,.08)}
+.login-btn{width:100%;padding:12px;background:var(--navy);color:#fff;border:none;border-radius:var(--rs);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s;margin-top:4px}
+.login-btn:hover{background:var(--navy2)}
+.login-divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--text3);font-size:11px}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+/* Garder pin-pad pour compatibilité */
 .pin-dots{display:flex;gap:10px;justify-content:center;margin:16px 0}
 .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border2);background:transparent;transition:background .15s}
 .pin-dot.filled{background:var(--navy);border-color:var(--navy)}
@@ -276,6 +279,12 @@ body.theme-teal{--navy:#1a5c5c;--navy2:#207070;--navy-bg:#e8f5f5;--navy-light:#a
 .pin-key{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:14px;font-size:18px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center}
 .pin-key:hover{background:var(--navy-bg);border-color:var(--navy)}
 .pin-key:active{transform:scale(.95)}
+.user-select{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px}
+.user-avatar{background:var(--surface2);border:2px solid var(--border);border-radius:var(--r);padding:16px 12px;text-align:center;cursor:pointer;transition:all .15s}
+.user-avatar:hover{border-color:var(--navy);background:var(--navy-bg)}
+.user-emoji{font-size:32px;margin-bottom:8px}
+.user-name{font-size:13px;font-weight:600;color:var(--text)}
+.user-role{font-size:10px;color:var(--text3);margin-top:2px}
 
 /* ─── WORKSPACE ─── */
 .ws-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .15s}
@@ -817,42 +826,35 @@ body.dark th{background:var(--surface3)}
   <button class="scanner-close" onclick="closeScanner()">✕ Fermer</button>
 </div>
 <div id="login-screen" class="login-screen">
-  <div class="login-box" style="width:400px">
-    <div id="login-step1">
-      <div class="login-logo" id="login-title">⛪ Christ Media</div>
-      <div class="login-sub" id="login-subtitle">Choisissez votre profil</div>
-      <div class="login-err" id="login-err"></div>
-      <div class="user-select" id="user-select-grid"></div>
+  <div class="login-box" style="width:380px">
+    <div style="text-align:center;margin-bottom:22px">
+      <div style="font-size:36px;margin-bottom:8px">⛪</div>
+      <div class="login-logo" id="login-title">Christ Media</div>
+      <div class="login-sub" id="login-subtitle">Connectez-vous à votre espace</div>
     </div>
-    <div id="login-step2" style="display:none">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-        <button onclick="retourStep1()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text3)">←</button>
-        <div>
-          <div class="login-logo" style="font-size:16px" id="pin-user-nom"></div>
-          <div class="login-sub">Entrez votre PIN</div>
-        </div>
+    <div class="login-err" id="login-err"></div>
+    <div class="login-form-group">
+      <div class="login-input-wrap">
+        <span class="login-input-icon">📧</span>
+        <input class="login-fi" type="email" id="login-email" placeholder="Adresse e-mail"
+          onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()">
       </div>
-      <div class="login-err" id="pin-err"></div>
-      <div class="pin-dots" id="pin-dots">
-        <div class="pin-dot" id="pd0"></div>
-        <div class="pin-dot" id="pd1"></div>
-        <div class="pin-dot" id="pd2"></div>
-        <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="login-form-group">
+      <div class="login-input-wrap">
+        <span class="login-input-icon">🔒</span>
+        <input class="login-fi" type="password" id="login-password" placeholder="Mot de passe"
+          onkeydown="if(event.key==='Enter')connexionEmail()">
       </div>
-      <div class="pin-pad">
-        <div class="pin-key" onclick="pinTap(1)">1</div>
-        <div class="pin-key" onclick="pinTap(2)">2</div>
-        <div class="pin-key" onclick="pinTap(3)">3</div>
-        <div class="pin-key" onclick="pinTap(4)">4</div>
-        <div class="pin-key" onclick="pinTap(5)">5</div>
-        <div class="pin-key" onclick="pinTap(6)">6</div>
-        <div class="pin-key" onclick="pinTap(7)">7</div>
-        <div class="pin-key" onclick="pinTap(8)">8</div>
-        <div class="pin-key" onclick="pinTap(9)">9</div>
-        <div class="pin-key" style="opacity:.3"></div>
-        <div class="pin-key" onclick="pinTap(0)">0</div>
-        <div class="pin-key" onclick="pinBack()">⌫</div>
-      </div>
+    </div>
+    <button class="login-btn" onclick="connexionEmail()">Se connecter →</button>
+    <div style="margin-top:14px;text-align:center;font-size:11px;color:var(--text3)">
+      Première connexion ? Utilisez l'email et le mot de passe fournis par l'administrateur.
+    </div>
+    <div style="margin-top:10px;text-align:center">
+      <button onclick="resetAdminLogin()" style="background:none;border:none;font-size:10px;color:var(--text3);cursor:pointer;text-decoration:underline">
+        🔑 Réinitialiser l'accès administrateur
+      </button>
     </div>
   </div>
 </div>
@@ -953,7 +955,7 @@ const defaultData={
     compte_auto:true
   },
   utilisateurs:[
-    {id:1,nom:'Christian',role:'admin',pin:'1234',emoji:'👑',actif:true}
+    {id:1,nom:'Christian',role:'admin',pin:'1234',email:'christmedia176@gmail.com',password:'admin1234',emoji:'👑',actif:true}
   ],
   session:{uid:null,role:null,nom:null}
 };
@@ -1596,7 +1598,7 @@ function rStock(){
   document.getElementById('content').innerHTML=`
     ${al.length?`<div class="alert alert-a">⚠️ ${al.length} article(s) à réapprovisionner : ${al.map(a=>a.nom).join(' · ')}</div>`:''}
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Photo</th><th>Code</th><th>Article</th><th>Catégorie</th><th>P. achat</th><th>P. vente</th><th>Marge</th><th>Stock dispo</th><th>Valeur</th><th></th></tr></thead>
+      <thead><tr><th>Photo</th><th>Code</th><th>Article</th><th>Catégorie</th><th class="th-pa">P. achat</th><th>P. vente</th><th class="th-marge">Marge</th><th>Stock dispo</th><th class="th-valeur">Valeur</th><th></th></tr></thead>
       <tbody>${filtered.map(a=>{
         const s=sa(a),p=Math.round(s/Math.max(a.si+(a.ea||0),1)*100),c=s<=a.seuil?'var(--red)':s<=a.seuil*2?'var(--amber)':'var(--green)';
         const mg=Math.round((a.pv-a.pa)/a.pv*100);
@@ -1605,10 +1607,10 @@ function rStock(){
           <td><div onclick="ouvrirPhotoModal(${a.id})" style="cursor:pointer" title="Cliquer pour ajouter/modifier photo">${imgEl}</div></td>
           <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text3)">${a.code}</td>
           <td class="tdm">${a.nom}</td><td>${cb(a.cat)}</td>
-          <td>${F(a.pa)}</td><td>${F(a.pv)}</td>
-          <td><span class="badge bg">${mg}%</span></td>
+          <td class="cell-pa">${F(a.pa)}</td><td>${F(a.pv)}</td>
+          <td class="cell-marge"><span class="badge bg">${mg}%</span></td>
           <td><span style="color:${c};font-weight:600">${N(s)}</span><div class="sbar"><div class="sfill" style="width:${p}%;background:${c}"></div></div></td>
-          <td>${F(s*a.pv)}</td>
+          <td class="cell-valeur">${F(s*a.pv)}</td>
           <td><div class="td-actions">
             <button class="btn-icon btn-sm" onclick="ouvrirPhotoModal(${a.id})" title="Photo">📸</button>
             <button class="btn-icon btn-sm" onclick="editArticle(${a.id})" title="Modifier">✏️</button>
@@ -1617,7 +1619,7 @@ function rStock(){
         </tr>`;}).join('')}
       </tbody></table></div>
     <div class="g3" style="margin-top:18px">
-      <div class="card"><div class="ct">Valeur totale stock</div><div class="mv">${F(S.stock.reduce((s,a)=>s+(sa(a)*a.pv),0))}</div></div>
+      <div class="card col-valeur"><div class="ct">Valeur totale stock</div><div class="mv">${F(S.stock.reduce((s,a)=>s+(sa(a)*a.pv),0))}</div></div>
       <div class="card"><div class="ct">Articles en rupture</div><div class="mv" style="color:var(--red)">${N(S.stock.filter(a=>sa(a)===0).length)}</div></div>
       <div class="card"><div class="ct">Stock bas</div><div class="mv" style="color:var(--amber)">${N(S.stock.filter(a=>sa(a)>0&&sa(a)<=a.seuil).length)}</div></div>
     </div>`;
@@ -1636,7 +1638,7 @@ function addArticle(preCode=''){
     </div>
     <div class="fg"><label class="fl">Nom de l'article</label><input class="fi" id="mn" placeholder="Description complète"></div>
     <div class="fr">
-      <div class="fg"><label class="fl">Prix achat (${(S.parametres&&S.parametres.devise)||'FCFA'})</label><input class="fi" type="number" id="mpa" placeholder="0" oninput="previewPrixArt()"></div>
+      ${isAdmin()?`<div class="fg"><label class="fl">Prix achat (${(S.parametres&&S.parametres.devise)||'FCFA'})</label><input class="fi" type="number" id="mpa" placeholder="0" oninput="previewPrixArt()"></div>`:''}
       <div class="fg"><label class="fl">Stock initial</label><input class="fi" type="number" id="msi" placeholder="0"></div>
       <div class="fg"><label class="fl">Seuil alerte</label><input class="fi" type="number" id="mse" placeholder="5"></div>
     </div>
@@ -1653,13 +1655,13 @@ function addArticle(preCode=''){
 }
 
 function previewPrixArt(){
-  const pa=+document.getElementById('mpa')?.value||0;
+  const pa=isAdmin()?(+document.getElementById('mpa')?.value||0):(S.stock.find(a=>a.id==editId)?.pa||0);
   const pv=+document.getElementById('mpv')?.value||0;
   const pv2=+document.getElementById('mpv2')?.value||0;
   const pv3=+document.getElementById('mpv3')?.value||0;
   const el=document.getElementById('prix-preview');
   if(!el)return;
-  if(!pa&&!pv){el.style.display='none';return;}
+  if(!isAdmin()||(!pa&&!pv)){el.style.display='none';return;}
   el.style.display='block';
   el.innerHTML=`
     <div class="total-preview-row"><span>Marge Détail</span><span style="color:${pv>pa?'var(--green)':'var(--red)'}">${pv>0?Math.round((pv-pa)/pv*100)+'%':'—'}</span></div>
@@ -1694,7 +1696,7 @@ function saveArt(){
   S.stock.push({
     id:genId(),code:c,nom:n,
     cat:document.getElementById('mcat').value,
-    pa:+document.getElementById('mpa').value||0,
+    pa:isAdmin()?(+document.getElementById('mpa')?.value||0):(S.stock.find(a=>a.id==editId)?.pa||0),
     pv,pv2,pv3,
     si:+document.getElementById('msi').value||0,
     qv:0,ea:0,
@@ -1708,7 +1710,7 @@ function editArticle(id){
     <div class="fr"><div class="fg"><label class="fl">Code</label><input class="fi" id="mc" value="${a.code}"></div>
     <div class="fg"><label class="fl">Catégorie</label><select class="fs" id="mcat"><option${a.cat==='Lingerie'?' selected':''}>Lingerie</option><option${a.cat==='Audio-Vidéo'?' selected':''}>Audio-Vidéo</option><option${a.cat==='Bureautique'?' selected':''}>Bureautique</option></select></div></div>
     <div class="fg"><label class="fl">Nom</label><input class="fi" id="mn" value="${a.nom}"></div>
-    <div class="fr"><div class="fg"><label class="fl">Prix achat (FCFA)</label><input class="fi" type="number" id="mpa" value="${a.pa}"></div>
+    ${isAdmin()?`<div class="fr"><div class="fg"><label class="fl">Prix achat (FCFA)</label><input class="fi" type="number" id="mpa" value="${a.pa}"></div>`:'<div class="fr"><div class="fg" style="visibility:hidden"></div>'}
     <div class="fg"><label class="fl">Prix vente (FCFA)</label><input class="fi" type="number" id="mpv" value="${a.pv}"></div></div>
     <div class="fr"><div class="fg"><label class="fl">Stock initial</label><input class="fi" type="number" id="msi" value="${a.si}"></div>
     <div class="fg"><label class="fl">Seuil alerte</label><input class="fi" type="number" id="mse" value="${a.seuil}"></div></div>
@@ -1720,7 +1722,7 @@ function updateArt(id){
   a.code=document.getElementById('mc').value;
   a.nom=document.getElementById('mn').value;
   a.cat=document.getElementById('mcat').value;
-  a.pa=+document.getElementById('mpa').value||0;
+  if(isAdmin()) a.pa=+document.getElementById('mpa')?.value||a.pa;
   a.pv=+document.getElementById('mpv').value||0;
   a.si=+document.getElementById('msi').value||0;
   a.seuil=+document.getElementById('mse').value||5;
@@ -3581,82 +3583,91 @@ function initV9(){
 let _pinBuffer='';
 let _loginUid=null;
 
+// ─── CONNEXION PAR EMAIL ───
 function afficherLoginScreen(){
   document.getElementById('login-screen').style.display='flex';
-  renderUserGrid();
+  // Pré-remplir email si session mémorisée
+  const lastEmail=localStorage.getItem('cm_last_email')||'';
+  const emailEl=document.getElementById('login-email');
+  if(emailEl&&lastEmail) emailEl.value=lastEmail;
+  setTimeout(()=>{
+    const el=document.getElementById(lastEmail?'login-password':'login-email');
+    if(el)el.focus();
+  },100);
 }
 
-function renderUserGrid(){
-  const grid=document.getElementById('user-select-grid');
-  if(!grid)return;
-  const users=S.utilisateurs||[{id:1,nom:'Admin',role:'admin',pin:'0000',emoji:'👑',actif:true}];
-  grid.innerHTML=users.filter(u=>u.actif!==false).map(u=>`
-    <div class="user-avatar" onclick="selectUser(${u.id})">
-      <div class="user-emoji">${u.emoji||'👤'}</div>
-      <div class="user-name">${u.nom}</div>
-      <div class="user-role">${u.role==='admin'?'Administrateur':'Employé'}</div>
-    </div>`).join('');
-}
-
-function selectUser(uid){
-  const u=(S.utilisateurs||[]).find(u=>u.id==uid);
-  if(!u)return;
-  _loginUid=uid;
-  _pinBuffer='';
-  document.getElementById('login-step1').style.display='none';
-  document.getElementById('login-step2').style.display='block';
-  document.getElementById('pin-user-nom').textContent=u.emoji+' '+u.nom;
-  majPinDots();
-}
-
-function retourStep1(){
-  _loginUid=null;_pinBuffer='';
-  document.getElementById('login-step1').style.display='block';
-  document.getElementById('login-step2').style.display='none';
-  document.getElementById('pin-err').textContent='';
-}
-
-function pinTap(n){
-  if(_pinBuffer.length>=4)return;
-  _pinBuffer+=String(n);
-  majPinDots();
-  if(_pinBuffer.length===4) setTimeout(verifierPin,150);
-}
-function pinBack(){
-  _pinBuffer=_pinBuffer.slice(0,-1);
-  majPinDots();
-}
-function majPinDots(){
-  for(let i=0;i<4;i++){
-    const el=document.getElementById('pd'+i);
-    if(el)el.classList.toggle('filled',i<_pinBuffer.length);
+function connexionEmail(){
+  const email=(document.getElementById('login-email')?.value||'').trim().toLowerCase();
+  const password=(document.getElementById('login-password')?.value||'');
+  const errEl=document.getElementById('login-err');
+  if(!email||!password){
+    if(errEl){errEl.textContent='Veuillez remplir tous les champs.';errEl.style.display='block';}
+    return;
   }
-}
-function verifierPin(){
-  const u=(S.utilisateurs||[]).find(u=>u.id==_loginUid);
-  if(!u)return;
-  if(_pinBuffer===String(u.pin)){
-    // Connexion réussie
-    S.session={uid:u.id,role:u.role,nom:u.nom,emoji:u.emoji||'👤'};
-    document.getElementById('login-screen').style.display='none';
-    majBadgeUtilisateur();
-    appliquerAcces(u.role);
-    toast(`✅ Bienvenue ${u.nom} !`);
-    if(!S.ventes)S.ventes=[];
-    if(!S.stock)S.stock=[];
-    if(!S.achats)S.achats=[];
-    if(!S.clients)S.clients=[];
-    if(!S.fournisseurs)S.fournisseurs=[];
-    if(!S.depenses)S.depenses=[];
-    rDash();
-  }else{
-    _pinBuffer='';
-    majPinDots();
-    const err=document.getElementById('pin-err');
-    if(err){err.textContent='PIN incorrect. Réessayez.';err.style.display='block';}
-    setTimeout(()=>{if(err)err.style.display='none';},2000);
+  const users=S.utilisateurs||[];
+  // Chercher par email + mot de passe (ou PIN pour compatibilité)
+  const u=users.find(u=>{
+    if(u.actif===false) return false;
+    const emailMatch=(u.email||'').toLowerCase()===email;
+    if(!emailMatch) return false;
+    const pw=String(u.password||'');
+    const pin=String(u.pin||'');
+    return pw===password||pin===password;
+  });
+  if(!u){
+    // Vérifier si l'email existe mais le mot de passe est faux
+    const emailExiste=users.some(u=>u.actif!==false&&(u.email||'').toLowerCase()===email);
+    const msg=emailExiste?"Mot de passe incorrect. Réessayez.":"Email inconnu. Contactez l'administrateur.";
+    if(errEl){errEl.textContent=msg;errEl.style.display='block';}
+    const pwEl=document.getElementById('login-password');
+    if(pwEl){pwEl.value='';pwEl.focus();}
+    setTimeout(()=>{if(errEl)errEl.style.display='none';},3500);
+    return;
   }
+  // Connexion réussie
+  localStorage.setItem('cm_last_email',email);
+  if(errEl)errEl.style.display='none';
+  S.session={uid:u.id,role:u.role,nom:u.nom,emoji:u.emoji||'👤',email:u.email};
+  document.getElementById('login-screen').style.display='none';
+  majBadgeUtilisateur();
+  appliquerAcces(u.role);
+  toast(`✅ Bienvenue ${u.nom} !`);
+  if(!S.ventes)S.ventes=[];
+  if(!S.stock)S.stock=[];
+  if(!S.achats)S.achats=[];
+  if(!S.clients)S.clients=[];
+  if(!S.fournisseurs)S.fournisseurs=[];
+  if(!S.depenses)S.depenses=[];
+  rDash();
 }
+
+// ─── RESET ACCÈS ADMIN (urgence) ───
+function resetAdminLogin(){
+  if(!confirm("Réinitialiser l'accès admin ?\n\nEmail: christmedia176@gmail.com\nMot de passe: admin1234\n\nConfirmer ?"))return;
+  if(!S.utilisateurs)S.utilisateurs=[];
+  const admin=S.utilisateurs.find(u=>u.role==='admin');
+  if(admin){
+    admin.email='christmedia176@gmail.com';
+    admin.password='admin1234';
+    admin.actif=true;
+  } else {
+    S.utilisateurs.unshift({id:1,nom:'Admin',role:'admin',pin:'1234',email:'christmedia176@gmail.com',password:'admin1234',emoji:'👑',actif:true});
+  }
+  saveLocal(S);
+  toast('✅ Accès réinitialisé');
+  document.getElementById('login-email').value='christmedia176@gmail.com';
+  document.getElementById('login-password').value='';
+  document.getElementById('login-password').focus();
+}
+
+// Conserver pour compatibilité (plus utilisé activement)
+function renderUserGrid(){}
+function selectUser(){}
+function retourStep1(){}
+function pinTap(){}
+function pinBack(){}
+function majPinDots(){}
+function verifierPin(){}
 
 function majBadgeUtilisateur(){
   const s=S.session;
@@ -3669,8 +3680,8 @@ function majBadgeUtilisateur(){
 }
 
 function appliquerAcces(role){
-  // Masquer certains menus pour les employés
   if(role!=='admin'){
+    // Masquer les menus réservés aux admins
     const menusCaches=['tresorerie','revenus','rapports','inventaire','comptes','devis','planning','parametres','workspace'];
     document.querySelectorAll('.ni[data-page]').forEach(el=>{
       const page=el.getAttribute('data-page');
@@ -3680,6 +3691,21 @@ function appliquerAcces(role){
       const onclick=el.getAttribute('onclick')||'';
       if(menusCaches.some(m=>onclick.includes("'"+m+"'"))){el.style.display='none';}
     });
+    // Injecter CSS pour masquer prix achat, marge, valeur stock
+    if(!document.getElementById('employe-css')){
+      const style=document.createElement('style');
+      style.id='employe-css';
+      style.textContent=`
+        .col-pa, .cell-pa, .th-pa { display:none !important; }
+        .col-marge, .cell-marge, .th-marge { display:none !important; }
+        .col-valeur, .cell-valeur, .th-valeur { display:none !important; }
+      `;
+      document.head.appendChild(style);
+    }
+  } else {
+    // Admin: s'assurer que tout est visible
+    const style=document.getElementById('employe-css');
+    if(style) style.remove();
   }
 }
 
@@ -3688,6 +3714,9 @@ function doLogout(){
   S.session={uid:null,role:null,nom:null};
   // Réafficher tous les menus
   document.querySelectorAll('.ni[data-page],.mn-dd-item').forEach(el=>el.style.display='');
+  // Supprimer CSS employé
+  const empCss=document.getElementById('employe-css');
+  if(empCss)empCss.remove();
   document.getElementById('current-user-badge').style.display='none';
   afficherLoginScreen();
 }
@@ -3768,8 +3797,9 @@ function rWorkspace(){
               <div style="display:flex;align-items:center;gap:10px">
                 <span style="font-size:24px">${u.emoji||'👤'}</span>
                 <div>
-                  <div style="font-weight:600">${u.nom}</div>
-                  <div style="font-size:11px;color:var(--text3)">${u.role==='admin'?'👑 Admin':'👤 Employé'} · PIN: ${'•'.repeat(String(u.pin).length)}</div>
+                  <div style="font-weight:600;font-size:13px">${u.nom}</div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:1px">${u.role==='admin'?'👑 Administrateur':'🧑 Vendeur / Caissier'}</div>
+                  <div style="font-size:11px;color:var(--navy);margin-top:2px">${u.email||'<em style=color:var(--red)>⚠ Email manquant</em>'}</div>
                 </div>
               </div>
               <div style="display:flex;gap:6px">
@@ -3840,24 +3870,31 @@ function appliquerMenusVisibles(){
 function addUserWS(){
   modal(`<div class="mft">➕ Nouvel utilisateur</div>
     <div class="fr">
-      <div class="fg"><label class="fl">Prénom / Nom</label><input class="fi" id="wu-nom" placeholder="Ex: Marie"></div>
+      <div class="fg"><label class="fl">Prénom / Nom</label><input class="fi" id="wu-nom" placeholder="Ex: Marie Kodjovi"></div>
       <div class="fg"><label class="fl">Rôle</label>
-        <select class="fs" id="wu-role"><option value="employe">Employé</option><option value="admin">Admin</option></select>
+        <select class="fs" id="wu-role"><option value="employe">Employé / Vendeur</option><option value="admin">Administrateur</option></select>
       </div>
     </div>
-    <div class="fr">
-      <div class="fg"><label class="fl">PIN (4 chiffres)</label><input class="fi" type="number" id="wu-pin" placeholder="1234" maxlength="4"></div>
-      <div class="fg"><label class="fl">Emoji avatar</label><input class="fi" id="wu-emoji" placeholder="👤" maxlength="2"></div>
-    </div>
+    <div class="fg"><label class="fl">Adresse e-mail (identifiant de connexion)</label>
+      <input class="fi" type="email" id="wu-email" placeholder="marie@christmedia.com"></div>
+    <div class="fg"><label class="fl">Mot de passe</label>
+      <input class="fi" type="password" id="wu-password" placeholder="Mot de passe sécurisé"></div>
+    <div class="fg"><label class="fl">Emoji avatar</label>
+      <input class="fi" id="wu-emoji" placeholder="👤" maxlength="2"></div>
     <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button>
       <button class="btn btn-primary" onclick="saveUserWS()">Créer</button></div>`);
 }
 function saveUserWS(){
-  const nom=document.getElementById('wu-nom').value;
-  const pin=document.getElementById('wu-pin').value;
-  if(!nom||!pin||pin.length!==4)return toast('❌ Nom et PIN 4 chiffres requis');
+  const nom=document.getElementById('wu-nom').value.trim();
+  const email=(document.getElementById('wu-email').value||'').trim().toLowerCase();
+  const password=document.getElementById('wu-password').value;
+  if(!nom)return toast('❌ Nom requis');
+  if(!email||!email.includes('@'))return toast('❌ Email valide requis');
+  if(!password||password.length<4)return toast('❌ Mot de passe (min 4 caractères) requis');
   if(!S.utilisateurs)S.utilisateurs=[];
-  S.utilisateurs.push({id:genId(),nom,role:document.getElementById('wu-role').value,pin,emoji:document.getElementById('wu-emoji').value||'👤',actif:true});
+  // Vérifier unicité email
+  if(S.utilisateurs.find(u=>u.email&&u.email.toLowerCase()===email))return toast('❌ Cet email est déjà utilisé');
+  S.utilisateurs.push({id:genId(),nom,role:document.getElementById('wu-role').value,email,password,pin:'0000',emoji:document.getElementById('wu-emoji').value||'👤',actif:true});
   saveData();closeModal();toast('✅ Utilisateur créé');rWorkspace();
 }
 function editUserWS(id){
@@ -3866,23 +3903,33 @@ function editUserWS(id){
     <div class="fr">
       <div class="fg"><label class="fl">Nom</label><input class="fi" id="wu-nom" value="${u.nom}"></div>
       <div class="fg"><label class="fl">Rôle</label>
-        <select class="fs" id="wu-role"><option value="employe"${u.role==='employe'?' selected':''}>Employé</option><option value="admin"${u.role==='admin'?' selected':''}>Admin</option></select>
+        <select class="fs" id="wu-role">
+          <option value="employe"${u.role==='employe'?' selected':''}>Employé / Vendeur</option>
+          <option value="admin"${u.role==='admin'?' selected':''}>Administrateur</option>
+        </select>
       </div>
     </div>
-    <div class="fr">
-      <div class="fg"><label class="fl">Nouveau PIN</label><input class="fi" type="number" id="wu-pin" placeholder="${'•'.repeat(String(u.pin).length)}" maxlength="4"></div>
-      <div class="fg"><label class="fl">Emoji</label><input class="fi" id="wu-emoji" value="${u.emoji||'👤'}" maxlength="2"></div>
-    </div>
+    <div class="fg"><label class="fl">Email</label>
+      <input class="fi" type="email" id="wu-email" value="${u.email||''}"></div>
+    <div class="fg"><label class="fl">Nouveau mot de passe <span style="color:var(--text3);font-weight:400">(laisser vide pour ne pas changer)</span></label>
+      <input class="fi" type="password" id="wu-password" placeholder="Nouveau mot de passe..."></div>
+    <div class="fg"><label class="fl">Emoji</label>
+      <input class="fi" id="wu-emoji" value="${u.emoji||'👤'}" maxlength="2"></div>
     <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button>
       <button class="btn btn-primary" onclick="updateUserWS(${id})">Enregistrer</button></div>`);
 }
 function updateUserWS(id){
   const u=(S.utilisateurs||[]).find(u=>u.id==id);if(!u)return;
-  u.nom=document.getElementById('wu-nom').value;
+  const email=(document.getElementById('wu-email').value||'').trim().toLowerCase();
+  if(!email||!email.includes('@'))return toast('❌ Email valide requis');
+  // Vérifier unicité (sauf pour l'utilisateur lui-même)
+  if(S.utilisateurs.find(x=>x.id!==id&&x.email&&x.email.toLowerCase()===email))return toast('❌ Cet email est déjà utilisé');
+  u.nom=document.getElementById('wu-nom').value.trim();
   u.role=document.getElementById('wu-role').value;
+  u.email=email;
   u.emoji=document.getElementById('wu-emoji').value||'👤';
-  const newPin=document.getElementById('wu-pin').value;
-  if(newPin&&newPin.length===4)u.pin=newPin;
+  const newPw=document.getElementById('wu-password').value;
+  if(newPw&&newPw.length>=4)u.password=newPw;
   saveData();closeModal();toast('✅ Utilisateur modifié');rWorkspace();
 }
 function delUserWS(id){
@@ -4043,6 +4090,8 @@ function partagerWAAvecMontant(vid){
 }
 
 // ─── ALLOCATION COMPTE AUTO ───
+// ─── HELPER RÔLE ───
+function isAdmin(){return S.session&&S.session.role==='admin';}
 // ─── HELPERS COMPTES ───
 function selectComptes(idSelect, compteIdSelectionne){
   if(!S.comptes||S.comptes.length===0) return `<select class="fs" id="${idSelect}"><option value="">— Aucun compte —</option></select>`;
@@ -4228,8 +4277,19 @@ if(!S.clients)S.clients=[];
 if(!S.fournisseurs)S.fournisseurs=[];
 if(!S.depenses)S.depenses=[];
 if(!S.utilisateurs||S.utilisateurs.length===0){
-  S.utilisateurs=[{id:1,nom:'Admin',role:'admin',pin:'1234',emoji:'👑',actif:true}];
+  S.utilisateurs=[{id:1,nom:'Admin',role:'admin',pin:'1234',email:'christmedia176@gmail.com',password:'admin1234',emoji:'👑',actif:true}];
 }
+// Migration: ajouter email+password aux anciens utilisateurs sans email
+S.utilisateurs=S.utilisateurs.map(u=>{
+  if(!u.email){
+    // Admin par défaut
+    if(u.role==='admin' && (u.id===1||u.nom==='Admin'||u.nom==='Christian')){
+      u.email=u.email||(S.parametres&&S.parametres.email)||'christmedia176@gmail.com';
+      u.password=u.password||u.pin||'admin1234';
+    }
+  }
+  return u;
+});
 majLogo();
 initV9();
 // Toujours afficher le login au démarrage
