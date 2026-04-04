@@ -13,6 +13,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
 <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
@@ -36,20 +37,24 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 
 /* ─── SIDEBAR ─── */
 .sidebar{width:230px;background:var(--navy);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
-.logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.08)}
-.logo-name{font-size:17px;font-weight:700;color:#fff;letter-spacing:-.3px}
-.logo-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;font-weight:400}
+.logo{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.logo-name{font-size:16px;font-weight:800;color:#fff;letter-spacing:-.4px;display:flex;align-items:center;gap:8px}
+.logo-name::before{content:'⛪';font-size:18px}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;font-weight:400;letter-spacing:.3px;text-transform:uppercase}
 .nav{flex:1;padding:12px 8px;overflow-y:auto}
-.nav-sec{font-size:10px;font-weight:600;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;padding:14px 10px 6px}
-.ni{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--rs);cursor:pointer;color:rgba(255,255,255,.55);font-size:13px;font-weight:500;margin-bottom:2px;transition:all .15s;user-select:none}
-.ni:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85)}
-.ni.active{background:rgba(255,255,255,.12);color:#fff}
-.ni svg{width:15px;height:15px;flex-shrink:0}
+.nav-sec{font-size:9.5px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:1.5px;padding:16px 12px 5px;display:flex;align-items:center;gap:8px}
+.nav-sec::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.06)}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.5);font-size:12.5px;font-weight:500;margin-bottom:1px;transition:all .18s;user-select:none;letter-spacing:.01em}
+.ni:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);transform:translateX(2px)}
+.ni.active{background:rgba(255,255,255,.14);color:#fff;box-shadow:inset 3px 0 0 rgba(255,255,255,.4)}
+.ni svg,.ni i[data-lucide]{width:16px;height:16px;flex-shrink:0;stroke-width:1.8}
+.ni i[data-lucide]{display:inline-flex;align-items:center}
+.ni i[data-lucide] svg{width:16px;height:16px}
 .sidebar-bottom{padding:12px 8px;border-top:1px solid rgba(255,255,255,.08)}
 
 /* ─── MAIN ─── */
 .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0}
-.topbar{padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10;box-shadow:var(--shadow)}
+.topbar{padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10;box-shadow:0 1px 0 var(--border),0 2px 8px rgba(0,0,0,.04)}
 .topbar-left{display:flex;align-items:center;gap:10px}
 .menu-btn{display:none;background:none;border:none;cursor:pointer;color:var(--text);padding:4px}
 .topbar-title{font-size:15px;font-weight:600}
@@ -59,17 +64,18 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .search-bar input::placeholder{color:var(--text3)}
 
 /* ─── BUTTONS ─── */
-.btn{padding:6px 14px;border-radius:var(--rs);border:1px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer;font-size:13px;font-weight:500;transition:all .15s;font-family:inherit;white-space:nowrap}
-.btn:hover{background:var(--surface2)}
-.btn-primary{background:var(--navy);color:#fff;border-color:var(--navy)}
-.btn-primary:hover{background:var(--navy2);border-color:var(--navy2)}
-.btn-success{background:var(--green);color:#fff;border-color:var(--green)}
-.btn-success:hover{opacity:.88}
-.btn-danger{background:var(--red);color:#fff;border-color:var(--red)}
-.btn-danger:hover{opacity:.88}
+.btn{padding:7px 16px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer;font-size:13px;font-weight:500;transition:all .18s;font-family:inherit;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--surface2);transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.btn:active{transform:translateY(0)}
+.btn-primary{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:0 2px 6px rgba(15,31,61,.2)}
+.btn-primary:hover{background:var(--navy2);border-color:var(--navy2);box-shadow:0 4px 12px rgba(15,31,61,.3)}
+.btn-success{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 2px 6px rgba(29,107,60,.2)}
+.btn-success:hover{opacity:.9;box-shadow:0 4px 12px rgba(29,107,60,.3)}
+.btn-danger{background:var(--red);color:#fff;border-color:var(--red);box-shadow:0 2px 6px rgba(176,40,40,.2)}
+.btn-danger:hover{opacity:.9;box-shadow:0 4px 12px rgba(176,40,40,.3)}
 .btn-sm{padding:4px 10px;font-size:12px}
-.btn-icon{padding:5px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface);cursor:pointer;color:var(--text2);transition:all .15s;display:inline-flex;align-items:center}
-.btn-icon:hover{background:var(--surface2);color:var(--text)}
+.btn-icon{padding:6px;border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer;color:var(--text2);transition:all .18s;display:inline-flex;align-items:center;justify-content:center}
+.btn-icon:hover{background:var(--surface2);color:var(--text);transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.08)}
 
 /* ─── PAGE ─── */
 .page{padding:24px;flex:1}
@@ -80,13 +86,14 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
 
 /* ─── CARDS ─── */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);transition:box-shadow .2s,transform .2s}
+.card:hover{box-shadow:0 2px 8px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.06);transform:translateY(-1px)}
 .ct{font-size:10px;color:var(--text3);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.6px}
 .mv{font-size:22px;font-weight:700;letter-spacing:-.5px}
 .ms{font-size:12px;color:var(--text3);margin-top:3px}
 
 /* ─── BADGES ─── */
-.badge{display:inline-flex;align-items:center;font-size:11px;padding:2px 9px;border-radius:20px;font-weight:600}
+.badge{display:inline-flex;align-items:center;font-size:10.5px;padding:3px 10px;border-radius:20px;font-weight:600;letter-spacing:.2px}
 .bg{background:var(--green-bg);color:var(--green)}
 .br{background:var(--red-bg);color:var(--red)}
 .ba{background:var(--amber-bg);color:var(--amber)}
@@ -102,10 +109,10 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 /* ─── TABLES ─── */
 .tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
 table{width:100%;border-collapse:collapse}
-th{text-align:left;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;padding:9px 12px;background:var(--surface2);border-bottom:1px solid var(--border)}
-td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);vertical-align:middle}
+th{text-align:left;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;padding:10px 14px;background:var(--surface2);border-bottom:1px solid var(--border)}
+td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);vertical-align:middle;transition:background .1s}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:var(--surface2)}
+tr:hover td{background:rgba(15,31,61,.03)}
 .tdm{color:var(--text);font-weight:500}
 .td-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s}
 tr:hover .td-actions{opacity:1}
@@ -113,10 +120,10 @@ tr:hover .td-actions{opacity:1}
 /* ─── FORMS ─── */
 .fg{margin-bottom:14px}
 .fl{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px}
-.fi{width:100%;padding:7px 12px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--surface);color:var(--text);font-size:13px;outline:none;font-family:inherit;transition:border .15s}
-.fi:focus{border-color:var(--navy)}
-.fs{width:100%;padding:7px 12px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--surface);color:var(--text);font-size:13px;outline:none;font-family:inherit;transition:border .15s;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239a9890'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
-.fs:focus{border-color:var(--navy)}
+.fi{width:100%;padding:8px 12px;border:1.5px solid var(--border2);border-radius:8px;background:var(--surface);color:var(--text);font-size:13px;outline:none;font-family:inherit;transition:all .18s}
+.fi:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(15,31,61,.08)}
+.fs{width:100%;padding:8px 12px;border:1.5px solid var(--border2);border-radius:8px;background:var(--surface);color:var(--text);font-size:13px;outline:none;font-family:inherit;transition:all .18s;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239a9890'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.fs:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(15,31,61,.08)}
 .fr{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
 
@@ -134,7 +141,7 @@ tr:hover .td-actions{opacity:1}
 
 /* ─── MODAL ─── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(2px)}
-.modal{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:24px;width:500px;max-width:95vw;max-height:90dvh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal{background:var(--surface);border-radius:16px;border:1px solid var(--border);padding:24px;width:500px;max-width:95vw;max-height:90dvh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.2),0 4px 16px rgba(0,0,0,.1)}
 .mft{font-size:16px;font-weight:600;margin-bottom:18px}
 .mff{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
 
@@ -177,7 +184,8 @@ tr:hover .td-actions{opacity:1}
 .hidden{display:none!important}
 
 /* ─── TOAST ─── */
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;font-weight:500;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:11px 20px;border-radius:24px;font-size:13px;font-weight:500;z-index:999;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
 .toast.show{opacity:1}
 
 /* ─── RESPONSIVE ─── */
@@ -371,7 +379,8 @@ body.dark th{background:var(--surface3)}
 .dark-toggle:hover{background:rgba(255,255,255,.1)}
 
 /* ─── KPI CARDS ─── */
-.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);position:relative;overflow:hidden;transition:all .2s}
+.kpi-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.1),0 8px 24px rgba(0,0,0,.06);transform:translateY(-2px)}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
 .kpi-green::before{background:var(--green)}
 .kpi-red::before{background:var(--red)}
@@ -587,92 +596,92 @@ body.dark th{background:var(--surface3)}
   <nav class="nav">
     <div class="nav-sec">Principal</div>
     <div class="ni active" data-page="dashboard" onclick="nav(this,'dashboard')">
-      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".7"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/></svg>
+      <i data-lucide="layout-dashboard"></i>
       Tableau de bord
     </div>
     <div class="ni" data-page="transactions" onclick="nav(this,'transactions')">
-      <svg viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h8M2 12h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <i data-lucide="arrow-left-right"></i>
       Transactions
     </div>
     <div class="ni" data-page="vente" onclick="nav(this,'vente')">
-      <svg viewBox="0 0 16 16" fill="none"><circle cx="6" cy="12" r="1.5" fill="currentColor"/><circle cx="11" cy="12" r="1.5" fill="currentColor"/><path d="M1 2h2l2.4 7h5.6l1.6-5H5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <i data-lucide="shopping-cart"></i>
       Ventes
     </div>
     <div class="ni" data-page="services" onclick="nav(this,'services')">
-      <svg viewBox="0 0 16 16" fill="none"><path d="M8 1l1.5 4.5H14l-3.5 2.5 1.5 4.5L8 10l-4 2.5 1.5-4.5L2 5.5h4.5z" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+      <i data-lucide="sparkles"></i>
       Services
     </div>
     <div class="nav-sec">Gestion</div>
     <div class="ni" data-page="achats" onclick="nav(this,'achats')">
-      <svg viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <i data-lucide="package-plus"></i>
       Achats
     </div>
     <div class="ni" data-page="stock" onclick="nav(this,'stock')">
-      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="6" width="14" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 6V4a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <i data-lucide="package"></i>
       Stock
     </div>
     <div class="ni" data-page="clients" onclick="nav(this,'clients')">
-      <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <i data-lucide="users"></i>
       Clients
     </div>
     <div class="ni" data-page="fournisseurs" onclick="nav(this,'fournisseurs')">
-      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="10" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M11 7h2.5l1.5 3v3h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="14" r="1.5" fill="currentColor"/><circle cx="11" cy="14" r="1.5" fill="currentColor"/></svg>
+      <i data-lucide="truck"></i>
       Fournisseurs
     </div>
     <div class="ni" data-page="depenses" onclick="nav(this,'depenses')">
-      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M1 7h14" stroke="currentColor" stroke-width="1.5"/><circle cx="5" cy="10.5" r="1" fill="currentColor" opacity=".6"/><circle cx="8" cy="10.5" r="1" fill="currentColor" opacity=".4"/></svg>
+      <i data-lucide="credit-card"></i>
       Dépenses
     </div>
     <div class="nav-sec">Analyse</div>
     <div class="ni" data-page="tresorerie" onclick="nav(this,'tresorerie')">
-      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="currentColor" opacity=".6"/><path d="M1 6h14" stroke="currentColor" stroke-width="1"/></svg>
+      <i data-lucide="landmark"></i>
       Trésorerie
     </div>
     <div class="ni" data-page="revenus" onclick="nav(this,'revenus')">
-      <svg viewBox="0 0 16 16" fill="none"><path d="M8 1v14M4 5h6a2 2 0 010 4H6a2 2 0 000 4h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <i data-lucide="trending-up"></i>
       Revenus & Charges
     </div>
     <div class="ni" data-page="rapports" onclick="nav(this,'rapports')">
-      <svg viewBox="0 0 16 16" fill="none"><path d="M2 14L5 9l3 3 3-5 3 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <i data-lucide="bar-chart-3"></i>
       Rapports
     </div>
     <div class="ni" data-page="inventaire" onclick="nav(this,'inventaire')">
-      <svg viewBox="0 0 16 16" fill="none"><path d="M2 2h12v2H2zM2 7h12v2H2zM2 12h12v2H2z" fill="currentColor" opacity=".6"/></svg>
+      <i data-lucide="clipboard-list"></i>
       Rapport inventaire
     </div>
     <div class="ni" data-page="historique" onclick="nav(this,'historique')">
-      <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <i data-lucide="history"></i>
       Historique stock
     </div>
     <div class="nav-sec">Système</div>
     <div class="ni" data-page="workspace" onclick="nav(this,'workspace')">
-      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" opacity=".4"/></svg>
+      <i data-lucide="layout-grid"></i>
       Espace de travail
     </div>
     <div class="ni" data-page="comptes" onclick="nav(this,'comptes')">
-      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M1 7h14" stroke="currentColor" stroke-width="1"/><circle cx="4" cy="10.5" r="1" fill="currentColor"/></svg>
+      <i data-lucide="wallet"></i>
       Comptes & Transferts
     </div>
     <div class="ni" data-page="devis" onclick="nav(this,'devis')">
-      <svg viewBox="0 0 16 16" fill="none"><path d="M3 1h10v14H3z" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h6M5 11h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      <i data-lucide="file-text"></i>
       Devis clients
     </div>
     <div class="ni" data-page="planning" onclick="nav(this,'planning')">
-      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M1 7h14M5 1v4M11 1v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <i data-lucide="calendar-check"></i>
       Planification
     </div>
     <div class="ni" data-page="parametres" onclick="nav(this,'parametres')">
-      <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <i data-lucide="settings"></i>
       Paramètres
     </div>
   </nav>
   <div class="sidebar-bottom">
     <div class="ni" onclick="exportData()">
-      <svg viewBox="0 0 16 16" fill="none"><path d="M8 1v9M5 7l3 3 3-3M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <i data-lucide="download"></i>
       Exporter données
     </div>
     <div class="ni" onclick="importData()">
-      <svg viewBox="0 0 16 16" fill="none"><path d="M8 11V2M5 5l3-3 3 3M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <i data-lucide="upload"></i>
       Importer données
     </div>
   </div>
@@ -1070,6 +1079,7 @@ async function manualSync(){
       setSyncStatus('online','Synchronisé ✓');
       toast('✅ Données synchronisées depuis le cloud');
       ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,parametres:rParametres})[currentPage]();
+      if(typeof lucide!=='undefined') lucide.createIcons();
     }else{
       await saveToFirebase(S);
       toast('✅ Données locales envoyées au cloud');
@@ -1096,6 +1106,7 @@ async function startFirebaseSync(){
         saveLocal(S);
         setSyncStatus('online','Synchronisé ✓');
         ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,parametres:rParametres})[currentPage]();
+      if(typeof lucide!=='undefined') lucide.createIcons();
       }else{
         await saveToFirebase(S);
       }
@@ -1163,6 +1174,7 @@ function nav(el,page){
   document.getElementById('topbar-actions').innerHTML=actionsMap[page]?actionsMap[page]():'';
   currentPage=page;
   ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,parametres:rParametres})[page]();
+  if(typeof lucide!=='undefined') lucide.createIcons();
   closeMobileSidebar();
   document.getElementById('mn-dropdown').classList.remove('open');
 }
@@ -3632,6 +3644,7 @@ function connexionEmail(){
   majBadgeUtilisateur();
   appliquerAcces(u.role);
   toast(`✅ Bienvenue ${u.nom} !`);
+  if(typeof lucide!=='undefined') setTimeout(()=>lucide.createIcons(),100);
   if(!S.ventes)S.ventes=[];
   if(!S.stock)S.stock=[];
   if(!S.achats)S.achats=[];
@@ -4292,6 +4305,8 @@ S.utilisateurs=S.utilisateurs.map(u=>{
 });
 majLogo();
 initV9();
+// Initialiser les icônes Lucide
+if(typeof lucide !== 'undefined') lucide.createIcons();
 // Toujours afficher le login au démarrage
 afficherLoginScreen();
 </script>
