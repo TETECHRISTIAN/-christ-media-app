@@ -32,85 +32,29 @@
   --r:12px;--rs:7px;--shadow:0 1px 3px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.05);
 }
 body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;overflow:hidden;height:100dvh}
-.app{display:flex;height:100dvh;overflow:hidden;background:var(--bg)}
+.app{display:flex;height:100dvh;overflow:hidden}
 
-/* ══════════════════════════════════════
-   SIDEBAR ICÔNES UNIQUEMENT
-══════════════════════════════════════ */
-.sidebar{width:64px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;transition:width .25s cubic-bezier(.4,0,.2,1);z-index:50}
-.sidebar:hover{width:220px}
-.sidebar:hover .ni-label{opacity:1;width:auto;overflow:visible}
-.sidebar:hover .logo-full{opacity:1;width:auto;overflow:visible;margin-left:10px}
-.sidebar:hover .logo-abbr{display:none}
-.sidebar:hover .nav-sec-line{opacity:1}
-.logo{padding:16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;min-height:64px;overflow:hidden;white-space:nowrap}
-.logo-icon{width:36px;height:36px;background:var(--navy);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.logo-abbr{font-size:12px;font-weight:800;color:var(--navy);display:block}
-.logo-full{font-size:14px;font-weight:800;color:var(--text);opacity:0;width:0;overflow:hidden;transition:opacity .2s;white-space:nowrap}
-.logo-sub-full{font-size:10px;color:var(--text3);margin-top:1px;white-space:nowrap}
-.nav{flex:1;padding:8px 8px;overflow-y:auto;overflow-x:hidden}
-.nav::-webkit-scrollbar{display:none}
-.nav-sec{display:flex;align-items:center;padding:12px 4px 4px;overflow:hidden}
-.nav-sec-line{height:1px;background:var(--border);flex:1;opacity:0;transition:opacity .2s}
-.ni{display:flex;align-items:center;gap:0;padding:10px 12px;border-radius:10px;cursor:pointer;color:var(--text3);margin-bottom:2px;transition:all .18s;user-select:none;white-space:nowrap;overflow:hidden;position:relative}
-.ni:hover{background:var(--navy-bg);color:var(--navy)}
-.ni.active{background:var(--navy-bg);color:var(--navy)}
-.ni.active::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:3px;background:var(--navy);border-radius:0 3px 3px 0}
-.ni-icon{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.ni-icon svg{width:18px;height:18px;stroke-width:1.8}
-.ni-label{font-size:13px;font-weight:500;opacity:0;width:0;overflow:hidden;transition:opacity .15s .05s;margin-left:0}
-.sidebar:hover .ni{gap:10px}
-.sidebar:hover .ni-label{opacity:1;width:auto;margin-left:0}
-.sidebar-bottom{padding:8px;border-top:1px solid var(--border);overflow:hidden}
-.sidebar-user{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;cursor:pointer;transition:all .18s;white-space:nowrap;overflow:hidden}
-.sidebar-user:hover{background:var(--surface2)}
-.sidebar-user-avatar{width:32px;height:32px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;color:#fff;font-weight:700}
-.sidebar-user-info{opacity:0;width:0;overflow:hidden;transition:opacity .15s}
-.sidebar:hover .sidebar-user-info{opacity:1;width:auto}
-.sidebar-user-nom{font-size:12px;font-weight:600;color:var(--text)}
-.sidebar-user-role{font-size:10px;color:var(--text3)}
+/* ─── SIDEBAR ─── */
+.sidebar{width:230px;background:var(--navy);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.08)}
+.logo-name{font-size:17px;font-weight:700;color:#fff;letter-spacing:-.3px}
+.logo-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;font-weight:400}
+.nav{flex:1;padding:12px 8px;overflow-y:auto}
+.nav-sec{font-size:10px;font-weight:600;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;padding:14px 10px 6px}
+.ni{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--rs);cursor:pointer;color:rgba(255,255,255,.55);font-size:13px;font-weight:500;margin-bottom:2px;transition:all .15s;user-select:none}
+.ni:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85)}
+.ni.active{background:rgba(255,255,255,.12);color:#fff}
+.ni svg{width:15px;height:15px;flex-shrink:0}
+.sidebar-bottom{padding:12px 8px;border-top:1px solid rgba(255,255,255,.08)}
 
-/* ══════════════════════════════════════
-   MAIN + TOPBAR
-══════════════════════════════════════ */
-.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0;background:var(--bg)}
-.topbar{padding:0 24px;height:60px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:40;box-shadow:0 1px 0 var(--border)}
-.topbar-left{display:flex;align-items:center;gap:12px}
-.menu-btn{display:none;background:none;border:none;cursor:pointer;color:var(--text);padding:4px;border-radius:8px}
-.menu-btn:hover{background:var(--surface2)}
-.topbar-title{font-size:15px;font-weight:700;color:var(--text)}
-.topbar-actions{display:flex;gap:6px;align-items:center}
-
-/* Tabs navigation horizontale */
-.topbar-tabs{display:flex;align-items:center;gap:2px;background:var(--surface2);border-radius:20px;padding:3px}
-.topbar-tab{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:16px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);transition:all .18s;border:none;background:none;font-family:inherit;white-space:nowrap}
-.topbar-tab:hover{color:var(--text);background:rgba(0,0,0,.04)}
-.topbar-tab.active{background:var(--surface);color:var(--navy);box-shadow:0 1px 4px rgba(0,0,0,.1)}
-.topbar-tab svg{width:14px;height:14px;stroke-width:2}
-
-/* Avatar utilisateur topbar */
-.topbar-user{display:flex;align-items:center;gap:8px;padding:4px 10px 4px 4px;border-radius:20px;cursor:pointer;border:1px solid var(--border);background:var(--surface);transition:all .18s}
-.topbar-user:hover{border-color:var(--navy-light);background:var(--navy-bg)}
-.topbar-user-avatar{width:30px;height:30px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:700}
-.topbar-user-nom{font-size:12px;font-weight:600;color:var(--text)}
-
-/* Menu dropdown user */
-.user-dropdown{position:absolute;top:56px;right:16px;width:240px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.12);z-index:200;overflow:hidden;display:none}
-.user-dropdown.open{display:block}
-.user-dd-header{padding:14px 16px;border-bottom:1px solid var(--border);background:var(--surface2)}
-.user-dd-nom{font-size:14px;font-weight:700;color:var(--text)}
-.user-dd-email{font-size:11px;color:var(--text3);margin-top:2px}
-.user-dd-role{font-size:10px;font-weight:600;color:var(--navy);background:var(--navy-bg);padding:2px 8px;border-radius:10px;display:inline-block;margin-top:4px}
-.user-dd-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:13px;color:var(--text2);transition:background .15s}
-.user-dd-item:hover{background:var(--surface2);color:var(--text)}
-.user-dd-item svg{width:15px;height:15px;color:var(--text3)}
-.user-dd-sep{height:1px;background:var(--border);margin:2px 0}
-.user-dd-danger{color:var(--red)}
-.user-dd-danger:hover{background:var(--red-bg)}
-
-/* Search bar */
-.search-bar{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;padding:6px 14px;min-width:200px;transition:all .18s}
-.search-bar:focus-within{border-color:var(--navy);background:var(--surface);min-width:240px}
+/* ─── MAIN ─── */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0}
+.topbar{padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10;box-shadow:var(--shadow)}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.menu-btn{display:none;background:none;border:none;cursor:pointer;color:var(--text);padding:4px}
+.topbar-title{font-size:15px;font-weight:600}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.search-bar{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:5px 10px;min-width:180px}
 .search-bar input{border:none;background:none;outline:none;font-size:13px;color:var(--text);font-family:inherit;width:100%}
 .search-bar input::placeholder{color:var(--text3)}
 
@@ -407,6 +351,48 @@ body.theme-teal{--navy:#1a5c5c;--navy2:#207070;--navy-bg:#e8f5f5;--navy-light:#a
 .recu-footer-strip p{font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.3px;margin:0}
 .recu-footer-strip strong{color:rgba(255,255,255,.75);font-size:11px}
 
+
+/* ─── VENTE RAPIDE — CARTES PRODUITS ─── */
+.vente-rapide-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+@media(max-width:768px){.vente-rapide-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}}
+.prod-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .18s;position:relative;user-select:none}
+.prod-card:hover{border-color:var(--navy);box-shadow:0 4px 16px rgba(15,31,61,.12);transform:translateY(-2px)}
+.prod-card:active{transform:scale(.97)}
+.prod-card.in-panier{border-color:var(--green);background:var(--green-bg)}
+.prod-card.rupture{opacity:.5;cursor:not-allowed;filter:grayscale(.5)}
+.prod-card-img{width:100%;height:100px;object-fit:cover;background:var(--surface2);display:block}
+.prod-card-img-placeholder{width:100%;height:100px;background:linear-gradient(135deg,var(--surface2),var(--surface3));display:flex;align-items:center;justify-content:center;font-size:32px}
+.prod-card-body{padding:8px 10px 10px}
+.prod-card-nom{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.prod-card-prix{font-size:13px;font-weight:800;color:var(--navy)}
+.prod-card-stock{position:absolute;top:7px;left:7px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;backdrop-filter:blur(4px)}
+.prod-card-stock.low{background:rgba(176,40,40,.8)}
+.prod-card-badge-panier{position:absolute;top:7px;right:7px;background:var(--green);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.prod-card-actions{display:flex;gap:6px;margin-top:8px}
+.prod-card-btn{flex:1;padding:5px 0;font-size:11px;font-weight:600;border:none;border-radius:6px;cursor:pointer;font-family:inherit;transition:all .15s}
+.prod-card-btn-vendre{background:var(--navy);color:#fff}
+.prod-card-btn-vendre:hover{background:var(--navy2)}
+.prod-card-btn-plus{width:28px;flex:none;background:var(--amber-bg);color:var(--amber);border:1.5px solid var(--amber-light);border-radius:6px;cursor:pointer;font-size:16px;font-weight:700;font-family:inherit;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.prod-card-btn-plus:hover{background:var(--amber);color:#fff}
+/* Barre de recherche produits */
+.vente-search-bar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1.5px solid var(--border2);border-radius:10px;padding:8px 14px;margin-bottom:14px}
+.vente-search-bar input{border:none;background:none;outline:none;font-size:14px;color:var(--text);font-family:inherit;flex:1}
+.vente-search-bar input::placeholder{color:var(--text3)}
+/* Filtres catégorie */
+.cat-filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.cat-filter-btn{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border2);background:var(--surface);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;color:var(--text2)}
+.cat-filter-btn:hover{border-color:var(--navy);color:var(--navy)}
+.cat-filter-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+/* Panier flottant compact */
+.panier-compact{background:var(--navy);border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.panier-compact-info{color:rgba(255,255,255,.7);font-size:13px}
+.panier-compact-total{font-size:22px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.panier-compact-btn{padding:8px 20px;background:#fff;color:var(--navy);border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:6px}
+.panier-compact-btn:hover{background:rgba(255,255,255,.9)}
+/* Lignes panier */
+.panier-ligne-v2{display:grid;grid-template-columns:1fr 80px 90px 80px 28px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.panier-ligne-v2:last-child{border-bottom:none}
+
 /* ─── THÈME PICKER ─── */
 .theme-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}
 .theme-swatch{width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:3px solid transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;font-size:16px}
@@ -614,7 +600,7 @@ body.dark th{background:var(--surface3)}
 .hist-qty{font-weight:600;font-size:13px}
 
 /* ─── SYNC STATUS ─── */
-.sync-bar{padding:4px 8px;display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text3)}
+.sync-bar{padding:6px 10px;display:flex;align-items:center;gap:8px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.5)}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s}
 .sync-dot.online{background:#4caf50}
 .sync-dot.syncing{background:var(--amber-light);animation:pulse .8s infinite alternate}
@@ -629,209 +615,142 @@ body.dark th{background:var(--surface3)}
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeMobileSidebar()"></div>
 
 <div class="app">
-<!-- ─── SIDEBAR ICÔNES ─── -->
+<!-- ─── SIDEBAR ─── -->
 <div class="sidebar" id="sidebar">
   <div class="logo">
-    <div class="logo-icon">⛪</div>
-    <div style="overflow:hidden">
-      <div class="logo-full" id="logo-name">Christ Media<div class="logo-sub-full" id="logo-sub">Lomé, Togo</div></div>
+    <div class="logo-name" id="logo-name">Christ Media</div>
+    <div class="logo-sub" id="logo-sub">Gestion · Lomé, Togo</div>
+    <div id="current-user-badge" style="display:none;margin-top:8px;background:rgba(255,255,255,.1);border-radius:6px;padding:5px 8px;display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.8)">
+      <span id="cu-emoji">👤</span>
+      <span id="cu-nom">—</span>
+      <span id="cu-role-badge" style="margin-left:auto;font-size:9px;padding:1px 6px;border-radius:8px;background:rgba(255,255,255,.15)">—</span>
     </div>
   </div>
   <nav class="nav">
-    <div class="nav-sec"><div class="nav-sec-line"></div></div>
-    <div class="ni active" data-page="dashboard" onclick="nav(this,'dashboard')" title="Tableau de bord">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
-      <span class="ni-label">Tableau de bord</span>
+    <div class="nav-sec">Principal</div>
+    <div class="ni active" data-page="dashboard" onclick="nav(this,'dashboard')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".7"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/></svg>
+      Tableau de bord
     </div>
-    <div class="ni" data-page="transactions" onclick="nav(this,'transactions')" title="Transactions">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke-width="2" stroke-linecap="round"/></svg></span>
-      <span class="ni-label">Transactions</span>
+    <div class="ni" data-page="transactions" onclick="nav(this,'transactions')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h8M2 12h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Transactions
     </div>
-    <div class="ni" data-page="vente" onclick="nav(this,'vente')" title="Ventes">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 10a4 4 0 01-8 0" stroke-width="1.8"/></svg></span>
-      <span class="ni-label">Ventes</span>
+    <div class="ni" data-page="vente" onclick="nav(this,'vente')">
+      <svg viewBox="0 0 16 16" fill="none"><circle cx="6" cy="12" r="1.5" fill="currentColor"/><circle cx="11" cy="12" r="1.5" fill="currentColor"/><path d="M1 2h2l2.4 7h5.6l1.6-5H5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Ventes
     </div>
-    <div class="ni" data-page="services" onclick="nav(this,'services')" title="Services">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2l3 6.3 6.9 1-5 4.9 1.2 6.8L12 18l-6.1 3 1.2-6.8-5-4.9 6.9-1L12 2z" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
-      <span class="ni-label">Services</span>
+    <div class="ni" data-page="services" onclick="nav(this,'services')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M8 1l1.5 4.5H14l-3.5 2.5 1.5 4.5L8 10l-4 2.5 1.5-4.5L2 5.5h4.5z" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+      Services
     </div>
-    <div class="nav-sec"><div class="nav-sec-line"></div></div>
-    <div class="ni" data-page="achats" onclick="nav(this,'achats')" title="Achats">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" stroke-width="1.8"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" stroke-width="1.8"/></svg></span>
-      <span class="ni-label">Achats</span>
+    <div class="nav-sec">Gestion</div>
+    <div class="ni" data-page="achats" onclick="nav(this,'achats')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Achats
     </div>
-    <div class="ni" data-page="stock" onclick="nav(this,'stock')" title="Stock">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" stroke-width="1.8"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" stroke-width="1.8"/></svg></span>
-      <span class="ni-label">Stock</span>
+    <div class="ni" data-page="stock" onclick="nav(this,'stock')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="6" width="14" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 6V4a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Stock
     </div>
-    <div class="ni" data-page="clients" onclick="nav(this,'clients')" title="Clients">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke-width="1.8" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-      <span class="ni-label">Clients</span>
+    <div class="ni" data-page="clients" onclick="nav(this,'clients')">
+      <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Clients
     </div>
-    <div class="ni" data-page="fournisseurs" onclick="nav(this,'fournisseurs')" title="Fournisseurs">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="3" width="15" height="13" rx="2" stroke-width="1.8"/><path d="M16 8h4l3 5v5h-7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="5.5" cy="18.5" r="2.5" stroke-width="1.8"/><circle cx="18.5" cy="18.5" r="2.5" stroke-width="1.8"/></svg></span>
-      <span class="ni-label">Fournisseurs</span>
+    <div class="ni" data-page="fournisseurs" onclick="nav(this,'fournisseurs')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="10" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M11 7h2.5l1.5 3v3h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="14" r="1.5" fill="currentColor"/><circle cx="11" cy="14" r="1.5" fill="currentColor"/></svg>
+      Fournisseurs
     </div>
-    <div class="ni" data-page="depenses" onclick="nav(this,'depenses')" title="Dépenses">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="4" width="22" height="16" rx="2" stroke-width="1.8"/><path d="M1 10h22" stroke-width="1.8"/><circle cx="6" cy="15" r="1" fill="currentColor"/><circle cx="10" cy="15" r="1" fill="currentColor"/></svg></span>
-      <span class="ni-label">Dépenses</span>
+    <div class="ni" data-page="depenses" onclick="nav(this,'depenses')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M1 7h14" stroke="currentColor" stroke-width="1.5"/><circle cx="5" cy="10.5" r="1" fill="currentColor" opacity=".6"/><circle cx="8" cy="10.5" r="1" fill="currentColor" opacity=".4"/></svg>
+      Dépenses
     </div>
-    <div class="nav-sec"><div class="nav-sec-line"></div></div>
-    <div class="ni" data-page="tresorerie" onclick="nav(this,'tresorerie')" title="Trésorerie">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="5" width="20" height="14" rx="2" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke-width="1.8"/></svg></span>
-      <span class="ni-label">Trésorerie</span>
+    <div class="nav-sec">Analyse</div>
+    <div class="ni" data-page="tresorerie" onclick="nav(this,'tresorerie')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="currentColor" opacity=".6"/><path d="M1 6h14" stroke="currentColor" stroke-width="1"/></svg>
+      Trésorerie
     </div>
-    <div class="ni" data-page="revenus" onclick="nav(this,'revenus')" title="Revenus">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M23 6l-9.5 9.5-5-5L1 18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      <span class="ni-label">Revenus</span>
+    <div class="ni" data-page="revenus" onclick="nav(this,'revenus')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M8 1v14M4 5h6a2 2 0 010 4H6a2 2 0 000 4h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Revenus & Charges
     </div>
-    <div class="ni" data-page="rapports" onclick="nav(this,'rapports')" title="Rapports">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 20V10M12 20V4M6 20v-6" stroke-width="2" stroke-linecap="round"/></svg></span>
-      <span class="ni-label">Rapports</span>
+    <div class="ni" data-page="rapports" onclick="nav(this,'rapports')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M2 14L5 9l3 3 3-5 3 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Rapports
     </div>
-    <div class="ni" data-page="inventaire" onclick="nav(this,'inventaire')" title="Inventaire">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-      <span class="ni-label">Inventaire</span>
+    <div class="ni" data-page="inventaire" onclick="nav(this,'inventaire')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M2 2h12v2H2zM2 7h12v2H2zM2 12h12v2H2z" fill="currentColor" opacity=".6"/></svg>
+      Rapport inventaire
     </div>
-    <div class="ni" data-page="historique" onclick="nav(this,'historique')" title="Historique">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><path d="M12 6v6l4 2" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-      <span class="ni-label">Historique</span>
+    <div class="ni" data-page="historique" onclick="nav(this,'historique')">
+      <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Historique stock
     </div>
-    <div class="nav-sec"><div class="nav-sec-line"></div></div>
-    <div class="ni" data-page="workspace" onclick="nav(this,'workspace')" title="Espace travail">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="1.8" opacity=".4"/></svg></span>
-      <span class="ni-label">Espace travail</span>
+    <div class="nav-sec">Système</div>
+    <div class="ni" data-page="workspace" onclick="nav(this,'workspace')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" opacity=".4"/></svg>
+      Espace de travail
     </div>
-    <div class="ni" data-page="comptes" onclick="nav(this,'comptes')" title="Comptes">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="5" width="20" height="14" rx="2" stroke-width="1.8"/><path d="M2 10h20" stroke-width="1.8"/><circle cx="6" cy="15" r="1" fill="currentColor"/></svg></span>
-      <span class="ni-label">Comptes</span>
+    <div class="ni" data-page="comptes" onclick="nav(this,'comptes')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M1 7h14" stroke="currentColor" stroke-width="1"/><circle cx="4" cy="10.5" r="1" fill="currentColor"/></svg>
+      Comptes & Transferts
     </div>
-    <div class="ni" data-page="devis" onclick="nav(this,'devis')" title="Devis">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke-width="1.8"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-      <span class="ni-label">Devis</span>
+    <div class="ni" data-page="devis" onclick="nav(this,'devis')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M3 1h10v14H3z" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h6M5 11h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Devis clients
     </div>
-    <div class="ni" data-page="planning" onclick="nav(this,'planning')" title="Planning">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><path d="M16 2v4M8 2v4M3 10h18" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-      <span class="ni-label">Planning</span>
+    <div class="ni" data-page="planning" onclick="nav(this,'planning')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M1 7h14M5 1v4M11 1v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Planification
     </div>
-    <div class="ni" data-page="parametres" onclick="nav(this,'parametres')" title="Paramètres">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke-width="1.8"/></svg></span>
-      <span class="ni-label">Paramètres</span>
+    <div class="ni" data-page="parametres" onclick="nav(this,'parametres')">
+      <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Paramètres
     </div>
   </nav>
   <div class="sidebar-bottom">
-    <div class="ni" onclick="exportData()" title="Exporter données">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      <span class="ni-label">Exporter</span>
+    <div class="ni" onclick="exportData()">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M8 1v9M5 7l3 3 3-3M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Exporter données
     </div>
-    <div class="ni" onclick="importData()" title="Importer données">
-      <span class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      <span class="ni-label">Importer</span>
+    <div class="ni" onclick="importData()">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M8 11V2M5 5l3-3 3 3M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Importer données
     </div>
-    <!-- User avatar sidebar -->
-    <div class="sidebar-user" onclick="toggleUserDropdown()" id="sidebar-user-btn">
-      <div class="sidebar-user-avatar" id="su-avatar">A</div>
-      <div class="sidebar-user-info">
-        <div class="sidebar-user-nom" id="su-nom">Admin</div>
-        <div class="sidebar-user-role" id="su-role">Administrateur</div>
-      </div>
-    </div>
-    <div style="padding:6px 8px;overflow:hidden">
-      <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text3)">
-        <div class="sync-dot" id="sync-dot" style="flex-shrink:0"></div>
-        <span id="sync-label" class="ni-label" style="font-size:10px">Sync...</span>
-        <button class="sync-btn" onclick="manualSync()" title="Sync" style="margin-left:auto;flex-shrink:0">↻</button>
-      </div>
-    </div>
+  </div>
+  <div class="sync-bar" id="sync-bar">
+    <div class="sync-dot" id="sync-dot"></div>
+    <span id="sync-label">Initialisation...</span>
+    <button class="sync-btn" onclick="manualSync()" title="Synchroniser maintenant">↻ Sync</button>
   </div>
 </div>
 
 <!-- ─── MAIN ─── -->
 <div class="main">
   <div id="install-banner" class="install-banner hidden">
-    📱 Installez l'app sur votre téléphone
+    📱 Installez l'app sur votre téléphone pour un accès hors-ligne
     <button class="btn btn-sm" id="install-btn" onclick="installPWA()">Installer</button>
     <button class="btn btn-sm" onclick="document.getElementById('install-banner').classList.add('hidden')">✕</button>
   </div>
   <div class="topbar">
     <div class="topbar-left">
       <button class="menu-btn" onclick="openMobileSidebar()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </button>
-      <!-- Tabs navigation rapide -->
-      <div class="topbar-tabs" id="topbar-tabs">
-        <button class="topbar-tab active" data-page="dashboard" onclick="nav(document.querySelector('[data-page=dashboard]'),'dashboard')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="2" opacity=".5"/></svg>
-          Dashboard
-        </button>
-        <button class="topbar-tab" data-page="vente" onclick="nav(document.querySelector('[data-page=vente]'),'vente')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18" stroke-width="2" stroke-linecap="round"/></svg>
-          Ventes
-        </button>
-        <button class="topbar-tab" data-page="clients" onclick="nav(document.querySelector('[data-page=clients]'),'clients')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke-width="2"/><circle cx="9" cy="7" r="4" stroke-width="2"/></svg>
-          Clients
-        </button>
-        <button class="topbar-tab" data-page="tresorerie" onclick="nav(document.querySelector('[data-page=tresorerie]'),'tresorerie')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="5" width="20" height="14" rx="2" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke-width="2"/></svg>
-          Trésorerie
-        </button>
-        <button class="topbar-tab" data-page="rapports" onclick="nav(document.querySelector('[data-page=rapports]'),'rapports')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 20V10M12 20V4M6 20v-6" stroke-width="2" stroke-linecap="round"/></svg>
-          Rapports
-        </button>
-      </div>
+      <div class="topbar-title" id="topbar-title">Tableau de bord</div>
     </div>
-    <div class="topbar-actions" id="topbar-actions" style="position:relative">
-      <!-- Recherche -->
-      <button class="btn-icon" onclick="ouvrirRecherche()" title="Recherche (Ctrl+K)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <div class="topbar-actions" id="topbar-actions">
+      <button class="btn-icon" onclick="ouvrirRecherche()" title="Recherche globale (Ctrl+K)" style="position:relative">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </button>
-      <!-- Notifs -->
       <button class="btn-icon" onclick="toggleNotifs()" title="Notifications" id="notif-btn" style="position:relative">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1a5 5 0 015 5v3l1.5 2.5H1.5L3 9V6a5 5 0 015-5zM6.5 13.5a1.5 1.5 0 003 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         <span class="notif-badge" id="notif-count" style="display:none">0</span>
       </button>
-      <!-- Dark mode -->
-      <button class="btn-icon" onclick="toggleDark()" title="Mode sombre" id="dark-btn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      <button class="btn-icon dark-toggle" onclick="toggleDark()" title="Mode sombre" id="dark-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="1" opacity=".3"/></svg>
       </button>
-      <!-- Bouton vente rapide -->
-      <button class="btn btn-success" onclick="nav(document.querySelector('[data-page=vente]'),'vente')" style="border-radius:20px;padding:6px 16px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-        Vente
-      </button>
-      <!-- Avatar user -->
-      <div class="topbar-user" onclick="toggleUserDropdown()" id="topbar-user-btn">
-        <div class="topbar-user-avatar" id="tu-avatar">A</div>
-        <span class="topbar-user-nom" id="tu-nom">Admin</span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
-      </div>
-      <!-- Dropdown user -->
-      <div class="user-dropdown" id="user-dropdown">
-        <div class="user-dd-header">
-          <div class="user-dd-nom" id="dd-nom">Admin</div>
-          <div class="user-dd-email" id="dd-email">—</div>
-          <span class="user-dd-role" id="dd-role">Administrateur</span>
-        </div>
-        <div class="user-dd-item" onclick="nav(document.querySelector('[data-page=parametres]'),'parametres');toggleUserDropdown()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-          Mon profil
-        </div>
-        <div class="user-dd-item" onclick="nav(document.querySelector('[data-page=parametres]'),'parametres');toggleUserDropdown()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-          Paramètres
-        </div>
-        <div class="user-dd-item" onclick="toggleDark()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-          Mode sombre
-        </div>
-        <div class="user-dd-sep"></div>
-        <div class="user-dd-item user-dd-danger" onclick="doLogout()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-          Déconnexion
-        </div>
-      </div>
+      <button class="btn btn-success" onclick="nav(document.querySelector('[data-page=vente]'),'vente')">+ Vente</button>
     </div>
   </div>
   <div class="page" id="content"></div>
@@ -1282,13 +1201,8 @@ let currentPage='dashboard';
 function nav(el,page){
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
   el&&el.classList.add('active');
-  // Sync onglets topbar
-  document.querySelectorAll('.topbar-tab').forEach(t=>t.classList.toggle('active',t.getAttribute('data-page')===page));
   document.getElementById('topbar-title').textContent=titles[page]||'';
   document.getElementById('topbar-actions').innerHTML=actionsMap[page]?actionsMap[page]():'';
-  // Fermer dropdown user si ouvert
-  const dd=document.getElementById('user-dropdown');
-  if(dd) dd.classList.remove('open');
   currentPage=page;
   ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,parametres:rParametres})[page]();
   closeMobileSidebar();
@@ -1404,92 +1318,93 @@ function setRemise(){
 function rVente(){
   if(!window.panier) window.panier=[];
   if(!window.remise) window.remise={type:'%',val:0};
-  const opts=S.stock.filter(a=>sa(a)>0).map(a=>`<option value="${a.id}">[${a.code}] ${a.nom} — ${F(a.pv)}</option>`).join('');
+  if(!window.venteSearch) window.venteSearch='';
+  if(!window.venteCat) window.venteCat='Tout';
+
   const sousTotal=window.panier.reduce((s,l)=>s+l.mt,0);
-  const remiseMt=window.remise.type==='%'?Math.round(sousTotal*window.remise.val/100):Math.min(window.remise.val,sousTotal);
+  const remiseMt=window.remise.type==='%'?Math.round(sousTotal*window.remise.val/100):Math.min(window.remise.val||0,sousTotal);
   const totalFinal=Math.max(0,sousTotal-remiseMt);
+  const totalQte=window.panier.reduce((s,l)=>s+l.qte,0);
+
+  // Filtrer les articles
+  const cats=['Tout',...new Set(S.stock.map(a=>a.cat))];
+  let stockFiltre=S.stock.filter(a=>sa(a)>=0);
+  if(window.venteCat&&window.venteCat!=='Tout') stockFiltre=stockFiltre.filter(a=>a.cat===window.venteCat);
+  if(window.venteSearch){
+    const q=window.venteSearch.toLowerCase();
+    stockFiltre=stockFiltre.filter(a=>a.nom.toLowerCase().includes(q)||a.code.toLowerCase().includes(q));
+  }
 
   document.getElementById('content').innerHTML=`
-    <div class="panier-wrap">
-      <div class="panier-title">
-        🛒 Nouveau panier
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <div class="prix-tabs">
-            <button class="prix-tab${window.typePrix==='detail'||!window.typePrix?' active':''}" onclick="setTypePrix('detail')">Détail</button>
-            <button class="prix-tab${window.typePrix==='semi'?' active':''}" onclick="setTypePrix('semi')">Semi-gros</button>
-            <button class="prix-tab${window.typePrix==='gros'?' active':''}" onclick="setTypePrix('gros')">Gros</button>
-          </div>
-          <button class="btn btn-sm" onclick="viderPanier()">🗑️ Vider</button>
-        </div>
+    <!-- PANIER COMPACT -->
+    ${window.panier.length>0?`
+    <div class="panier-compact">
+      <div>
+        <div class="panier-compact-info">🛒 ${totalQte} article${totalQte>1?'s':''} dans le panier</div>
+        <div class="panier-compact-total">${F(totalFinal)}</div>
       </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="panier-compact-btn" onclick="ouvrirPanierModal()">
+          📋 Voir & Valider
+        </button>
+        <button onclick="viderPanier()" style="padding:8px 12px;background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit">✕ Vider</button>
+      </div>
+    </div>`:`
+    <div style="background:var(--surface);border:1.5px dashed var(--border2);border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;color:var(--text3)">
+      <span style="font-size:24px">🛒</span>
+      <div><div style="font-weight:600;color:var(--text2)">Panier vide</div><div style="font-size:12px">Clique sur un article pour l'ajouter</div></div>
+    </div>`}
 
-      <div class="search-rapide">
-        <span class="search-rapide-label">🔍 Recherche</span>
-        <input type="text" id="sr-code" placeholder="Code ou nom article"
-          oninput="rechercheRapide(this.value,'vente')"
-          onkeydown="if(event.key==='Enter')ajouterParCode(document.getElementById('sr-code').value)">
-        <button class="btn btn-primary btn-sm" onclick="ajouterParCode(document.getElementById('sr-code').value)">+ Ajouter</button>
-        <button class="btn btn-sm" onclick="openScanner('vente')">📷</button>
-        <div id="sr-result" style="width:100%"></div>
-      </div>
-
-      <div class="fg"><label class="fl">Ou sélectionner dans la liste</label>
-        <div style="display:flex;gap:8px">
-          <select class="fs" id="pa-art" style="flex:1"><option value="">Sélectionner...</option>${opts}</select>
-          <button class="btn btn-primary" onclick="ajouterAuPanier()">+ Ajouter</button>
-        </div>
-      </div>
-      ${window.panier.length>0?`
-      <div class="panier-ligne-header">
-        <span>Article</span><span>Qté</span><span>Prix unit.</span><span>Total</span><span></span>
-      </div>
-      ${window.panier.map((l,i)=>`
-        <div class="panier-ligne">
-          <div style="font-size:12px;font-weight:500;color:var(--text)">${l.nom}
-            <span class="prix-tag prix-${l.typePrix||'detail'}" style="font-size:9px;margin-left:4px">${l.typePrix==='semi'?'Semi-gros':l.typePrix==='gros'?'Gros':'Détail'}</span>
-          </div>
-          <input class="fi" type="number" min="1" max="${l.dispo}" value="${l.qte}"
-            oninput="majLignePanier(${i},'qte',+this.value||1)" style="padding:5px 8px;font-size:12px">
-          <input class="fi" type="number" min="0" value="${l.pu}"
-            oninput="majLignePanier(${i},'pu',+this.value||0)" style="padding:5px 8px;font-size:12px">
-          <div style="font-weight:600;font-size:13px">${F(l.mt)}</div>
-          <button class="del-btn" onclick="retirerDuPanier(${i})">✕</button>
-        </div>`).join('')}
-
-      <div class="remise-row">
-        <span style="font-size:12px;font-weight:600;color:var(--amber);white-space:nowrap">🎯 Remise</span>
-        <select class="fs" id="remise-type" onchange="setRemise()" style="width:90px;padding:4px 8px;font-size:12px">
-          <option value="%"${window.remise.type==='%'?' selected':''}>%</option>
-          <option value="FCFA"${window.remise.type==='FCFA'?' selected':''}>Montant</option>
-        </select>
-        <input class="fi" type="number" id="remise-val" min="0" value="${window.remise.val}"
-          oninput="setRemise()" style="width:90px;padding:4px 8px;font-size:12px" placeholder="0">
-        ${remiseMt>0?`<span class="remise-badge">−${F(remiseMt)}</span>`:''}
-      </div>
-
-      <div class="total-preview">
-        <div class="total-preview-row"><span>Sous-total (${window.panier.length} article${window.panier.length>1?'s':''})</span><span>${F(sousTotal)}</span></div>
-        ${remiseMt>0?`<div class="total-preview-row" style="color:var(--amber)"><span>Remise ${window.remise.type==='%'?window.remise.val+'%':''}</span><span>−${F(remiseMt)}</span></div>`:''}
-        <div class="total-preview-final"><span>TOTAL À PAYER</span><span>${F(totalFinal)}</span></div>
-      </div>
-
-      <div class="fr" style="margin-top:14px">
-        <div class="fg"><label class="fl">Client</label><input class="fi" id="pa-client" placeholder="Nom du client"></div>
-        <div class="fg"><label class="fl">Mode paiement</label>
-          ${selectComptes('pa-mode', premierCompteId())}
-        </div>
-        <div class="fg"><label class="fl">Statut</label>
-          <select class="fs" id="pa-statut"><option value="Payé">✅ Payé</option><option value="Non payé">⏳ À percevoir</option></select>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
-        <button class="btn btn-success" onclick="validerPanier()">✓ Valider (${F(totalFinal)})</button>
-      </div>`:`<div class="panier-empty">🛒 Panier vide — ajoutez des articles ci-dessus</div>`}
+    <!-- BARRE RECHERCHE -->
+    <div class="vente-search-bar">
+      <span style="font-size:18px">🔍</span>
+      <input type="text" placeholder="Rechercher un article..." value="${window.venteSearch||''}"
+        oninput="window.venteSearch=this.value;rVente()"
+        onkeydown="if(event.key==='Escape'){window.venteSearch='';rVente()}">
+      ${window.venteSearch?`<button onclick="window.venteSearch='';rVente()" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--text3)">✕</button>`:''}
+      <button class="btn btn-sm" onclick="openScanner('vente')" title="Scanner">📷</button>
     </div>
 
-    <p class="st">Historique des ventes</p>
+    <!-- FILTRES CATÉGORIE -->
+    <div class="cat-filter-bar">
+      ${cats.map(cat=>`
+        <button class="cat-filter-btn${(window.venteCat||'Tout')===cat?' active':''}"
+          onclick="window.venteCat='${cat}';rVente()">${cat}</button>
+      `).join('')}
+    </div>
+
+    <!-- GRILLE PRODUITS -->
+    <div class="vente-rapide-grid">
+      ${stockFiltre.length===0?`<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text3)">Aucun article trouvé</div>`:''}
+      ${stockFiltre.map(a=>{
+        const dispo=sa(a);
+        const inPanier=window.panier.find(l=>l.aid===a.id);
+        const qteInPanier=inPanier?inPanier.qte:0;
+        const imgEl=a.photo
+          ?`<img class="prod-card-img" src="${a.photo}" onerror="this.outerHTML='<div class=\'prod-card-img-placeholder\'>📦</div>'">`
+          :`<div class="prod-card-img-placeholder">${a.cat==='Lingerie'?'👗':a.cat==='Audio-Vidéo'?'🎧':'📦'}</div>`;
+        return`
+        <div class="prod-card${inPanier?' in-panier':''}${dispo<=0?' rupture':''}" onclick="${dispo>0?`ajouterProduitRapide(${a.id})`:''}">
+          ${imgEl}
+          <div class="prod-card-stock${dispo<=a.seuil?' low':''}">Stock: ${dispo}</div>
+          ${qteInPanier>0?`<div class="prod-card-badge-panier">${qteInPanier}</div>`:''}
+          <div class="prod-card-body">
+            <div class="prod-card-nom" title="${a.nom}">${a.nom}</div>
+            <div class="prod-card-prix">${F(a.pv)}</div>
+            ${dispo>0?`
+            <div class="prod-card-actions">
+              <button class="prod-card-btn prod-card-btn-vendre" onclick="event.stopPropagation();ajouterProduitRapide(${a.id})">Ajouter</button>
+              ${qteInPanier>0?`<button class="prod-card-btn-plus" onclick="event.stopPropagation();retirerUnDuPanier(${a.id})">−</button>`:''}
+            </div>`:`<div style="font-size:11px;color:var(--red);font-weight:600;margin-top:6px">Rupture de stock</div>`}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <!-- HISTORIQUE VENTES -->
+    <p class="st" style="margin-top:24px">Historique des ventes</p>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Date</th><th>Articles</th><th>Montant</th><th>Client</th><th>Mode</th><th>Statut</th><th></th></tr></thead>
+      <thead><tr><th>Date</th><th>Articles</th><th>Montant</th><th>Client</th><th>Compte</th><th>Statut</th><th></th></tr></thead>
       <tbody>${S.ventes.slice().reverse().map(v=>{
         const lignes=v.lignes||[{aid:v.aid,qte:v.qte,pu:v.pu,mt:v.mt}];
         const noms=lignes.map(l=>{const a=ga(l.aid);return a?a.nom:'?'}).join(', ');
@@ -1501,7 +1416,7 @@ function rVente(){
           <td><span class="badge bb">${v.cid?nomCompte(v.cid):(v.mode||'—')}</span></td>
           <td>${sb(v.statut)}</td>
           <td><div class="td-actions">
-            ${v.statut==='Non payé'?`<button class="btn-icon btn-sm" onclick="payerVente(${v.id})" title="Marquer payé">✓</button><button class="btn-icon btn-sm" onclick="gererAcompte(${v.id})" title="Acompte">💰</button>`:''}
+            ${v.statut==='Non payé'?`<button class="btn-icon btn-sm" onclick="payerVente(${v.id})" title="Encaisser">✓</button><button class="btn-icon btn-sm" onclick="gererAcompte(${v.id})" title="Acompte">💰</button>`:''}
             <button class="btn-icon btn-sm" onclick="demanderMontantRecu(${v.id})" title="Reçu">🖨️</button>
             <button class="btn-icon btn-sm" onclick="configurerTranches(${v.id})" title="Tranches">💳</button>
             <button class="btn-icon btn-sm" onclick="printFacture(${v.id})" title="Facture">🧾</button>
@@ -1511,6 +1426,101 @@ function rVente(){
         </tr>`;}).join('')}
       </tbody></table></div>`;
 }
+
+
+// ─── VENTE RAPIDE — FONCTIONS CARTES ───
+function ajouterProduitRapide(aid){
+  const a=ga(aid);if(!a)return;
+  const dispo=sa(a);if(dispo<=0)return toast('❌ Stock insuffisant');
+  const type=window.typePrix||'detail';
+  const pu=getPrixParType(a,type);
+  const existant=window.panier.findIndex(l=>l.aid===aid);
+  if(existant>=0){
+    if(window.panier[existant].qte>=dispo)return toast('⚠️ Stock max atteint');
+    window.panier[existant].qte++;
+    window.panier[existant].mt=window.panier[existant].qte*window.panier[existant].pu;
+  }else{
+    window.panier.push({aid:a.id,nom:a.nom,qte:1,pu,mt:pu,dispo,typePrix:type});
+  }
+  toast(`✅ ${a.nom} ajouté`);
+  rVente();
+}
+
+function retirerUnDuPanier(aid){
+  const idx=window.panier.findIndex(l=>l.aid===aid);
+  if(idx<0)return;
+  window.panier[idx].qte--;
+  window.panier[idx].mt=window.panier[idx].qte*window.panier[idx].pu;
+  if(window.panier[idx].qte<=0) window.panier.splice(idx,1);
+  rVente();
+}
+
+function ouvrirPanierModal(){
+  if(!window.panier||window.panier.length===0)return toast('⚠️ Panier vide');
+  const sousTotal=window.panier.reduce((s,l)=>s+l.mt,0);
+  const remiseMt=window.remise.type==='%'?Math.round(sousTotal*window.remise.val/100):Math.min(window.remise.val||0,sousTotal);
+  const totalFinal=Math.max(0,sousTotal-remiseMt);
+
+  modal(`<div class="mft">🛒 Panier — ${window.panier.length} article${window.panier.length>1?'s':''}</div>
+    <!-- Type de prix -->
+    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+      <div class="prix-tabs">
+        <button class="prix-tab${window.typePrix==='detail'||!window.typePrix?' active':''}" onclick="setTypePrix('detail');ouvrirPanierModal()">Détail</button>
+        <button class="prix-tab${window.typePrix==='semi'?' active':''}" onclick="setTypePrix('semi');ouvrirPanierModal()">Semi-gros</button>
+        <button class="prix-tab${window.typePrix==='gros'?' active':''}" onclick="setTypePrix('gros');ouvrirPanierModal()">Gros</button>
+      </div>
+    </div>
+    <!-- Lignes panier -->
+    <div style="margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:1fr 70px 90px 80px 28px;gap:6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;padding:0 0 6px;border-bottom:1px solid var(--border)">
+        <span>Article</span><span>Qté</span><span>Prix</span><span>Total</span><span></span>
+      </div>
+      ${window.panier.map((l,i)=>`
+        <div style="display:grid;grid-template-columns:1fr 70px 90px 80px 28px;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div style="font-size:12px;font-weight:500">${l.nom}
+            <span style="font-size:9px;color:var(--text3);display:block">${l.typePrix==='semi'?'Semi-gros':l.typePrix==='gros'?'Gros':'Détail'}</span>
+          </div>
+          <input class="fi" type="number" min="1" max="${l.dispo}" value="${l.qte}"
+            oninput="majLignePanier(${i},'qte',+this.value||1)" style="padding:4px 6px;font-size:12px;text-align:center">
+          <input class="fi" type="number" min="0" value="${l.pu}"
+            oninput="majLignePanier(${i},'pu',+this.value||0)" style="padding:4px 6px;font-size:12px">
+          <div style="font-weight:700;font-size:13px">${F(l.mt)}</div>
+          <button onclick="retirerDuPanier(${i})" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:0">✕</button>
+        </div>`).join('')}
+    </div>
+    <!-- Remise -->
+    <div class="remise-row">
+      <span style="font-size:12px;font-weight:600;color:var(--amber);white-space:nowrap">🎯 Remise</span>
+      <select class="fs" id="remise-type" onchange="setRemise()" style="width:80px;padding:4px 8px;font-size:12px">
+        <option value="%"${window.remise.type==='%'?' selected':''}>%</option>
+        <option value="FCFA"${window.remise.type==='FCFA'?' selected':''}>Montant</option>
+      </select>
+      <input class="fi" type="number" id="remise-val" min="0" value="${window.remise.val}"
+        oninput="setRemise()" style="width:80px;padding:4px 8px;font-size:12px" placeholder="0">
+      ${remiseMt>0?`<span class="remise-badge">−${F(remiseMt)}</span>`:''}
+    </div>
+    <!-- Totaux -->
+    <div class="total-preview" style="margin:10px 0">
+      ${sousTotal!==totalFinal?`<div class="total-preview-row"><span>Sous-total</span><span>${F(sousTotal)}</span></div>`:''}
+      ${remiseMt>0?`<div class="total-preview-row" style="color:var(--amber)"><span>Remise</span><span>−${F(remiseMt)}</span></div>`:''}
+      <div class="total-preview-final"><span>TOTAL À PAYER</span><span>${F(totalFinal)}</span></div>
+    </div>
+    <!-- Client + Compte + Statut -->
+    <div class="fr">
+      <div class="fg"><label class="fl">Client</label><input class="fi" id="pa-client" placeholder="Nom du client"></div>
+      <div class="fg"><label class="fl">Compte encaissement</label>${selectComptes('pa-mode', premierCompteId())}</div>
+    </div>
+    <div class="fg"><label class="fl">Statut</label>
+      <select class="fs" id="pa-statut"><option value="Payé">✅ Payé</option><option value="Non payé">⏳ À percevoir</option></select>
+    </div>
+    <!-- Boutons -->
+    <div class="mff">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-danger btn-sm" onclick="viderPanier();closeModal()">🗑️ Vider</button>
+      <button class="btn btn-success" onclick="validerPanier()">✓ Valider — ${F(totalFinal)}</button>
+    </div>`);
+}
+
 
 function getPrixParType(a,type){
   if(!a)return 0;
@@ -3799,46 +3809,13 @@ function verifierPin(){}
 
 function majBadgeUtilisateur(){
   const s=S.session;
-  if(!s||!s.uid)return;
-  const nom=s.nom||'Admin';
-  const initiale=nom.charAt(0).toUpperCase();
-  const role=s.role==='admin'?'Administrateur':'Vendeur';
-  const email=s.email||'';
-  // Sidebar user
-  const suAvatar=document.getElementById('su-avatar');
-  const suNom=document.getElementById('su-nom');
-  const suRole=document.getElementById('su-role');
-  if(suAvatar) suAvatar.textContent=s.emoji||initiale;
-  if(suNom) suNom.textContent=nom;
-  if(suRole) suRole.textContent=role;
-  // Topbar user
-  const tuAvatar=document.getElementById('tu-avatar');
-  const tuNom=document.getElementById('tu-nom');
-  if(tuAvatar) tuAvatar.textContent=s.emoji||initiale;
-  if(tuNom) tuNom.textContent=nom;
-  // Dropdown
-  const ddNom=document.getElementById('dd-nom');
-  const ddEmail=document.getElementById('dd-email');
-  const ddRole=document.getElementById('dd-role');
-  if(ddNom) ddNom.textContent=nom;
-  if(ddEmail) ddEmail.textContent=email;
-  if(ddRole) ddRole.textContent=role;
-  // Ancien badge (compat)
   const badge=document.getElementById('current-user-badge');
-  if(badge) badge.style.display='none';
+  if(!badge||!s||!s.uid)return;
+  badge.style.display='flex';
+  document.getElementById('cu-emoji').textContent=s.emoji||'👤';
+  document.getElementById('cu-nom').textContent=s.nom||'';
+  document.getElementById('cu-role-badge').textContent=s.role==='admin'?'Admin':'Employé';
 }
-
-function toggleUserDropdown(){
-  const dd=document.getElementById('user-dropdown');
-  if(dd) dd.classList.toggle('open');
-}
-// Fermer dropdown en cliquant ailleurs
-document.addEventListener('click',e=>{
-  if(!e.target.closest('#topbar-user-btn')&&!e.target.closest('#sidebar-user-btn')&&!e.target.closest('#user-dropdown')){
-    const dd=document.getElementById('user-dropdown');
-    if(dd) dd.classList.remove('open');
-  }
-});
 
 function appliquerAcces(role){
   if(role!=='admin'){
