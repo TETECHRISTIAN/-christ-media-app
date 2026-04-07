@@ -1716,13 +1716,17 @@ function saveAchat(){
   const statut_achat=document.getElementById('mstatut')?.value||'Payé';
   S.achats.push({id:genId(),date,fid,aid,qte,pu,mt:pu*qte,mode,cid,notes,statut:statut_achat});
   if(statut_achat==='Payé') debiterCompte(cid,pu*qte);
+  else { const f=S.fournisseurs.find(f=>f.id==fid); if(f) f.dette=(f.dette||0)+(pu*qte); }
   if(art) addHistorique('Entrée',art,qte,`Achat — ${notes||'réappro'}`);
   saveData();closeModal();toast(`✅ Achat enregistré — stock +${qte} pour ${art?art.nom:'article'}`);rAchats();
 }
 function delAchat(id){
   if(!confirm('Supprimer cet achat ? Le stock sera ajusté.'))return;
   const ac=S.achats.find(a=>a.id==id);
-  if(ac){const art=ga(ac.aid);if(art)art.ea=Math.max(0,(art.ea||0)-ac.qte);}
+  if(ac){
+    const art=ga(ac.aid);if(art)art.ea=Math.max(0,(art.ea||0)-ac.qte);
+    if(ac.statut!=='Payé'){const f=S.fournisseurs.find(f=>f.id==ac.fid);if(f)f.dette=Math.max(0,(f.dette||0)-ac.mt);}
+  }
   S.achats=S.achats.filter(a=>a.id!=id);
   saveData();toast('🗑️ Achat supprimé');rAchats();
 }
