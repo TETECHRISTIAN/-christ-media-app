@@ -457,7 +457,23 @@ body.dark th{background:var(--surface3)}
 .plan-item.urgent{border-left-color:var(--red)}
 .plan-item.proche{border-left-color:var(--amber)}
 .plan-item.ok{border-left-color:var(--green)}
+.plan-item.alerte-active{border-left-color:var(--purple);background:var(--purple-bg)}
 .plan-date-badge{font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;white-space:nowrap}
+.plan-alerte-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;background:var(--purple-bg);color:var(--purple);display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.plan-priority{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;white-space:nowrap}
+.plan-priority.haute{background:var(--red-bg);color:var(--red)}
+.plan-priority.moyenne{background:var(--amber-bg);color:var(--amber)}
+.plan-priority.basse{background:var(--green-bg);color:var(--green)}
+/* Section alertes à venir */
+.alerte-section{background:linear-gradient(135deg,var(--purple-bg),#ede8f8);border:1.5px solid var(--purple);border-radius:var(--r);padding:14px 16px;margin-bottom:16px}
+.alerte-section-title{font-size:12px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.alerte-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(91,58,143,.12);font-size:12px}
+.alerte-row:last-child{border-bottom:none}
+.alerte-row-titre{font-weight:600;color:var(--text)}
+.alerte-row-info{color:var(--text3);font-size:11px;margin-top:1px}
+.alerte-countdown{background:var(--purple);color:#fff;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap}
+/* Notif planning alerte */
+.notif-item-alerte{background:var(--purple-bg);border-left:3px solid var(--purple)}
 
 /* ─── ACOMPTES ─── */
 .acompte-bar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-top:6px}
@@ -687,6 +703,10 @@ body.dark th{background:var(--surface3)}
       Historique stock
     </div>
     <div class="nav-sec">Système</div>
+    <div class="ni" data-page="calculatrice" onclick="nav(this,'calculatrice')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1.5" y="1.5" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M4 4h8M4 7.5h2M7 7.5h2M10 7.5h2M4 10h2M7 10h2M10 10h2M4 12.5h2M7 12.5h2M10 12.5h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      Calculatrice
+    </div>
     <div class="ni" data-page="workspace" onclick="nav(this,'workspace')">
       <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" opacity=".4"/></svg>
       Espace de travail
@@ -993,7 +1013,7 @@ const defaultData={
     theme_color:'default',
     custom_primary:'#0f1f3d',
     notif_stock:true,
-    menu_visible:['dashboard','transactions','vente','services','achats','stock','clients','fournisseurs','depenses','tresorerie','revenus','rapports','inventaire','historique','comptes','devis','planning','parametres'],
+    menu_visible:['dashboard','transactions','vente','services','achats','stock','clients','fournisseurs','depenses','tresorerie','revenus','rapports','inventaire','historique','comptes','devis','planning','calculatrice','parametres'],
     compte_auto:true
   },
   utilisateurs:[
@@ -1111,7 +1131,7 @@ async function manualSync(){
       saveLocal(S);
       setSyncStatus('online','Synchronisé ✓');
       toast('✅ Données synchronisées depuis le cloud');
-      ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,parametres:rParametres})[currentPage]();
+      ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres})[currentPage]();
     }else{
       await saveToFirebase(S);
       toast('✅ Données locales envoyées au cloud');
@@ -1137,7 +1157,7 @@ async function startFirebaseSync(){
         if(savedSession&&savedSession.uid) S.session=savedSession;
         saveLocal(S);
         setSyncStatus('online','Synchronisé ✓');
-        ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,parametres:rParametres})[currentPage]();
+        ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres})[currentPage]();
       }else{
         await saveToFirebase(S);
       }
@@ -1182,7 +1202,7 @@ function toast(msg,dur=2200){
 }
 
 // ─── NAVIGATION ───
-const titles={dashboard:'Tableau de bord',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',parametres:'Paramètres'};
+const titles={dashboard:'Tableau de bord',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres'};
 const actionsMap={
   dashboard:()=>'<button class="btn btn-success" onclick="nav(document.querySelector(\'[data-page=vente]\'),\'vente\')">+ Vente</button>',
   transactions:()=>'',
@@ -1194,7 +1214,7 @@ const actionsMap={
   fournisseurs:()=>'<button class="btn btn-primary" onclick="addFour()">+ Fournisseur</button>',
   depenses:()=>'<button class="btn btn-danger" onclick="addDep()">+ Dépense</button>',
   tresorerie:()=>'',revenus:()=>'<button class="btn btn-success" onclick="addRevenu()">+ Revenu</button> <button class="btn" onclick="addCharge()">+ Charge</button>',rapports:()=>'<button class="btn" onclick="printRapport()">🖨️ Imprimer</button>',
-  historique:()=>'<button class="btn" onclick="clearHistorique()">🗑️ Vider</button>',inventaire:()=>'<button class="btn" onclick="printRapport()">🖨️ Imprimer</button>',workspace:()=>'',comptes:()=>'<button class="btn btn-primary" onclick="addCompte()">+ Compte</button>',devis:()=>'<button class="btn btn-primary" onclick="addDevis()">+ Devis</button>',planning:()=>'<button class="btn btn-primary" onclick="addPlanning()">+ Tâche</button>',parametres:()=>''
+  historique:()=>'<button class="btn" onclick="clearHistorique()">🗑️ Vider</button>',inventaire:()=>'<button class="btn" onclick="printRapport()">🖨️ Imprimer</button>',workspace:()=>'',comptes:()=>'<button class="btn btn-primary" onclick="addCompte()">+ Compte</button>',devis:()=>'<button class="btn btn-primary" onclick="addDevis()">+ Devis</button>',planning:()=>'<button class="btn btn-primary" onclick="addPlanning()">+ Tâche</button>',calculatrice:()=>'',parametres:()=>''
 };
 
 let currentPage='dashboard';
@@ -1204,7 +1224,7 @@ function nav(el,page){
   document.getElementById('topbar-title').textContent=titles[page]||'';
   document.getElementById('topbar-actions').innerHTML=actionsMap[page]?actionsMap[page]():'';
   currentPage=page;
-  ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,parametres:rParametres})[page]();
+  ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres})[page]();
   closeMobileSidebar();
   document.getElementById('mn-dropdown').classList.remove('open');
 }
@@ -1712,7 +1732,7 @@ function saveAchat(){
   const notes=document.getElementById('mno').value;
   if(!fid||!aid)return toast('❌ Fournisseur et article requis');
   const art=ga(aid);
-  if(art){art.ea=(art.ea||0)+qte;}
+  if(art){art.ea=(art.ea||0)+qte; if(pu>0) art.pa=pu;}
   const statut_achat=document.getElementById('mstatut')?.value||'Payé';
   S.achats.push({id:genId(),date,fid,aid,qte,pu,mt:pu*qte,mode,cid,notes,statut:statut_achat});
   if(statut_achat==='Payé') debiterCompte(cid,pu*qte);
@@ -2590,6 +2610,82 @@ function rInventaire(){
     }).join('')}`;
 }
 
+// ─── CALCULATRICE ───
+let calcExpr='', calcResult='0', calcJustEval=false;
+function rCalc(){
+  const p=document.getElementById('page-content');
+  p.innerHTML=`
+  <div class="page" style="display:flex;flex-direction:column;align-items:center;padding-top:32px">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;width:320px;box-shadow:var(--shadow);overflow:hidden">
+      <!-- Écran -->
+      <div style="background:var(--navy);padding:20px 18px 14px;min-height:90px;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end">
+        <div id="calc-expr" style="font-size:13px;color:rgba(255,255,255,.45);min-height:18px;word-break:break-all;text-align:right">${calcExpr||'&nbsp;'}</div>
+        <div id="calc-disp" style="font-size:36px;font-weight:700;color:#fff;letter-spacing:-1px;word-break:break-all;text-align:right">${calcResult}</div>
+      </div>
+      <!-- Boutons -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border)">
+        ${[
+          ['C','±','%','÷'],
+          ['7','8','9','×'],
+          ['4','5','6','−'],
+          ['1','2','3','+'],
+          ['00','0',',','=']
+        ].map(row=>row.map((k,i)=>{
+          const isOp=['÷','×','−','+','='].includes(k);
+          const isClear=k==='C';
+          const isWide=false;
+          const bg=isOp?'var(--navy)':isClear?'var(--red-bg)':'var(--surface)';
+          const color=isOp?'#fff':isClear?'var(--red)':'var(--text)';
+          const fw=isOp||isClear?'700':'500';
+          return `<button onclick="calcKey('${k}')" style="padding:18px 0;font-size:18px;font-weight:${fw};background:${bg};color:${color};border:none;cursor:pointer;font-family:inherit;transition:opacity .1s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='.7'" onmouseup="this.style.opacity='1'" onmouseleave="this.style.opacity='1'">${k}</button>`;
+        }).join('')).join('')}
+      </div>
+      <!-- Bande historique -->
+      <div style="padding:10px 14px;border-top:1px solid var(--border);max-height:140px;overflow-y:auto" id="calc-hist">
+        <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Historique</div>
+        <div id="calc-hist-list" style="font-size:12px;color:var(--text2);line-height:1.9">${(calcHistory||[]).slice(-6).reverse().map(h=>`<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">${h.expr}</span><span style="font-weight:600">${h.res}</span></div>`).join('')||'<span style="color:var(--text3)">Aucun calcul</span>'}</div>
+      </div>
+    </div>
+  </div>`;
+}
+let calcHistory=[];
+function calcKey(k){
+  if(k==='C'){calcExpr='';calcResult='0';calcJustEval=false;}
+  else if(k==='='){
+    try{
+      const expr=calcExpr.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-').replace(/,/g,'.');
+      if(!expr)return;
+      const res=Function('"use strict";return ('+expr+')')();
+      const fmt=parseFloat(res.toFixed(10)).toLocaleString('fr-FR');
+      calcHistory.push({expr:calcExpr,res:fmt});
+      calcExpr=String(parseFloat(res.toFixed(10)));
+      calcResult=fmt;
+      calcJustEval=true;
+    }catch{calcResult='Erreur';calcExpr='';}
+  }
+  else if(k==='±'){
+    try{const v=parseFloat(calcResult.replace(/\s/g,'').replace(',','.'));calcResult=parseFloat((-v).toFixed(10)).toLocaleString('fr-FR');calcExpr=String(-parseFloat(calcResult.replace(/\s/g,'').replace(',','.')));}catch{}
+  }
+  else if(k==='%'){
+    try{const v=parseFloat(calcResult.replace(/\s/g,'').replace(',','.'));calcResult=parseFloat((v/100).toFixed(10)).toLocaleString('fr-FR');}catch{}
+  }
+  else{
+    if(calcJustEval&&['+','−','×','÷'].includes(k)){calcExpr=calcExpr+k;calcJustEval=false;}
+    else if(calcJustEval){calcExpr=k;calcJustEval=false;}
+    else{calcExpr+=k;}
+    // Affichage courant
+    const last=calcExpr.split(/[+\-×÷]/).pop().replace(',','.');
+    try{calcResult=parseFloat(last).toLocaleString('fr-FR');}catch{}
+  }
+  // Refresh écran uniquement
+  const de=document.getElementById('calc-disp');
+  const ee=document.getElementById('calc-expr');
+  const hl=document.getElementById('calc-hist-list');
+  if(de) de.textContent=calcResult;
+  if(ee) ee.textContent=calcExpr||'\u00a0';
+  if(hl) hl.innerHTML=(calcHistory||[]).slice(-6).reverse().map(h=>`<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">${h.expr}</span><span style="font-weight:600">${h.res}</span></div>`).join('')||'<span style="color:var(--text3)">Aucun calcul</span>';
+}
+
 // ─── PARAMÈTRES ───
 function rParametres(){
   if(!S.parametres)S.parametres={nom:'Christ Media',ville:'Lomé, Togo',email:'christmedia176@gmail.com',devise:'FCFA',categories:['Lingerie','Audio-Vidéo','Bureautique']};
@@ -3178,8 +3274,24 @@ function getNotifs(){
   // Plannings en retard
   const today=D();
   if(S.plannings){
-    S.plannings.filter(p=>p.date<=today&&p.statut!=='Terminé').forEach(p=>{
-      notifs.push({icon:'📅',msg:`Tâche en retard : ${p.titre}`,type:'planning',urgent:true});
+    S.plannings.filter(p=>p.date<today&&p.statut!=='Terminé').forEach(p=>{
+      const jours=Math.ceil((new Date()-new Date(p.date))/864e5);
+      notifs.push({icon:'⏰',msg:`Tâche en retard (${jours}j) : ${p.titre}`,type:'planning',urgent:true,priority:p.priorite||'moyenne'});
+    });
+    // Tâches du jour
+    S.plannings.filter(p=>p.date===today&&p.statut!=='Terminé').forEach(p=>{
+      notifs.push({icon:'📅',msg:`Échéance aujourd'hui : ${p.titre}`,type:'planning',urgent:true,priority:p.priorite||'moyenne'});
+    });
+    // Alertes de date (rappel avant échéance)
+    S.plannings.filter(p=>p.dateAlerte&&p.statut!=='Terminé').forEach(p=>{
+      const diffAlerte=Math.ceil((new Date(p.dateAlerte)-new Date())/864e5);
+      if(diffAlerte>=0&&diffAlerte<=0){
+        // Alerte du jour
+        notifs.push({icon:'🔔',msg:`Rappel : ${p.titre} — échéance le ${p.date}`,type:'alerte',urgent:false,alerte:true});
+      } else if(diffAlerte>0&&diffAlerte<=3){
+        // Alerte proche (dans 1-3 jours)
+        notifs.push({icon:'🔔',msg:`Rappel dans ${diffAlerte}j : ${p.titre}`,type:'alerte',urgent:false,alerte:true});
+      }
     });
   }
   return notifs;
@@ -3208,9 +3320,9 @@ function toggleNotifs(){
         <button onclick="document.getElementById('notif-panel').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px">✕</button>
       </div>
       ${notifs.length===0?'<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">✅ Aucune notification</div>':
-      notifs.map(n=>`<div class="notif-item">
-        <div class="notif-dot" style="background:${n.urgent?'var(--red)':'var(--amber)'}"></div>
-        <div><div style="font-size:12px">${n.icon} ${n.msg}</div></div>
+      notifs.map(n=>`<div class="notif-item${n.alerte?' notif-item-alerte':''}">
+        <div class="notif-dot" style="background:${n.urgent?'var(--red)':n.alerte?'var(--purple)':'var(--amber)'}"></div>
+        <div style="flex:1"><div style="font-size:12px">${n.icon} ${n.msg}</div>${n.priority&&n.priority!=='moyenne'?`<div style="font-size:10px;margin-top:2px;color:${n.priority==='haute'?'var(--red)':'var(--green)'};font-weight:600">Priorité ${n.priority}</div>`:''}</div>
       </div>`).join('')}`;
     panel.style.display='block';
   }else{
@@ -3580,27 +3692,61 @@ function rPlanning(){
   const today=D();
   const urgents=S.plannings.filter(p=>p.date<today&&p.statut!=='Terminé');
   const proches=S.plannings.filter(p=>p.date===today&&p.statut!=='Terminé');
+  // Tâches dont la date d'alerte est atteinte ou dépassée (et non terminées)
+  const alertesActives=S.plannings.filter(p=>p.dateAlerte&&p.statut!=='Terminé'&&p.dateAlerte<=today);
+  // Tâches avec alerte à venir (dans les 7 prochains jours)
+  const alertesProches=S.plannings.filter(p=>p.dateAlerte&&p.statut!=='Terminé'&&p.dateAlerte>today&&Math.ceil((new Date(p.dateAlerte)-new Date())/864e5)<=7);
+
   document.getElementById('content').innerHTML=`
     ${urgents.length?`<div class="alert alert-r">⏰ ${urgents.length} tâche(s) en retard !</div>`:''}
     ${proches.length?`<div class="alert alert-a">📅 ${proches.length} tâche(s) pour aujourd'hui</div>`:''}
+    ${alertesActives.length?`<div class="alert" style="background:var(--purple-bg);color:var(--purple);border:1px solid #c5aef0">🔔 ${alertesActives.length} alerte(s) de rappel déclenchée(s)</div>`:''}
     <div class="g3" style="margin-bottom:16px">
       <div class="card"><div class="ct">Total tâches</div><div class="mv">${N(S.plannings.length)}</div></div>
       <div class="card"><div class="ct">En cours</div><div class="mv" style="color:var(--navy)">${N(S.plannings.filter(p=>p.statut==='En cours').length)}</div></div>
       <div class="card"><div class="ct">Terminées</div><div class="mv" style="color:var(--green)">${N(S.plannings.filter(p=>p.statut==='Terminé').length)}</div></div>
     </div>
+    <div class="g3" style="margin-bottom:16px">
+      <div class="card"><div class="ct">🔴 Haute priorité</div><div class="mv" style="color:var(--red)">${N(S.plannings.filter(p=>p.priorite==='haute'&&p.statut!=='Terminé').length)}</div></div>
+      <div class="card"><div class="ct">🔔 Alertes actives</div><div class="mv" style="color:var(--purple)">${N(alertesActives.length)}</div></div>
+      <div class="card"><div class="ct">⏳ À venir (7j)</div><div class="mv" style="color:var(--amber)">${N(alertesProches.length)}</div></div>
+    </div>
+    ${(alertesActives.length+alertesProches.length)>0?`
+    <div class="alerte-section">
+      <div class="alerte-section-title">🔔 Alertes & Rappels à venir</div>
+      ${[...alertesActives,...alertesProches].sort((a,b)=>a.dateAlerte.localeCompare(b.dateAlerte)).map(p=>{
+        const diffA=Math.ceil((new Date(p.dateAlerte)-new Date())/864e5);
+        const diffE=Math.ceil((new Date(p.date)-new Date())/864e5);
+        const alertLabel=diffA<0?'Rappel déclenché':diffA===0?"Rappel aujourd'hui":`Rappel dans ${diffA}j`;
+        return`<div class="alerte-row">
+          <div>
+            <div class="alerte-row-titre">${p.titre}</div>
+            <div class="alerte-row-info">📅 Échéance : ${p.date} ${p.mt?`· ${F(p.mt)}`:''} · ${p.cat||'Tâche'}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+            <span class="alerte-countdown">${alertLabel}</span>
+            <span style="font-size:10px;color:var(--text3)">${diffE<0?`Retard ${Math.abs(diffE)}j`:diffE===0?"Échéance auj.":`Éch. dans ${diffE}j`}</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`:''}
     <p class="st">Tâches & Rappels</p>
     ${S.plannings.length===0?'<div class="empty"><p>Aucune tâche planifiée</p><small>Ajoutez des rappels de paiement, livraisons, rendez-vous...</small></div>':
     S.plannings.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(p=>{
       const diff=Math.ceil((new Date(p.date)-new Date())/864e5);
       const cls=diff<0?'urgent':diff<=3?'proche':'ok';
       const dateLbl=diff<0?`Retard ${Math.abs(diff)}j`:diff===0?'Aujourd\'hui':diff===1?'Demain':`Dans ${diff}j`;
+      const alerteInfo=p.dateAlerte?`<span class="plan-alerte-badge">🔔 Rappel ${p.dateAlerte}</span>`:'';
+      const priorityBadge=p.priorite?`<span class="plan-priority ${p.priorite}">${p.priorite==='haute'?'🔴 Haute':p.priorite==='moyenne'?'🟡 Moyenne':'🟢 Basse'}</span>`:'';
       return`<div class="plan-item ${cls}">
         <div style="flex:1">
           <div style="font-weight:600;font-size:13px">${p.titre}</div>
           <div style="font-size:11px;color:var(--text3);margin-top:2px">${p.notes||''}</div>
-          <div style="display:flex;gap:6px;margin-top:6px;align-items:center">
+          <div style="display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap">
             <span class="badge ${p.statut==='Terminé'?'bg':p.statut==='En cours'?'bb':'ba'}">${p.statut}</span>
             <span style="font-size:11px;color:var(--text3)">${p.cat||''}</span>
+            ${priorityBadge}
+            ${alerteInfo}
           </div>
         </div>
         <div style="text-align:right">
@@ -3620,9 +3766,15 @@ function addPlanning(){
   modal(`<div class="mft">📅 Nouvelle tâche / Rappel</div>
     <div class="fg"><label class="fl">Titre</label><input class="fi" id="pl-titre" placeholder="Ex: Payer fournisseur Mode Afrique"></div>
     <div class="fr">
-      <div class="fg"><label class="fl">Date</label><input class="fi" type="date" id="pl-date" value="${D()}"></div>
+      <div class="fg"><label class="fl">Date d'échéance</label><input class="fi" type="date" id="pl-date" value="${D()}"></div>
       <div class="fg"><label class="fl">Catégorie</label>
         <select class="fs" id="pl-cat"><option>Paiement</option><option>Livraison</option><option>Réunion</option><option>Rappel</option><option>Autre</option></select>
+      </div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">🔔 Date d'alerte (rappel)</label><input class="fi" type="date" id="pl-alerte" title="Date à laquelle vous serez alerté(e) avant l'échéance"></div>
+      <div class="fg"><label class="fl">Priorité</label>
+        <select class="fs" id="pl-priorite"><option value="moyenne">🟡 Moyenne</option><option value="haute">🔴 Haute</option><option value="basse">🟢 Basse</option></select>
       </div>
     </div>
     <div class="fg"><label class="fl">Montant lié (optionnel)</label><input class="fi" type="number" id="pl-mt" placeholder="0"></div>
@@ -3634,7 +3786,9 @@ function savePlanning(){
   const titre=document.getElementById('pl-titre').value;
   if(!titre)return toast('❌ Titre requis');
   if(!S.plannings)S.plannings=[];
-  S.plannings.push({id:genId(),titre,date:document.getElementById('pl-date').value,cat:document.getElementById('pl-cat').value,notes:document.getElementById('pl-notes').value,mt:+document.getElementById('pl-mt').value||0,statut:'En cours'});
+  const dateAlerte=document.getElementById('pl-alerte')?.value||'';
+  const priorite=document.getElementById('pl-priorite')?.value||'moyenne';
+  S.plannings.push({id:genId(),titre,date:document.getElementById('pl-date').value,cat:document.getElementById('pl-cat').value,notes:document.getElementById('pl-notes').value,mt:+document.getElementById('pl-mt').value||0,statut:'En cours',dateAlerte,priorite});
   saveData();closeModal();toast('✅ Tâche ajoutée');rPlanning();
   majNotifBadge();
 }
@@ -3904,6 +4058,7 @@ function rWorkspace(){
     {id:'comptes',label:'Comptes',icon:'🏦'},
     {id:'devis',label:'Devis',icon:'📄'},
     {id:'planning',label:'Planning',icon:'📅'},
+    {id:'calculatrice',label:'Calculatrice',icon:'🧮'},
   ];
   const visible=p.menu_visible||allMenus.map(m=>m.id);
 
