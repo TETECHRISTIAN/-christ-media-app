@@ -771,13 +771,17 @@ body.dark th{background:var(--surface3)}
     </div>
   </nav>
   <div class="sidebar-bottom">
-    <div class="ni" onclick="exportData()">
+    <div class="ni admin-only" onclick="exportData()">
       <svg viewBox="0 0 16 16" fill="none"><path d="M8 1v9M5 7l3 3 3-3M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Exporter données
     </div>
-    <div class="ni" onclick="importData()">
+    <div class="ni admin-only" onclick="importData()">
       <svg viewBox="0 0 16 16" fill="none"><path d="M8 11V2M5 5l3-3 3 3M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Importer données
+    </div>
+    <div class="ni" onclick="doLogout()" style="color:rgba(255,100,100,.8);margin-top:4px">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3M11 11l3-3-3-3M14 8H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Déconnecter
     </div>
   </div>
   <div class="sync-bar" id="sync-bar">
@@ -1065,6 +1069,7 @@ const defaultData={
   },
   utilisateurs:[
     {id:1,nom:'Christian',role:'admin',pin:'1234',email:'christmedia176@gmail.com',password:'admin1234',emoji:'👑',actif:true}
+    // Rôles disponibles: 'admin', 'caissier', 'vendeur'
   ],
   session:{uid:null,role:null,nom:null}
 };
@@ -1267,6 +1272,11 @@ const actionsMap={
 
 let currentPage='dashboard';
 function nav(el,page){
+  // Vérifier les permissions
+  if(!peutAcceder(page)){
+    toast('🔒 Accès réservé à l\'administrateur');
+    return;
+  }
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
   el&&el.classList.add('active');
   document.getElementById('topbar-title').textContent=titles[page]||'';
@@ -3025,6 +3035,24 @@ function rParametres(){
         <div><div class="param-label">Réinitialiser l'application</div><div class="param-desc" style="color:var(--red)">⚠️ Supprime toutes les données</div></div>
         <button class="btn btn-danger" onclick="reinitApp()">🗑️ Réinitialiser</button>
       </div>
+    </div>
+
+    <div class="param-section" style="border:1px solid var(--red-light)">
+      <div class="param-section-title" style="color:var(--red)">🔐 Session</div>
+      <div class="param-row">
+        <div>
+          <div class="param-label">Compte connecté</div>
+          <div class="param-desc">${S.session?.nom||'—'} · ${S.session?.email||'—'}</div>
+          <div class="param-desc" style="margin-top:2px">${S.session?.role==='admin'?'👑 Administrateur':S.session?.role==='caissier'?'💰 Caissier':'🛒 Vendeur'}</div>
+        </div>
+        <button class="btn btn-danger" onclick="doLogout()">🚪 Déconnecter</button>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:16px 0 4px;color:var(--text3);font-size:11px">
+      <div style="font-weight:600;color:var(--text2);font-size:12px">Christ Media — All-in-One</div>
+      <div style="margin-top:3px">Version <strong>11.0</strong> · Avril 2026</div>
+      <div style="margin-top:2px">Développé avec ❤️ pour Christ Media · Lomé, Togo</div>
     </div>`;
 }
 
@@ -4371,46 +4399,89 @@ function majBadgeUtilisateur(){
   document.getElementById('cu-role-badge').textContent=s.role==='admin'?'Admin':'Employé';
 }
 
-function appliquerAcces(role){
-  if(role!=='admin'){
-    // Masquer les menus réservés aux admins
-    const menusCaches=['tresorerie','revenus','rapports','inventaire','comptes','devis','planning','parametres','workspace'];
-    document.querySelectorAll('.ni[data-page]').forEach(el=>{
-      const page=el.getAttribute('data-page');
-      if(menusCaches.includes(page)) el.style.display='none';
-    });
-    document.querySelectorAll('.mn-dd-item').forEach(el=>{
-      const onclick=el.getAttribute('onclick')||'';
-      if(menusCaches.some(m=>onclick.includes("'"+m+"'"))){el.style.display='none';}
-    });
-    // Injecter CSS pour masquer prix achat, marge, valeur stock
-    if(!document.getElementById('employe-css')){
-      const style=document.createElement('style');
-      style.id='employe-css';
-      style.textContent=`
-        .col-pa, .cell-pa, .th-pa { display:none !important; }
-        .col-marge, .cell-marge, .th-marge { display:none !important; }
-        .col-valeur, .cell-valeur, .th-valeur { display:none !important; }
-      `;
-      document.head.appendChild(style);
-    }
-  } else {
-    // Admin: s'assurer que tout est visible
-    const style=document.getElementById('employe-css');
-    if(style) style.remove();
+// ─── PERMISSIONS PAR RÔLE ───
+const PERMISSIONS = {
+  admin: {
+    pages: ['dashboard','objectifs','transactions','vente','services','achats','stock','clients',
+            'fournisseurs','depenses','tresorerie','revenus','rapports','inventaire','historique',
+            'comptes','devis','planning','calculatrice','workspace','parametres'],
+    label: '👑 Administrateur',
+    couleur: '#f5c060'
+  },
+  caissier: {
+    pages: ['dashboard','vente','services','stock','clients','calculatrice','transactions'],
+    label: '💰 Caissier',
+    couleur: '#8ecba8'
+  },
+  vendeur: {
+    pages: ['dashboard','vente','services','stock','clients','calculatrice'],
+    label: '🛒 Vendeur',
+    couleur: '#c5d0e8'
   }
+};
+
+function appliquerAcces(role){
+  const perms = PERMISSIONS[role] || PERMISSIONS['vendeur'];
+  const pagesAutorisees = perms.pages;
+
+  // Sidebar desktop
+  document.querySelectorAll('.ni[data-page]').forEach(el=>{
+    const page = el.getAttribute('data-page');
+    el.style.display = pagesAutorisees.includes(page) ? '' : 'none';
+  });
+  // Menu mobile dropdown
+  document.querySelectorAll('.mn-dd-item').forEach(el=>{
+    const onclick = el.getAttribute('onclick') || '';
+    const visible = pagesAutorisees.some(m => onclick.includes("'"+m+"'"));
+    el.style.display = visible ? '' : 'none';
+  });
+
+  // CSS restrictions : masquer infos sensibles pour non-admin
+  const oldStyle = document.getElementById('employe-css');
+  if(oldStyle) oldStyle.remove();
+
+  if(role !== 'admin'){
+    const style = document.createElement('style');
+    style.id = 'employe-css';
+    style.textContent = `
+      .col-pa, .cell-pa, .th-pa { display:none !important; }
+      .col-marge, .cell-marge, .th-marge { display:none !important; }
+      .col-valeur, .cell-valeur, .th-valeur { display:none !important; }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Mettre à jour le badge rôle dans la sidebar
+  const badge = document.getElementById('cu-role-badge');
+  if(badge){
+    badge.textContent = perms.label;
+    badge.style.background = perms.couleur + '33';
+    badge.style.color = perms.couleur;
+  }
+  // Masquer export/import pour non-admin
+  document.querySelectorAll('.admin-only').forEach(el=>{
+    el.style.display = role==='admin' ? '' : 'none';
+  });
+}
+
+function peutAcceder(page){
+  const role = S.session?.role || 'vendeur';
+  const perms = PERMISSIONS[role] || PERMISSIONS['vendeur'];
+  return perms.pages.includes(page);
 }
 
 function doLogout(){
-  if(!confirm('Se déconnecter ?'))return;
+  const nom = S.session?.nom || 'utilisateur';
+  if(!confirm('Déconnecter ' + nom + ' ?'))return;
   S.session={uid:null,role:null,nom:null};
-  // Réafficher tous les menus
-  document.querySelectorAll('.ni[data-page],.mn-dd-item').forEach(el=>el.style.display='');
-  // Supprimer CSS employé
+  saveLocal(S);
+  // Réafficher tous les menus et nettoyer
+  document.querySelectorAll('.ni[data-page],.mn-dd-item,.admin-only').forEach(el=>el.style.display='');
   const empCss=document.getElementById('employe-css');
   if(empCss)empCss.remove();
   document.getElementById('current-user-badge').style.display='none';
-  afficherLoginScreen();
+  toast('👋 Déconnecté');
+  setTimeout(()=>afficherLoginScreen(), 400);
 }
 
 // Remplacer initAuth
@@ -4491,7 +4562,7 @@ function rWorkspace(){
                 <span style="font-size:24px">${u.emoji||'👤'}</span>
                 <div>
                   <div style="font-weight:600;font-size:13px">${u.nom}</div>
-                  <div style="font-size:11px;color:var(--text3);margin-top:1px">${u.role==='admin'?'👑 Administrateur':'🧑 Vendeur / Caissier'}</div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:1px">${u.role==='admin'?'👑 Administrateur':u.role==='caissier'?'💰 Caissier':'🛒 Vendeur'}</div>
                   <div style="font-size:11px;color:var(--navy);margin-top:2px">${u.email||'<em style=color:var(--red)>⚠ Email manquant</em>'}</div>
                 </div>
               </div>
@@ -4565,7 +4636,7 @@ function addUserWS(){
     <div class="fr">
       <div class="fg"><label class="fl">Prénom / Nom</label><input class="fi" id="wu-nom" placeholder="Ex: Marie Kodjovi"></div>
       <div class="fg"><label class="fl">Rôle</label>
-        <select class="fs" id="wu-role"><option value="employe">Employé / Vendeur</option><option value="admin">Administrateur</option></select>
+        <select class="fs" id="wu-role"><option value="vendeur">🛒 Vendeur</option><option value="caissier">💰 Caissier</option><option value="admin">👑 Administrateur</option></select>
       </div>
     </div>
     <div class="fg"><label class="fl">Adresse e-mail (identifiant de connexion)</label>
@@ -4587,7 +4658,8 @@ function saveUserWS(){
   if(!S.utilisateurs)S.utilisateurs=[];
   // Vérifier unicité email
   if(S.utilisateurs.find(u=>u.email&&u.email.toLowerCase()===email))return toast('❌ Cet email est déjà utilisé');
-  S.utilisateurs.push({id:genId(),nom,role:document.getElementById('wu-role').value,email,password,pin:'0000',emoji:document.getElementById('wu-emoji').value||'👤',actif:true});
+  const roleVal = document.getElementById('wu-role').value;
+  S.utilisateurs.push({id:genId(),nom,role:roleVal,email,password,pin:'0000',emoji:document.getElementById('wu-emoji').value||'👤',actif:true});
   saveData();closeModal();toast('✅ Utilisateur créé');rWorkspace();
 }
 function editUserWS(id){
@@ -4597,8 +4669,9 @@ function editUserWS(id){
       <div class="fg"><label class="fl">Nom</label><input class="fi" id="wu-nom" value="${u.nom}"></div>
       <div class="fg"><label class="fl">Rôle</label>
         <select class="fs" id="wu-role">
-          <option value="employe"${u.role==='employe'?' selected':''}>Employé / Vendeur</option>
-          <option value="admin"${u.role==='admin'?' selected':''}>Administrateur</option>
+          <option value="vendeur"${u.role==='vendeur'||u.role==='employe'?' selected':''}>🛒 Vendeur</option>
+          <option value="caissier"${u.role==='caissier'?' selected':''}>💰 Caissier</option>
+          <option value="admin"${u.role==='admin'?' selected':''}>👑 Administrateur</option>
         </select>
       </div>
     </div>
@@ -4975,12 +5048,13 @@ if(!S.utilisateurs||S.utilisateurs.length===0){
 // Migration: ajouter email+password aux anciens utilisateurs sans email
 S.utilisateurs=S.utilisateurs.map(u=>{
   if(!u.email){
-    // Admin par défaut
     if(u.role==='admin' && (u.id===1||u.nom==='Admin'||u.nom==='Christian')){
       u.email=u.email||(S.parametres&&S.parametres.email)||'christmedia176@gmail.com';
       u.password=u.password||u.pin||'admin1234';
     }
   }
+  // Migrer anciens rôles 'employe' vers 'vendeur'
+  if(u.role==='employe') u.role='vendeur';
   return u;
 });
 // Init objectifs si absent
