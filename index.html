@@ -625,6 +625,25 @@ body.dark th{background:var(--surface3)}
 .sync-btn{margin-left:auto;background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:inherit;transition:all .15s}
 .sync-btn:hover{background:rgba(255,255,255,.1);color:#fff}
 
+/* ─── MENU PROFIL TOPBAR ─── */
+.user-pill{display:flex;align-items:center;gap:8px;padding:5px 10px 5px 6px;border-radius:20px;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all .15s;user-select:none;position:relative}
+.user-pill:hover{background:var(--surface2);border-color:var(--border2)}
+.user-pill-avatar{width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.user-pill-name{font-size:12px;font-weight:600;color:var(--text);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-pill-role{font-size:10px;color:var(--text3)}
+.user-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 8px 30px rgba(0,0,0,.15);min-width:220px;z-index:300;overflow:hidden;display:none}
+.user-dropdown.open{display:block}
+.user-dd-header{padding:14px 16px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.user-dd-name{font-size:14px;font-weight:700;color:var(--text)}
+.user-dd-email{font-size:11px;color:var(--text3);margin-top:2px}
+.user-dd-role{font-size:11px;margin-top:4px;font-weight:600}
+.user-dd-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:13px;color:var(--text2);transition:background .15s}
+.user-dd-item:hover{background:var(--surface2);color:var(--text)}
+.user-dd-item svg{width:15px;height:15px;flex-shrink:0;opacity:.6}
+.user-dd-sep{height:1px;background:var(--border);margin:4px 0}
+.user-dd-danger{color:var(--red)!important}
+.user-dd-danger:hover{background:var(--red-bg)!important}
+
 /* ─── OBJECTIFS ─── */
 .obj-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
 .obj-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
@@ -806,17 +825,50 @@ body.dark th{background:var(--surface3)}
       <div class="topbar-title" id="topbar-title">Tableau de bord</div>
     </div>
     <div class="topbar-actions" id="topbar-actions">
-      <button class="btn-icon" onclick="ouvrirRecherche()" title="Recherche globale (Ctrl+K)" style="position:relative">
+      <button class="btn btn-success" onclick="nav(document.querySelector('[data-page=vente]'),'vente')">+ Vente</button>
+    </div>
+    <!-- MENU PROFIL -->
+    <div style="display:flex;align-items:center;gap:6px;margin-left:10px">
+      <button class="btn-icon" onclick="ouvrirRecherche()" title="Recherche globale (Ctrl+K)">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </button>
       <button class="btn-icon" onclick="toggleNotifs()" title="Notifications" id="notif-btn" style="position:relative">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1a5 5 0 015 5v3l1.5 2.5H1.5L3 9V6a5 5 0 015-5zM6.5 13.5a1.5 1.5 0 003 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         <span class="notif-badge" id="notif-count" style="display:none">0</span>
       </button>
-      <button class="btn-icon dark-toggle" onclick="toggleDark()" title="Mode sombre" id="dark-btn">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="1" opacity=".3"/></svg>
-      </button>
-      <button class="btn btn-success" onclick="nav(document.querySelector('[data-page=vente]'),'vente')">+ Vente</button>
+      <div class="user-pill" id="user-pill" onclick="toggleUserMenu()">
+        <div class="user-pill-avatar" id="up-avatar">👤</div>
+        <div>
+          <div class="user-pill-name" id="up-name">—</div>
+          <div class="user-pill-role" id="up-role">—</div>
+        </div>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style="opacity:.4;flex-shrink:0"><path d="M2 3l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <!-- DROPDOWN -->
+        <div class="user-dropdown" id="user-dropdown" onclick="event.stopPropagation()">
+          <div class="user-dd-header">
+            <div class="user-dd-name" id="udd-name">—</div>
+            <div class="user-dd-email" id="udd-email">—</div>
+            <div class="user-dd-role" id="udd-role">—</div>
+          </div>
+          <div class="user-dd-item" onclick="closeUserMenu();nav(document.querySelector('[data-page=parametres]'),'parametres')">
+            <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Paramètres
+          </div>
+          <div class="user-dd-item admin-only" onclick="closeUserMenu();nav(document.querySelector('[data-page=workspace]'),'workspace')">
+            <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" opacity=".4"/></svg>
+            Espace de travail
+          </div>
+          <div class="user-dd-item" onclick="closeUserMenu();toggleDark()">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="1" opacity=".3"/></svg>
+            Mode sombre
+          </div>
+          <div class="user-dd-sep"></div>
+          <div class="user-dd-item user-dd-danger" onclick="closeUserMenu();doLogout()">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3M11 11l3-3-3-3M14 8H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Déconnecter
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   <div class="page" id="content"></div>
@@ -1565,18 +1617,18 @@ function rVente(){
           ?`<img class="prod-card-img" src="${a.photo}" onerror="this.outerHTML='<div class=\'prod-card-img-placeholder\'>📦</div>'">`
           :`<div class="prod-card-img-placeholder">${a.cat==='Lingerie'?'👗':a.cat==='Audio-Vidéo'?'🎧':'📦'}</div>`;
         return`
-        <div class="prod-card${inPanier?' in-panier':''}${dispo<=0?' rupture':''}" onclick="${dispo>0?`ajouterProduitRapide(${a.id})`:''}">
+        <div class="prod-card${inPanier?' in-panier':''}${dispo<=0?' rupture':''}" onclick="ajouterProduitRapide(${a.id})">
           ${imgEl}
           <div class="prod-card-stock${dispo<=a.seuil?' low':''}">Stock: ${dispo}</div>
           ${qteInPanier>0?`<div class="prod-card-badge-panier">${qteInPanier}</div>`:''}
           <div class="prod-card-body">
             <div class="prod-card-nom" title="${a.nom}">${a.nom}</div>
             <div class="prod-card-prix">${F(a.pv)}</div>
-            ${dispo>0?`
             <div class="prod-card-actions">
-              <button class="prod-card-btn prod-card-btn-vendre" onclick="event.stopPropagation();ajouterProduitRapide(${a.id})">Ajouter</button>
+              <button class="prod-card-btn prod-card-btn-vendre" style="${dispo<=0?'background:var(--amber);border-color:var(--amber)':''}" onclick="event.stopPropagation();ajouterProduitRapide(${a.id})">${dispo<=0?'Vendre':'Ajouter'}</button>
               ${qteInPanier>0?`<button class="prod-card-btn-plus" onclick="event.stopPropagation();retirerUnDuPanier(${a.id})">−</button>`:''}
-            </div>`:`<div style="font-size:11px;color:var(--red);font-weight:600;margin-top:6px">Rupture de stock</div>`}
+            </div>
+            ${dispo<=0?'<div style="font-size:10px;color:var(--amber);font-weight:600;margin-top:2px">⚠️ Stock épuisé</div>':''}
           </div>
         </div>`;
       }).join('')}
@@ -1612,12 +1664,12 @@ function rVente(){
 // ─── VENTE RAPIDE — FONCTIONS CARTES ───
 function ajouterProduitRapide(aid){
   const a=ga(aid);if(!a)return;
-  const dispo=sa(a);if(dispo<=0)return toast('❌ Stock insuffisant');
+  const dispo=sa(a); // Vente autorisée même stock épuisé
   const type=window.typePrix||'detail';
   const pu=getPrixParType(a,type);
   const existant=window.panier.findIndex(l=>l.aid===aid);
   if(existant>=0){
-    if(window.panier[existant].qte>=dispo)return toast('⚠️ Stock max atteint');
+    // pas de blocage sur quantité max stock
     window.panier[existant].qte++;
     window.panier[existant].mt=window.panier[existant].qte*window.panier[existant].pu;
   }else{
@@ -1713,7 +1765,7 @@ function ajouterAuPanier(){
   const sel=document.getElementById('pa-art');
   const aid=parseInt(sel.value);if(!aid)return toast('⚠️ Sélectionne un article');
   const a=ga(aid);if(!a)return;
-  const dispo=sa(a);if(dispo<=0)return toast('❌ Stock insuffisant');
+  const dispo=sa(a); // Vente autorisée même stock épuisé
   const type=window.typePrix||'detail';
   const pu=getPrixParType(a,type);
   const existant=window.panier.findIndex(l=>l.aid===aid);
@@ -4396,7 +4448,18 @@ function majBadgeUtilisateur(){
   badge.style.display='flex';
   document.getElementById('cu-emoji').textContent=s.emoji||'👤';
   document.getElementById('cu-nom').textContent=s.nom||'';
-  document.getElementById('cu-role-badge').textContent=s.role==='admin'?'Admin':'Employé';
+  document.getElementById('cu-role-badge').textContent=s.role==='admin'?'Admin':s.role==='caissier'?'Caissier':'Vendeur';
+  // Remplir le pill topbar
+  const roleLabel=s.role==='admin'?'👑 Administrateur':s.role==='caissier'?'💰 Caissier':'🛒 Vendeur';
+  const av=document.getElementById('up-avatar');const pn=document.getElementById('up-name');
+  const pr=document.getElementById('up-role');const dn=document.getElementById('udd-name');
+  const de=document.getElementById('udd-email');const dr=document.getElementById('udd-role');
+  if(av)av.textContent=s.emoji||'👤';
+  if(pn)pn.textContent=s.nom||'—';
+  if(pr)pr.textContent=roleLabel;
+  if(dn)dn.textContent=s.nom||'—';
+  if(de)de.textContent=s.email||'—';
+  if(dr)dr.textContent=roleLabel;
 }
 
 // ─── PERMISSIONS PAR RÔLE ───
@@ -4414,7 +4477,7 @@ const PERMISSIONS = {
     couleur: '#8ecba8'
   },
   vendeur: {
-    pages: ['dashboard','vente','services','stock','clients','calculatrice'],
+    pages: ['dashboard','vente','services','clients','calculatrice'],
     label: '🛒 Vendeur',
     couleur: '#c5d0e8'
   }
@@ -4463,6 +4526,18 @@ function appliquerAcces(role){
     el.style.display = role==='admin' ? '' : 'none';
   });
 }
+
+function toggleUserMenu(){
+  const dd=document.getElementById('user-dropdown');
+  if(dd) dd.classList.toggle('open');
+}
+function closeUserMenu(){
+  const dd=document.getElementById('user-dropdown');
+  if(dd) dd.classList.remove('open');
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#user-pill')) closeUserMenu();
+});
 
 function peutAcceder(page){
   const role = S.session?.role || 'vendeur';
