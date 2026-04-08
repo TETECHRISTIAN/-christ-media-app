@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Christ Media">
-<title>Christ Media — All-in-One V10</title>
+<title>Christ Media — All-in-One V11</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
 <link rel="manifest" href="manifest.json">
@@ -624,6 +624,44 @@ body.dark th{background:var(--surface3)}
 @keyframes pulse{from{opacity:.4}to{opacity:1}}
 .sync-btn{margin-left:auto;background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:inherit;transition:all .15s}
 .sync-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+
+/* ─── OBJECTIFS ─── */
+.obj-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
+.obj-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.obj-val{font-size:18px;font-weight:700;letter-spacing:-.5px}
+.obj-target{font-size:11px;color:var(--text3);margin-top:2px}
+.obj-bar{height:6px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-top:8px}
+.obj-fill{height:100%;border-radius:4px;transition:width .5s}
+.obj-pct{font-size:11px;font-weight:600;margin-top:4px}
+
+/* ─── TENDANCE ─── */
+.trend-up{color:var(--green);font-size:11px;font-weight:600}
+.trend-down{color:var(--red);font-size:11px;font-weight:600}
+.trend-flat{color:var(--text3);font-size:11px;font-weight:600}
+
+/* ─── FILTRE DATE ─── */
+.date-filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.dfb{padding:4px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;font-family:inherit}
+.dfb.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.dfb-custom{display:flex;gap:6px;align-items:center}
+.dfb-custom input{padding:3px 8px;border:1px solid var(--border2);border-radius:var(--rs);font-size:12px;background:var(--surface);color:var(--text);outline:none;font-family:inherit}
+.dfb-custom input:focus{border-color:var(--navy)}
+
+/* ─── FICHE CLIENT PANEL ─── */
+.client-panel{position:fixed;right:0;top:0;bottom:0;width:380px;background:var(--surface);border-left:1px solid var(--border);box-shadow:-8px 0 30px rgba(0,0,0,.12);z-index:150;overflow-y:auto;transform:translateX(100%);transition:transform .25s}
+.client-panel.open{transform:translateX(0)}
+.cp-header{padding:20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start}
+.cp-name{font-size:18px;font-weight:700}
+.cp-close{background:none;border:none;cursor:pointer;font-size:18px;color:var(--text2);padding:4px}
+.cp-section{padding:16px 20px;border-bottom:1px solid var(--border)}
+.cp-sec-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.cp-stat{display:flex;justify-content:space-between;align-items:center;padding:6px 0}
+.cp-stat-label{font-size:13px;color:var(--text2)}
+.cp-stat-val{font-size:13px;font-weight:600;color:var(--text)}
+
+/* ─── RACCOURCIS CLAVIER ─── */
+.kbd{display:inline-flex;align-items:center;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;padding:1px 5px;font-size:10px;font-family:'DM Mono',monospace;color:var(--text2)}
+
 </style>
 </head>
 <body>
@@ -682,6 +720,10 @@ body.dark th{background:var(--surface3)}
       Dépenses
     </div>
     <div class="nav-sec">Analyse</div>
+    <div class="ni" data-page="objectifs" onclick="nav(this,'objectifs')">
+      <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="1" fill="currentColor"/></svg>
+      Objectifs
+    </div>
     <div class="ni" data-page="tresorerie" onclick="nav(this,'tresorerie')">
       <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="currentColor" opacity=".6"/><path d="M1 6h14" stroke="currentColor" stroke-width="1"/></svg>
       Trésorerie
@@ -823,6 +865,10 @@ body.dark th{background:var(--surface3)}
         <div class="mn-dd-item" onclick="nav(document.querySelector('[data-page=depenses]'),'depenses');mnActivate('mn-more')">
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
           Dépenses
+        </div>
+        <div class="mn-dd-item" onclick="nav(document.querySelector('[data-page=objectifs]'),'objectifs');mnActivate('mn-more')">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="1" fill="currentColor"/></svg>
+          Objectifs
         </div>
         <div class="mn-dd-item" onclick="nav(document.querySelector('[data-page=tresorerie]'),'tresorerie');mnActivate('mn-more')">
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="currentColor" opacity=".6"/></svg>
@@ -1000,6 +1046,7 @@ const defaultData={
   plannings:[],
   dettes:[],
   historique_prix:[],
+  objectifs:{ca_mensuel:500000,ventes_nb:50,depenses_max:200000,actif:true},
   boutiques:[{id:1,nom:'Christ Media — Lomé',actif:true}],
   boutique_active:1,
   parametres:{
@@ -1131,7 +1178,7 @@ async function manualSync(){
       saveLocal(S);
       setSyncStatus('online','Synchronisé ✓');
       toast('✅ Données synchronisées depuis le cloud');
-      ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres})[currentPage]();
+      ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres})[currentPage]();
     }else{
       await saveToFirebase(S);
       toast('✅ Données locales envoyées au cloud');
@@ -1157,7 +1204,7 @@ async function startFirebaseSync(){
         if(savedSession&&savedSession.uid) S.session=savedSession;
         saveLocal(S);
         setSyncStatus('online','Synchronisé ✓');
-        ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres})[currentPage]();
+        ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres})[currentPage]();
       }else{
         await saveToFirebase(S);
       }
@@ -1202,9 +1249,10 @@ function toast(msg,dur=2200){
 }
 
 // ─── NAVIGATION ───
-const titles={dashboard:'Tableau de bord',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres'};
+const titles={dashboard:'Tableau de bord',objectifs:'Objectifs & KPIs',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres'};
 const actionsMap={
   dashboard:()=>'<button class="btn btn-success" onclick="nav(document.querySelector(\'[data-page=vente]\'),\'vente\')">+ Vente</button>',
+  objectifs:()=>'<button class="btn btn-primary" onclick="editObjectifs()">⚙️ Modifier objectifs</button>',
   transactions:()=>'',
   vente:()=>'',
   services:()=>'<button class="btn btn-primary" onclick="addService()">+ Service</button>',
@@ -1224,7 +1272,7 @@ function nav(el,page){
   document.getElementById('topbar-title').textContent=titles[page]||'';
   document.getElementById('topbar-actions').innerHTML=actionsMap[page]?actionsMap[page]():'';
   currentPage=page;
-  ({dashboard:rDash,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres})[page]();
+  ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres})[page]();
   closeMobileSidebar();
   document.getElementById('mn-dropdown').classList.remove('open');
 }
@@ -1264,6 +1312,16 @@ function closeModal(){document.getElementById('modal-root').innerHTML=''}
 // ─── DASHBOARD ───
 function rDash(){
   if(!S||!S.ventes)return;
+  // Mois courant et mois précédent
+  const now=new Date();
+  const curM=now.toISOString().slice(0,7);
+  const prevDate=new Date(now.getFullYear(),now.getMonth()-1,1);
+  const prevM=prevDate.toISOString().slice(0,7);
+  const ventesM=mois=>S.ventes.filter(v=>v.statut==='Payé'&&v.date&&v.date.startsWith(mois)).reduce((s,v)=>s+v.mt,0);
+  const depM=mois=>S.depenses.filter(d=>d.date&&d.date.startsWith(mois)).reduce((s,d)=>s+d.mt,0);
+  const vpCur=ventesM(curM),vpPrev=ventesM(prevM);
+  const depCur=depM(curM),depPrev=depM(prevM);
+  const trend=(cur,prev)=>{if(!prev)return'<span class="trend-flat">— nouveau</span>';const pct=Math.round((cur-prev)/prev*100);if(pct>0)return`<span class="trend-up">↑ +${pct}% vs mois préc.</span>`;if(pct<0)return`<span class="trend-down">↓ ${pct}% vs mois préc.</span>`;return'<span class="trend-flat">= stable</span>';};
   const vp=S.ventes.filter(v=>v.statut==='Payé').reduce((s,v)=>s+v.mt,0);
   const vi=S.ventes.filter(v=>v.statut==='Non payé').reduce((s,v)=>s+v.mt,0);
   const dep=S.depenses.reduce((s,d)=>s+d.mt,0);
@@ -1272,15 +1330,28 @@ function rDash(){
   const al=S.stock.filter(a=>sa(a)<=a.seuil&&sa(a)>=0);
   const vc=cat=>S.ventes.filter(v=>{const a=ga(v.aid);return a&&a.cat===cat&&v.statut==='Payé'}).reduce((s,v)=>s+v.mt,0);
   const vl=vc('Lingerie'),vav=vc('Audio-Vidéo'),vb=vc('Bureautique'),vt=vp||1;
+  // Objectifs
+  const obj=S.objectifs||{ca_mensuel:500000,ventes_nb:50,depenses_max:200000,actif:true};
+  const vNbCur=S.ventes.filter(v=>v.statut==='Payé'&&v.date&&v.date.startsWith(curM)).length;
+  const caPct=Math.min(100,obj.ca_mensuel?Math.round(vpCur/obj.ca_mensuel*100):0);
+  const nbPct=Math.min(100,obj.ventes_nb?Math.round(vNbCur/obj.ventes_nb*100):0);
+  const depPct=Math.min(100,obj.depenses_max?Math.round(depCur/obj.depenses_max*100):0);
   document.getElementById('content').innerHTML=`
     ${al.length?`<div class="alert alert-r">⚠️ ${al.length} article(s) en stock bas : ${al.slice(0,3).map(a=>`<strong>${a.nom}</strong> (${sa(a)} restants)`).join(' · ')}${al.length>3?` +${al.length-3} autres`:''}</div>`:''}
-    <p class="st">Vue d'ensemble</p>
+    <p class="st">Vue d'ensemble <span style="font-size:11px;color:var(--text3);font-weight:400;margin-left:8px">${curM}</span></p>
     <div class="g4">
       <div class="card"><div class="ct">Solde net</div><div class="mv" style="color:${solde>=0?'var(--green)':'var(--red)'}">${F(solde)}</div><span class="badge ${solde>=0?'bg':'br'}">${solde>=0?'Bénéfice':'Déficit'}</span></div>
-      <div class="card"><div class="ct">Ventes encaissées</div><div class="mv">${F(vp)}</div><span class="badge bg">${S.ventes.filter(v=>v.statut==='Payé').length} ventes</span></div>
-      <div class="card"><div class="ct">Créances clients</div><div class="mv" style="color:var(--amber)">${F(vi+S.clients.reduce((s,c)=>s+c.solde,0))}</div><span class="badge ba">À encaisser</span></div>
+      <div class="card"><div class="ct">Ventes encaissées</div><div class="mv">${F(vpCur)}</div>${trend(vpCur,vpPrev)}</div>
+      <div class="card"><div class="ct">Dépenses du mois</div><div class="mv" style="color:var(--red)">${F(depCur)}</div>${trend(depCur,depPrev)}</div>
       <div class="card"><div class="ct">Valeur stock</div><div class="mv">${F(sv)}</div><span class="badge bb">${S.stock.length} articles</span></div>
     </div>
+    ${obj.actif!==false?`
+    <p class="st">Objectifs du mois <button onclick="nav(document.querySelector('[data-page=objectifs]'),'objectifs')" style="font-size:11px;font-weight:500;background:none;border:none;color:var(--navy);cursor:pointer;margin-left:8px">Voir détail →</button></p>
+    <div class="g3">
+      <div class="obj-card"><div class="obj-title">CA mensuel</div><div class="obj-val">${F(vpCur)}</div><div class="obj-target">Objectif : ${F(obj.ca_mensuel)}</div><div class="obj-bar"><div class="obj-fill" style="width:${caPct}%;background:${caPct>=100?'var(--green)':caPct>=60?'var(--navy)':'var(--amber)'}"></div></div><div class="obj-pct" style="color:${caPct>=100?'var(--green)':caPct>=60?'var(--navy)':'var(--amber)'}">${caPct}%${caPct>=100?' ✅':''}</div></div>
+      <div class="obj-card"><div class="obj-title">Nb. ventes</div><div class="obj-val">${vNbCur}</div><div class="obj-target">Objectif : ${obj.ventes_nb} ventes</div><div class="obj-bar"><div class="obj-fill" style="width:${nbPct}%;background:${nbPct>=100?'var(--green)':nbPct>=60?'var(--teal)':'var(--amber)'}"></div></div><div class="obj-pct" style="color:${nbPct>=100?'var(--green)':nbPct>=60?'var(--teal)':'var(--amber)'}">${nbPct}%${nbPct>=100?' ✅':''}</div></div>
+      <div class="obj-card"><div class="obj-title">Dépenses max</div><div class="obj-val">${F(depCur)}</div><div class="obj-target">Plafond : ${F(obj.depenses_max)}</div><div class="obj-bar"><div class="obj-fill" style="width:${depPct}%;background:${depPct>=100?'var(--red)':depPct>=80?'var(--amber)':'var(--green)'}"></div></div><div class="obj-pct" style="color:${depPct>=100?'var(--red)':depPct>=80?'var(--amber)':'var(--green)'}">${depPct}%${depPct>=100?' ⚠️':''}</div></div>
+    </div>`:``}
     <p class="st">Ventes par secteur</p>
     <div class="g3">
       <div class="card"><div class="ct">Lingerie</div><div class="mv">${F(vl)}</div><div class="pbar"><div class="pfill" style="width:${Math.round(vl/vt*100)}%;background:var(--pink)"></div></div><div class="ms">${Math.round(vl/vt*100)}% du CA</div></div>
@@ -1308,11 +1379,91 @@ function rDash(){
       <div class="card"><div class="ct">Total dépenses</div><div class="mv" style="color:var(--red)">${F(dep)}</div><span class="badge br">${S.depenses.length} opérations</span></div>
       <div class="card"><div class="ct">Dettes fournisseurs</div><div class="mv" style="color:var(--amber)">${F(S.fournisseurs.reduce((s,f)=>s+f.dette,0))}</div><span class="badge ba">À régler</span></div>
       <div class="card"><div class="ct">Clients débiteurs</div><div class="mv">${N(S.clients.filter(c=>c.solde>0).length)}</div><span class="badge ba">${F(S.clients.reduce((s,c)=>s+c.solde,0))}</span></div>
-    </div>`;
+    </div>
+    <p class="st" style="color:var(--text3);font-size:11px;font-weight:400;margin-top:24px">
+      Raccourcis : <span class="kbd">N</span> Nouvelle vente &nbsp; <span class="kbd">S</span> Stock &nbsp; <span class="kbd">Ctrl+K</span> Recherche &nbsp; <span class="kbd">Échap</span> Fermer modal
+    </p>`;
+}
+
+
+// ─── OBJECTIFS ───
+function rObjectifs(){
+  if(!S.objectifs)S.objectifs={ca_mensuel:500000,ventes_nb:50,depenses_max:200000,actif:true};
+  const obj=S.objectifs;
+  const now=new Date();
+  const moisLabels=[];const caHisto=[];const depHisto=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const m=d.toISOString().slice(0,7);
+    const label=d.toLocaleDateString('fr-FR',{month:'short',year:'2-digit'});
+    moisLabels.push(label);
+    caHisto.push(S.ventes.filter(v=>v.statut==='Payé'&&v.date&&v.date.startsWith(m)).reduce((s,v)=>s+v.mt,0));
+    depHisto.push(S.depenses.filter(d2=>d2.date&&d2.date.startsWith(m)).reduce((s,d2)=>s+d2.mt,0));
+  }
+  const curM=now.toISOString().slice(0,7);
+  const vpCur=caHisto[5],depCur=depHisto[5];
+  const vNbCur=S.ventes.filter(v=>v.statut==="Payé"&&v.date&&v.date.startsWith(curM)).length;
+  const caPct=Math.min(100,obj.ca_mensuel?Math.round(vpCur/obj.ca_mensuel*100):0);
+  const nbPct=Math.min(100,obj.ventes_nb?Math.round(vNbCur/obj.ventes_nb*100):0);
+  const depPct=Math.min(100,obj.depenses_max?Math.round(depCur/obj.depenses_max*100):0);
+  const maxCA=Math.max(...caHisto,obj.ca_mensuel,1);
+  document.getElementById("content").innerHTML=`
+    <p class="st">Mois en cours — ${curM}</p>
+    <div class="g3">
+      <div class="obj-card">
+        <div class="obj-title">Objectif CA mensuel</div>
+        <div class="obj-val">${F(vpCur)}</div>
+        <div class="obj-target">Cible : ${F(obj.ca_mensuel)}</div>
+        <div class="obj-bar"><div class="obj-fill" style="width:${caPct}%;background:${caPct>=100?"var(--green)":caPct>=60?"var(--navy)":"var(--amber)"}"></div></div>
+        <div class="obj-pct" style="color:${caPct>=100?"var(--green)":caPct>=60?"var(--navy)":"var(--amber)"}">${caPct}%${caPct>=100?" ✅":caPct>=60?" 🔥":" ⏳"}</div>
+      </div>
+      <div class="obj-card">
+        <div class="obj-title">Nombre de ventes</div>
+        <div class="obj-val">${vNbCur}</div>
+        <div class="obj-target">Cible : ${obj.ventes_nb} ventes</div>
+        <div class="obj-bar"><div class="obj-fill" style="width:${nbPct}%;background:${nbPct>=100?"var(--green)":nbPct>=60?"var(--teal)":"var(--amber)"}"></div></div>
+        <div class="obj-pct" style="color:${nbPct>=100?"var(--green)":nbPct>=60?"var(--teal)":"var(--amber)"}">${nbPct}%${nbPct>=100?" ✅":nbPct>=60?" 🔥":" ⏳"}</div>
+      </div>
+      <div class="obj-card">
+        <div class="obj-title">Plafond dépenses</div>
+        <div class="obj-val">${F(depCur)}</div>
+        <div class="obj-target">Plafond : ${F(obj.depenses_max)}</div>
+        <div class="obj-bar"><div class="obj-fill" style="width:${depPct}%;background:${depPct>=100?"var(--red)":depPct>=80?"var(--amber)":"var(--green)"}"></div></div>
+        <div class="obj-pct" style="color:${depPct>=100?"var(--red)":depPct>=80?"var(--amber)":"var(--green)"}">${depPct}%${depPct>=100?" ⚠️ Dépassé":depPct>=80?" 🔶 Attention":" ✅ OK"}</div>
+      </div>
+    </div>
+    <p class="st" style="margin-top:24px">Historique CA 6 mois</p>
+    <div class="card" style="padding:20px">
+      <div style="display:flex;align-items:flex-end;gap:8px;height:120px">
+        ${caHisto.map((v,i)=>{const h=Math.round(v/maxCA*100);const ok=obj.ca_mensuel&&v>=obj.ca_mensuel;return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="font-size:10px;color:var(--text3)">${Math.round(v/1000)}k</div><div style="width:100%;height:${Math.max(h,4)}px;background:${ok?"var(--green)":i===5?"var(--navy)":"var(--navy-light)"};border-radius:4px 4px 0 0"></div><div style="font-size:10px;color:var(--text3)">${moisLabels[i]}</div></div>`;}).join("")}
+      </div>
+    </div>
+    <p class="st" style="margin-top:24px">Récap mensuel</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Mois</th><th>CA</th><th>Dépenses</th><th>Solde</th><th>Objectif CA</th></tr></thead>
+      <tbody>${moisLabels.map((lbl,i)=>{const ca=caHisto[i],dep=depHisto[i],s=ca-dep,ok=obj.ca_mensuel&&ca>=obj.ca_mensuel;return`<tr><td class="tdm">${lbl}</td><td style="font-weight:600;color:var(--green)">${F(ca)}</td><td style="color:var(--red)">${F(dep)}</td><td style="font-weight:600;color:${s>=0?"var(--green)":"var(--red)"}">${F(s)}</td><td><span class="badge ${ok?"bg":"ba"}">${ok?"✅ Atteint":"—"}</span></td></tr>`;}).join("")}</tbody>
+    </table></div>`;
+}
+function editObjectifs(){
+  if(!S.objectifs)S.objectifs={ca_mensuel:500000,ventes_nb:50,depenses_max:200000,actif:true};
+  const o=S.objectifs;
+  modal(`<div class="mft">Objectifs mensuels</div>
+    <div class="fg"><label class="fl">Objectif CA (${S.parametres.devise})</label><input class="fi" type="number" id="o-ca" value="${o.ca_mensuel}"></div>
+    <div class="fg"><label class="fl">Nombre de ventes cible</label><input class="fi" type="number" id="o-nb" value="${o.ventes_nb}"></div>
+    <div class="fg"><label class="fl">Plafond dépenses (${S.parametres.devise})</label><input class="fi" type="number" id="o-dep" value="${o.depenses_max}"></div>
+    <div class="fg" style="display:flex;align-items:center;gap:10px"><input type="checkbox" id="o-actif" ${o.actif!==false?"checked":""}><label for="o-actif" style="font-size:13px;cursor:pointer">Afficher sur le tableau de bord</label></div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveObjectifs()">Enregistrer</button></div>`);
+}
+function saveObjectifs(){
+  if(!S.objectifs)S.objectifs={};
+  S.objectifs.ca_mensuel=+document.getElementById("o-ca").value||0;
+  S.objectifs.ventes_nb=+document.getElementById("o-nb").value||0;
+  S.objectifs.depenses_max=+document.getElementById("o-dep").value||0;
+  S.objectifs.actif=document.getElementById("o-actif").checked;
+  saveData();closeModal();toast("Objectifs mis à jour");rObjectifs();
 }
 
 // ─── VENTES (PANIER MULTI-ARTICLES) ───
-if(!window.panier) window.panier=[];
 
 // ─── ÉTAT PANIER ───
 if(!window.typePrix) window.typePrix='detail';
@@ -1652,33 +1803,71 @@ function delVente(id){
 }
 
 // ─── ACHATS ───
-function rAchats(){
-  const tot=S.achats.reduce((s,a)=>s+a.mt,0);
-  document.getElementById('content').innerHTML=`
-    <div class="g3" style="margin-bottom:20px">
-      <div class="card"><div class="ct">Total achats</div><div class="mv">${F(tot)}</div><span class="badge bb">${S.achats.length} opérations</span></div>
-      <div class="card"><div class="ct">Ce mois</div><div class="mv">${F(S.achats.filter(a=>a.date>=D().slice(0,7)).reduce((s,a)=>s+a.mt,0))}</div></div>
-      <div class="card"><div class="ct">Fournisseurs actifs</div><div class="mv">${N([...new Set(S.achats.map(a=>a.fid))].length)}</div></div>
+// ─── FILTRE DATE UNIVERSEL ───
+if(!window.dfState)window.dfState={};
+function dfHtml(key){
+  const s=window.dfState[key]||'mois';
+  return `<div class="date-filter-bar">
+    <button class="dfb${s==='jour'?' active':''}" onclick="setDf('${key}','jour');r${key.charAt(0).toUpperCase()+key.slice(1)}()">Aujourd\'hui</button>
+    <button class="dfb${s==='semaine'?' active':''}" onclick="setDf('${key}','semaine');r${key.charAt(0).toUpperCase()+key.slice(1)}()">Cette semaine</button>
+    <button class="dfb${s==='mois'?' active':''}" onclick="setDf('${key}','mois');r${key.charAt(0).toUpperCase()+key.slice(1)}()">Ce mois</button>
+    <button class="dfb${s==='tout'?' active':''}" onclick="setDf('${key}','tout');r${key.charAt(0).toUpperCase()+key.slice(1)}()">Tout</button>
+    <div class="dfb-custom">
+      <input type="date" id="df-from-${key}" value="${window.dfState[key+'_from']||''}" onchange="setDf('${key}','custom');r${key.charAt(0).toUpperCase()+key.slice(1)}()">
+      <span style="font-size:11px;color:var(--text3)">→</span>
+      <input type="date" id="df-to-${key}" value="${window.dfState[key+'_to']||''}" onchange="setDf('${key}','custom');r${key.charAt(0).toUpperCase()+key.slice(1)}()">
     </div>
+  </div>`;
+}
+function setDf(key,val){
+  window.dfState[key]=val;
+  if(val==='custom'){
+    window.dfState[key+'_from']=document.getElementById('df-from-'+key)?.value||'';
+    window.dfState[key+'_to']=document.getElementById('df-to-'+key)?.value||'';
+  }
+}
+function applyDf(key,items){
+  const s=window.dfState[key]||'mois';
+  const today=D();
+  const now=new Date();
+  if(s==='jour') return items.filter(i=>i.date===today);
+  if(s==='semaine'){
+    const day=now.getDay()||7;
+    const mon=new Date(now);mon.setDate(now.getDate()-day+1);
+    const monStr=mon.toISOString().split('T')[0];
+    return items.filter(i=>i.date>=monStr&&i.date<=today);
+  }
+  if(s==='mois'){
+    const m=today.slice(0,7);
+    return items.filter(i=>i.date&&i.date.startsWith(m));
+  }
+  if(s==='custom'){
+    const from=window.dfState[key+'_from']||'';
+    const to=window.dfState[key+'_to']||'9999';
+    return items.filter(i=>(!from||i.date>=from)&&(!to||i.date<=to));
+  }
+  return items;
+}
+
+function rAchats(){
+  const filtered=applyDf('achats',S.achats);
+  const tot=filtered.reduce((s,a)=>s+a.mt,0);
+  document.getElementById('content').innerHTML=dfHtml('achats')+`
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Date</th><th>Fournisseur</th><th>Article</th><th>Qté</th><th>Prix unit.</th><th>Montant</th><th>Mode</th><th>Notes</th><th></th></tr></thead>
-      <tbody>${S.achats.length===0?'<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text3)">Aucun achat enregistré</td></tr>':
-        S.achats.slice().reverse().map(ac=>{
-          const f=gf(ac.fid),ar=ga(ac.aid);
-          return`<tr>
-            <td style="font-family:'DM Mono',monospace;font-size:12px">${ac.date}</td>
-            <td class="tdm">${f?f.nom:ac.four||'?'}</td>
-            <td>${ar?ar.nom:'?'}</td>
-            <td>${N(ac.qte)}</td><td>${F(ac.pu)}</td>
-            <td style="font-weight:600;color:var(--red)">${F(ac.mt)}</td>
-            <td><span class="badge bb">${ac.cid?nomCompte(ac.cid):(ac.mode||'—')}</span></td>
-            <td style="color:var(--text3);font-size:12px">${ac.notes||'—'}</td>
-            <td><div class="td-actions">
-              ${ac.statut==='À payer'?`<button class="btn-icon btn-sm" onclick="configurerTranchesAchat(${ac.id})" title="Tranches paiement">💳</button>`:''}
-              <button class="btn-icon btn-sm" onclick="delAchat(${ac.id})" style="color:var(--red)">✕</button>
-            </div></td>
-          </tr>`;
-        }).join('')}
+      <thead><tr><th>Date</th><th>Fournisseur</th><th>Article</th><th>Qté</th><th>Montant</th><th>Compte</th><th>Notes</th><th></th></tr></thead>
+      <tbody>${filtered.length===0?'<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text3)">Aucun achat</td></tr>':
+        filtered.slice().reverse().map(a=>{const fnom=gf(a.fid)?gf(a.fid).nom:a.four||'—';const anom=ga(a.aid)?ga(a.aid).nom:'—';return`<tr>
+          <td style="font-family:'DM Mono',monospace;font-size:12px">${a.date}</td>
+          <td class="tdm">${fnom}</td><td>${anom}</td><td>${N(a.qte)}</td>
+          <td style="font-weight:600;color:var(--purple)">${F(a.mt)}</td>
+          <td><span class="badge bb">${a.cid?nomCompte(a.cid):(a.mode||'—')}</span></td>
+          <td style="color:var(--text3);font-size:12px">${a.notes||'—'}</td>
+          <td><div class="td-actions">
+            <button class="btn-icon btn-sm" onclick="delAchat(${a.id})" style="color:var(--red)">✕</button>
+          </div></td>
+        </tr>`;}).join('')}
+        <tr style="background:var(--surface2)"><td colspan="4" style="font-weight:600">Total (${filtered.length} achats)</td>
+          <td style="font-weight:700;color:var(--purple)">${F(tot)}</td><td></td><td></td><td></td></tr>
       </tbody></table></div>`;
 }
 function addAchat(){
@@ -1901,24 +2090,92 @@ function delArticle(id){
 function rClients(){
   document.getElementById('content').innerHTML=`
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Nom</th><th>Téléphone</th><th>Secteur</th><th>Solde dû</th><th>Statut</th><th>Notes</th><th></th></tr></thead>
+      <thead><tr><th>Nom</th><th>Téléphone</th><th>Secteur</th><th>Total achats</th><th>Solde dû</th><th>Statut</th><th></th></tr></thead>
       <tbody>${S.clients.length===0?'<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text3)">Aucun client</td></tr>':
-        S.clients.map(c=>`<tr>
-          <td class="tdm">${c.nom}</td><td>${c.tel}</td><td>${cb(c.secteur)}</td>
-          <td style="color:${c.solde>0?'var(--red)':'var(--text2)'};font-weight:${c.solde>0?'600':'400'}">${c.solde>0?F(c.solde):'—'}</td>
-          <td>${sb(c.statut)}</td><td style="color:var(--text3);font-size:12px">${c.notes||'—'}</td>
-          <td><div class="td-actions">
-            <button class="btn-icon btn-sm" onclick="editClient(${c.id})">✏️</button>
-            <button class="btn-icon btn-sm" onclick="delClient(${c.id})" style="color:var(--red)">✕</button>
-          </div></td>
-        </tr>`).join('')}
+        S.clients.map(c=>{
+          const vc2=S.ventes.filter(v=>v.client===c.nom&&v.statut==='Payé');
+          const tot=vc2.reduce((s,v)=>s+v.mt,0);
+          return`<tr style="cursor:pointer" onclick="ouvrirFicheClient(${c.id})">
+            <td class="tdm" style="color:var(--navy)">${c.nom}</td><td>${c.tel}</td><td>${cb(c.secteur)}</td>
+            <td style="font-weight:600;color:var(--green)">${tot>0?F(tot):'—'}</td>
+            <td style="color:${c.solde>0?'var(--red)':'var(--text2)'};font-weight:${c.solde>0?'600':'400'}">${c.solde>0?F(c.solde):'—'}</td>
+            <td>${sb(c.statut)}</td>
+            <td><div class="td-actions">
+              <button class="btn-icon btn-sm" onclick="event.stopPropagation();ouvrirFicheClient(${c.id})" title="Fiche">👤</button>
+              <button class="btn-icon btn-sm" onclick="event.stopPropagation();editClient(${c.id})">✏️</button>
+              <button class="btn-icon btn-sm" onclick="event.stopPropagation();delClient(${c.id})" style="color:var(--red)">✕</button>
+            </div></td>
+          </tr>`;
+        }).join('')}
       </tbody></table></div>
     <div class="g3" style="margin-top:18px">
       <div class="card"><div class="ct">Total clients</div><div class="mv">${N(S.clients.length)}</div></div>
       <div class="card"><div class="ct">Débiteurs</div><div class="mv" style="color:var(--red)">${N(S.clients.filter(c=>c.solde>0).length)}</div></div>
       <div class="card"><div class="ct">Total créances</div><div class="mv" style="color:var(--amber)">${F(S.clients.reduce((s,c)=>s+c.solde,0))}</div></div>
     </div>`;
+  if(!document.getElementById('client-panel')){
+    const p=document.createElement('div');p.id='client-panel';p.className='client-panel';p.innerHTML='';document.body.appendChild(p);
+  }
 }
+function ouvrirFicheClient(id){
+  const c=S.clients.find(c=>c.id==id);if(!c)return;
+  const vc2=S.ventes.filter(v=>v.client===c.nom);
+  const vp2=vc2.filter(v=>v.statut==='Payé');
+  const tot=vp2.reduce((s,v)=>s+v.mt,0);
+  const dv=vc2.slice().sort((a,b)=>b.date.localeCompare(a.date))[0];
+  let panel=document.getElementById('client-panel');
+  if(!panel){panel=document.createElement('div');panel.id='client-panel';panel.className='client-panel';document.body.appendChild(panel);}
+  panel.innerHTML=`
+    <div class="cp-header">
+      <div>
+        <div style="font-size:22px;margin-bottom:4px">${c.statut==='VIP'?'👑':c.statut==='Débiteur'?'⚠️':'👤'}</div>
+        <div class="cp-name">${c.nom}</div>
+        <div style="margin-top:4px">${sb(c.statut)}</div>
+      </div>
+      <button class="cp-close" onclick="fermerFicheClient()">✕</button>
+    </div>
+    <div class="cp-section">
+      <div class="cp-sec-title">Coordonnées</div>
+      <div class="cp-stat"><span class="cp-stat-label">Téléphone</span><span class="cp-stat-val">${c.tel||'—'}</span></div>
+      <div class="cp-stat"><span class="cp-stat-label">Secteur</span><span class="cp-stat-val">${c.secteur}</span></div>
+      ${c.notes?`<div class="cp-stat"><span class="cp-stat-label">Notes</span><span class="cp-stat-val" style="font-size:12px">${c.notes}</span></div>`:''}
+    </div>
+    <div class="cp-section">
+      <div class="cp-sec-title">Activité commerciale</div>
+      <div class="cp-stat"><span class="cp-stat-label">Total dépensé</span><span class="cp-stat-val" style="color:var(--green)">${F(tot)}</span></div>
+      <div class="cp-stat"><span class="cp-stat-label">Nb. commandes</span><span class="cp-stat-val">${vc2.length}</span></div>
+      <div class="cp-stat"><span class="cp-stat-label">Panier moyen</span><span class="cp-stat-val">${vp2.length>0?F(Math.round(tot/vp2.length)):'—'}</span></div>
+      <div class="cp-stat"><span class="cp-stat-label">Dernière visite</span><span class="cp-stat-val">${dv?dv.date:'—'}</span></div>
+      ${c.solde>0?`<div class="cp-stat"><span class="cp-stat-label" style="color:var(--red)">Solde dû</span><span class="cp-stat-val" style="color:var(--red);font-weight:700">${F(c.solde)}</span></div>`:''}
+    </div>
+    <div class="cp-section">
+      <div class="cp-sec-title">Historique (${vc2.length})</div>
+      ${vc2.length===0?'<div style="font-size:13px;color:var(--text3);padding:8px 0">Aucun achat enregistré</div>':
+        vc2.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8).map(v=>{
+          const lignes=v.lignes||[{aid:v.aid,qte:v.qte,pu:v.pu}];
+          const noms=lignes.map(l=>{const a=S.stock.find(a=>a.id==l.aid);return a?a.nom:'?'}).join(', ');
+          return`<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between">
+              <span style="font-size:12px;color:var(--text3)">${v.date}</span>
+              <span style="font-weight:600;font-size:13px;color:${v.statut==='Payé'?'var(--green)':'var(--red)'}">${F(v.mt)}</span>
+            </div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${noms}</div>
+            <div style="margin-top:3px">${sb(v.statut)}</div>
+          </div>`;
+        }).join('')}
+      ${vc2.length>8?`<div style="font-size:11px;color:var(--text3);padding:6px 0">+ ${vc2.length-8} autres</div>`:''}
+    </div>
+    <div style="padding:16px 20px">
+      <button class="btn btn-primary" style="width:100%" onclick="editClient(${c.id});fermerFicheClient()">✏️ Modifier</button>
+    </div>`;
+  panel.classList.add('open');
+  document.addEventListener('keydown',_escFC);
+}
+function fermerFicheClient(){
+  const p=document.getElementById('client-panel');if(p)p.classList.remove('open');
+  document.removeEventListener('keydown',_escFC);
+}
+function _escFC(e){if(e.key==='Escape')fermerFicheClient();}
 function addClient(){
   modal(`<div class="mft">Ajouter un client</div>
     <div class="fg"><label class="fl">Nom complet</label><input class="fi" id="mn" placeholder="Nom du client"></div>
@@ -2016,22 +2273,24 @@ function delFour(id){
 
 // ─── DÉPENSES ───
 function rDep(){
-  const tot=S.depenses.reduce((s,d)=>s+d.mt,0);
-  document.getElementById('content').innerHTML=`
+  const filtered=applyDf('dep',S.depenses);
+  const tot=filtered.reduce((s,d)=>s+d.mt,0);
+  document.getElementById('content').innerHTML=dfHtml('dep')+`
     <div class="tbl-wrap"><table>
       <thead><tr><th>Date</th><th>Fournisseur</th><th>Catégorie</th><th>Montant</th><th>Mode</th><th>Notes</th><th></th></tr></thead>
-      <tbody>${S.depenses.slice().reverse().map(d=>`<tr>
-        <td style="font-family:'DM Mono',monospace;font-size:12px">${d.date}</td>
-        <td class="tdm">${d.four}</td><td>${cb(d.cat)}</td>
-        <td style="font-weight:600;color:var(--red)">${F(d.mt)}</td>
-        <td><span class="badge bb">${d.cid?nomCompte(d.cid):(d.mode||'—')}</span></td>
-        <td style="color:var(--text3);font-size:12px">${d.notes||'—'}</td>
-        <td><div class="td-actions">
-          <button class="btn-icon btn-sm" onclick="editDep(${d.id})">✏️</button>
-          <button class="btn-icon btn-sm" onclick="delDep(${d.id})" style="color:var(--red)">✕</button>
-        </div></td>
-      </tr>`).join('')}
-        <tr style="background:var(--surface2)"><td colspan="3" style="font-weight:600;color:var(--text)">Total</td>
+      <tbody>${filtered.length===0?'<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text3)">Aucune dépense</td></tr>':
+        filtered.slice().reverse().map(d=>`<tr>
+          <td style="font-family:'DM Mono',monospace;font-size:12px">${d.date}</td>
+          <td class="tdm">${d.four}</td><td>${cb(d.cat)}</td>
+          <td style="font-weight:600;color:var(--red)">${F(d.mt)}</td>
+          <td><span class="badge bb">${d.cid?nomCompte(d.cid):(d.mode||'—')}</span></td>
+          <td style="color:var(--text3);font-size:12px">${d.notes||'—'}</td>
+          <td><div class="td-actions">
+            <button class="btn-icon btn-sm" onclick="editDep(${d.id})">✏️</button>
+            <button class="btn-icon btn-sm" onclick="delDep(${d.id})" style="color:var(--red)">✕</button>
+          </div></td>
+        </tr>`).join('')}
+        <tr style="background:var(--surface2)"><td colspan="3" style="font-weight:600">Total (${filtered.length})</td>
           <td style="font-weight:700;color:var(--red)">${F(tot)}</td><td></td><td></td><td></td></tr>
       </tbody></table></div>`;
 }
@@ -2997,8 +3256,15 @@ function supprimerPhoto(aid){
 let txnFilter='jour';
 function rTransactions(){
   const today=D();
+  const now2=new Date();
+  const day2=now2.getDay()||7;
+  const mon2=new Date(now2);mon2.setDate(now2.getDate()-day2+1);
+  const monStr2=mon2.toISOString().split('T')[0];
+  const curM2=today.slice(0,7);
   const filterFn=item=>{
     if(txnFilter==='jour') return item.date===today;
+    if(txnFilter==='semaine') return item.date>=monStr2&&item.date<=today;
+    if(txnFilter==='mois') return item.date&&item.date.startsWith(curM2);
     return true;
   };
   const ventes=S.ventes.filter(filterFn);
@@ -3027,7 +3293,9 @@ function rTransactions(){
 
   document.getElementById('content').innerHTML=`
     <div class="period-tabs" id="txn-tabs">
-      <button class="ptab${txnFilter==='jour'?' active':''}" onclick="txnFilter='jour';rTransactions()">Aujourd'hui</button>
+      <button class="ptab${txnFilter==='jour'?' active':''}" onclick="txnFilter='jour';rTransactions()">Aujourd\'hui</button>
+      <button class="ptab${txnFilter==='semaine'?' active':''}" onclick="txnFilter='semaine';rTransactions()">Semaine</button>
+      <button class="ptab${txnFilter==='mois'?' active':''}" onclick="txnFilter='mois';rTransactions()">Ce mois</button>
       <button class="ptab${txnFilter==='tout'?' active':''}" onclick="txnFilter='tout';rTransactions()">Tout</button>
     </div>
     <div class="g4" style="margin-bottom:16px">
@@ -3348,56 +3616,96 @@ function fermerRecherche(){
   document.getElementById('search-global').style.display='none';
 }
 document.addEventListener('keydown',e=>{
-  if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();ouvrirRecherche();}
-  if(e.key==='Escape')fermerRecherche();
+  if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();ouvrirRecherche();return;}
+  if(e.key==='Escape'){fermerRecherche();fermerFicheClient();closeModal();return;}
+  // Raccourcis clavier simples — uniquement hors saisie
+  const tag=document.activeElement?.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT') return;
+  if(e.key==='n'||e.key==='N'){nav(document.querySelector('[data-page=vente]'),'vente');}
+  if(e.key==='s'||e.key==='S'){nav(document.querySelector('[data-page=stock]'),'stock');}
+  if(e.key==='d'||e.key==='D'){nav(document.querySelector('[data-page=dashboard]'),'dashboard');}
+  if(e.key==='c'||e.key==='C'){nav(document.querySelector('[data-page=clients]'),'clients');}
 });
+
 
 function rechercheGlobale(q){
   const el=document.getElementById('sg-results');
   if(!el)return;
-  if(!q||q.length<2){el.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">Tapez au moins 2 caractères</div>';return;}
+  if(!q||q.length<2){
+    el.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">Tapez pour chercher dans toute l\'app…<br><span style="font-size:11px;margin-top:8px;display:block">Articles · Clients · Ventes · Services · Fournisseurs · Devis</span></div>';
+    return;
+  }
   const r=q.toLowerCase();
-  const results=[];
+  const sections={};
+  const addR=(sec,icon,bg,titre,detail,action,badge)=>{
+    if(!sections[sec])sections[sec]={icon,items:[]};
+    sections[sec].items.push({icon,bg,titre,detail,action,badge});
+  };
 
   // Articles
   S.stock.filter(a=>a.nom.toLowerCase().includes(r)||a.code.toLowerCase().includes(r)).slice(0,5).forEach(a=>{
-    results.push({section:'📦 Articles',icon:'📦',bg:'var(--navy-bg)',titre:a.nom,detail:`${a.code} · ${a.cat} · Stock: ${sa(a)}`,action:`nav(document.querySelector('[data-page=stock]'),'stock');filterStock('${a.code}');fermerRecherche()`});
+    const stk=sa(a);const low=stk<=a.seuil;
+    addR('📦 Articles','📦','var(--navy-bg)',a.nom,`${a.code} · ${a.cat} · Stock: ${stk} · ${F(a.pv)}`,
+      `nav(document.querySelector('[data-page=stock]'),'stock');filterStock('${a.code}');fermerRecherche()`,
+      low?'<span style="font-size:10px;background:var(--red-bg);color:var(--red);padding:1px 6px;border-radius:8px;font-weight:600">Bas</span>':'');
   });
   // Clients
-  S.clients.filter(c=>c.nom.toLowerCase().includes(r)||c.tel?.includes(r)).slice(0,3).forEach(c=>{
-    results.push({section:'👤 Clients',icon:'👤',bg:'var(--teal-bg)',titre:c.nom,detail:`${c.tel||''} · ${c.secteur} · Solde: ${F(c.solde)}`,action:`nav(document.querySelector('[data-page=clients]'),'clients');fermerRecherche()`});
+  S.clients.filter(c=>c.nom.toLowerCase().includes(r)||(c.tel||'').includes(r)).slice(0,4).forEach(c=>{
+    const tot=S.ventes.filter(v=>v.client===c.nom&&v.statut==='Payé').reduce((s,v)=>s+v.mt,0);
+    addR('👤 Clients','👤','var(--teal-bg)',c.nom,`${c.tel||''} · ${c.secteur} · Total: ${F(tot)}`,
+      `nav(document.querySelector('[data-page=clients]'),'clients');fermerRecherche();setTimeout(()=>ouvrirFicheClient(${c.id}),200)`,
+      c.solde>0?`<span style="font-size:10px;background:var(--red-bg);color:var(--red);padding:1px 6px;border-radius:8px;font-weight:600">Doit ${F(c.solde)}</span>`:'');
   });
   // Ventes
-  S.ventes.filter(v=>(v.client||'').toLowerCase().includes(r)).slice(0,3).forEach(v=>{
-    const a=ga(v.aid);
-    results.push({section:'🛒 Ventes',icon:'🛒',bg:'var(--green-bg)',titre:v.client||'Client anonyme',detail:`${v.date} · ${F(v.mt)} · ${v.statut}`,action:`nav(document.querySelector('[data-page=vente]'),'vente');fermerRecherche()`});
+  S.ventes.filter(v=>(v.client||'').toLowerCase().includes(r)||(v.date||'').includes(r)).slice(0,4).forEach(v=>{
+    const lignes=v.lignes||[{aid:v.aid}];
+    const noms=lignes.map(l=>{const a=ga(l.aid);return a?a.nom:'?'}).join(', ');
+    addR('🛒 Ventes','🛒','var(--green-bg)',v.client||'Anonyme',`${v.date} · ${noms.slice(0,40)} · ${F(v.mt)}`,
+      `nav(document.querySelector('[data-page=vente]'),'vente');fermerRecherche()`,
+      v.statut==='Non payé'?'<span style="font-size:10px;background:var(--red-bg);color:var(--red);padding:1px 6px;border-radius:8px;font-weight:600">Impayé</span>':'');
+  });
+  // Devis
+  (S.devis||[]).filter(d=>d.client.toLowerCase().includes(r)).slice(0,3).forEach(d=>{
+    addR('📄 Devis','📄','var(--purple-bg)',`DEV-${String(d.id).padStart(4,'0')} · ${d.client}`,`${d.date} · ${F(d.mt)} · ${d.statut}`,
+      `nav(document.querySelector('[data-page=devis]'),'devis');fermerRecherche()`,'');
   });
   // Services
   (S.services||[]).filter(s=>s.nom.toLowerCase().includes(r)).slice(0,3).forEach(s=>{
-    results.push({section:'⭐ Services',icon:'⭐',bg:'var(--amber-bg)',titre:s.nom,detail:`${s.cat} · ${F(s.prix)}`,action:`nav(document.querySelector('[data-page=services]'),'services');fermerRecherche()`});
+    addR('⭐ Services','⭐','var(--amber-bg)',s.nom,`${s.cat} · ${F(s.prix)}`,
+      `nav(document.querySelector('[data-page=services]'),'services');fermerRecherche()`,'');
   });
   // Fournisseurs
   S.fournisseurs.filter(f=>f.nom.toLowerCase().includes(r)).slice(0,3).forEach(f=>{
-    results.push({section:'🚚 Fournisseurs',icon:'🚚',bg:'var(--purple-bg)',titre:f.nom,detail:`${f.secteur} · Dette: ${F(f.dette)}`,action:`nav(document.querySelector('[data-page=fournisseurs]'),'fournisseurs');fermerRecherche()`});
+    addR('🚚 Fournisseurs','🚚','var(--pink-bg)',f.nom,`${f.secteur} · Dette: ${F(f.dette)}`,
+      `nav(document.querySelector('[data-page=fournisseurs]'),'fournisseurs');fermerRecherche()`,'');
+  });
+  // Dépenses
+  S.depenses.filter(d=>d.four.toLowerCase().includes(r)||(d.notes||'').toLowerCase().includes(r)).slice(0,3).forEach(d=>{
+    addR('💸 Dépenses','💸','var(--red-bg)',d.four,`${d.date} · ${d.cat} · ${F(d.mt)}`,
+      `nav(document.querySelector('[data-page=depenses]'),'depenses');fermerRecherche()`,'');
   });
 
-  if(results.length===0){
-    el.innerHTML=`<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">❌ Aucun résultat pour "${q}"</div>`;
+  const keys=Object.keys(sections);
+  if(keys.length===0){
+    el.innerHTML=`<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">Aucun résultat pour "<strong>${q}</strong>"</div>`;
     return;
   }
 
-  let html='';
-  let lastSection='';
-  results.forEach(item=>{
-    if(item.section!==lastSection){
-      html+=`<div class="search-global-section">${item.section}</div>`;
-      lastSection=item.section;
-    }
-    html+=`<div class="search-global-item" onclick="${item.action}">
-      <div class="search-global-icon" style="background:${item.bg}">${item.icon}</div>
-      <div><div style="font-weight:500;font-size:13px">${item.titre}</div>
-      <div style="font-size:11px;color:var(--text3)">${item.detail}</div></div>
-    </div>`;
+  // Résumé par catégorie
+  const total=keys.reduce((s,k)=>s+sections[k].items.length,0);
+  let html=`<div style="padding:8px 16px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:11px;color:var(--text3)">${total} résultat(s) dans ${keys.length} catégorie(s)</div>`;
+  keys.forEach(sec=>{
+    html+=`<div style="padding:6px 16px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);background:var(--surface2);border-bottom:1px solid var(--border)">${sec} <span style="font-weight:400">(${sections[sec].items.length})</span></div>`;
+    sections[sec].items.forEach(item=>{
+      html+=`<div class="search-global-item" onclick="${item.action}" style="display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+        <div class="search-global-icon" style="background:${item.bg};width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px">${item.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.titre} ${item.badge||''}</div>
+          <div style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.detail}</div>
+        </div>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="flex-shrink:0;opacity:.3"><path d="M2 6h8M6 2l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>`;
+    });
   });
   el.innerHTML=html;
 }
@@ -3680,6 +3988,94 @@ function convertirDevisVente(id){
   d.statut='Accepté';
   saveData();toast(`✅ Devis converti en vente : ${F(d.mt)}`);rDevis();
 }
+function imprimerDevis(id){
+  const d=S.devis.find(d=>d.id==id);if(!d)return;
+  const p=S.parametres;
+  const lignesHtml=d.lignes.map((l,i)=>{
+    const a=ga(l.aid);
+    return`<tr style="border-bottom:1px solid #e5e3df">
+      <td style="padding:8px 10px;font-size:13px">${i+1}</td>
+      <td style="padding:8px 10px;font-size:13px;font-weight:500">${a?a.nom:l.nom||'?'}</td>
+      <td style="padding:8px 10px;font-size:13px;text-align:center">${l.qte}</td>
+      <td style="padding:8px 10px;font-size:13px;text-align:right">${Math.round(l.pu).toLocaleString('fr-FR')} ${p.devise}</td>
+      <td style="padding:8px 10px;font-size:13px;font-weight:600;text-align:right">${Math.round(l.mt).toLocaleString('fr-FR')} ${p.devise}</td>
+    </tr>`;
+  }).join('');
+  const total=d.mt;
+  const win=window.open('','_blank','width=800,height=900');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Devis DEV-${String(d.id).padStart(4,'0')}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',system-ui,sans-serif;background:#fff;color:#151410;font-size:14px;padding:40px}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;padding-bottom:20px;border-bottom:2px solid #0f1f3d}
+    .logo-block .name{font-size:22px;font-weight:800;color:#0f1f3d;letter-spacing:-.5px}
+    .logo-block .sub{font-size:12px;color:#9a9890;margin-top:3px}
+    .logo-block .contact{font-size:12px;color:#5a5853;margin-top:8px;line-height:1.6}
+    .devis-meta{text-align:right}
+    .devis-meta .num{font-size:22px;font-weight:800;color:#0f1f3d}
+    .devis-meta .info{font-size:12px;color:#5a5853;margin-top:4px;line-height:1.6}
+    .client-block{background:#f5f4f0;border-radius:8px;padding:16px 20px;margin-bottom:24px}
+    .client-block .label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:#9a9890;margin-bottom:4px}
+    .client-block .val{font-size:16px;font-weight:700;color:#151410}
+    table{width:100%;border-collapse:collapse;margin-bottom:24px}
+    thead{background:#0f1f3d}
+    thead th{padding:10px 10px;font-size:11px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.5px;text-align:left}
+    thead th:last-child,thead th:nth-child(4),thead th:nth-child(3){text-align:right}
+    tbody tr:nth-child(even){background:#f9f8f6}
+    .total-block{display:flex;justify-content:flex-end;margin-bottom:24px}
+    .total-box{background:#0f1f3d;color:#fff;border-radius:8px;padding:16px 24px;min-width:260px}
+    .total-box .lbl{font-size:12px;opacity:.7;font-weight:500}
+    .total-box .val{font-size:26px;font-weight:800;letter-spacing:-.5px;margin-top:4px}
+    .notes-block{background:#f5f4f0;border-radius:8px;padding:14px 18px;margin-bottom:24px}
+    .notes-block .label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:#9a9890;margin-bottom:6px}
+    .footer{text-align:center;font-size:11px;color:#9a9890;border-top:1px solid #e5e3df;padding-top:16px;margin-top:8px}
+    .status-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:#e8edf5;color:#0f1f3d;margin-top:4px}
+    @media print{body{padding:20px}.no-print{display:none}}
+  </style></head><body>
+  <div class="header">
+    <div class="logo-block">
+      <div class="name">${p.nom||'Christ Media'}</div>
+      <div class="sub">${p.ville||'Lomé, Togo'}</div>
+      <div class="contact">${p.tel||''}<br>${p.email||''}</div>
+    </div>
+    <div class="devis-meta">
+      <div class="num">DEV-${String(d.id).padStart(4,'0')}</div>
+      <div class="info">
+        Date : ${d.date}<br>
+        Validité : ${d.validite||'—'}<br>
+        <span class="status-badge">${d.statut}</span>
+      </div>
+    </div>
+  </div>
+  <div class="client-block">
+    <div class="label">Client</div>
+    <div class="val">${d.client}</div>
+  </div>
+  <table>
+    <thead><tr>
+      <th style="width:40px">#</th>
+      <th>Article</th>
+      <th style="width:70px;text-align:right">Qté</th>
+      <th style="width:120px;text-align:right">Prix unit.</th>
+      <th style="width:130px;text-align:right">Total</th>
+    </tr></thead>
+    <tbody>${lignesHtml}</tbody>
+  </table>
+  <div class="total-block">
+    <div class="total-box">
+      <div class="lbl">TOTAL DEVIS</div>
+      <div class="val">${Math.round(total).toLocaleString('fr-FR')} ${p.devise}</div>
+    </div>
+  </div>
+  ${d.notes?`<div class="notes-block"><div class="label">Conditions / Notes</div><div>${d.notes}</div></div>`:''}
+  <div class="footer">${p.nom||'Christ Media'} · ${p.ville||'Lomé, Togo'} · Ce devis est valable jusqu'au ${d.validite||'—'}</div>
+  <div class="no-print" style="margin-top:24px;text-align:center">
+    <button onclick="window.print()" style="padding:10px 24px;background:#0f1f3d;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer">🖨️ Imprimer / Sauvegarder PDF</button>
+  </div>
+  </body></html>`);
+  win.document.close();
+}
+
 function delDevis(id){
   if(!confirm('Supprimer ce devis ?'))return;
   S.devis=S.devis.filter(d=>d.id!=id);
@@ -4587,6 +4983,10 @@ S.utilisateurs=S.utilisateurs.map(u=>{
   }
   return u;
 });
+// Init objectifs si absent
+if(!S.objectifs)S.objectifs={ca_mensuel:500000,ventes_nb:50,depenses_max:200000,actif:true};
+// Init dfState
+if(!window.dfState)window.dfState={};
 majLogo();
 initV9();
 // Toujours afficher le login au démarrage
