@@ -15,7 +15,6 @@
 <link rel="apple-touch-icon" href="icons/icon-192x192.png">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -1187,7 +1186,7 @@ const firebaseConfig = {
 };
 
 // ─── FIREBASE INIT (via CDN) ───
-let firebaseApp=null, db=null, storage=null, fbReady=false;
+let firebaseApp=null, db=null, fbReady=false;
 
 function initFirebase(){
   return new Promise(resolve=>{
@@ -1199,7 +1198,6 @@ function initFirebase(){
         firebaseApp = firebase.initializeApp(firebaseConfig);
       }
       db = firebase.database();
-      storage = firebase.storage();
       fbReady = true;
       resolve(true);
     }catch(e){console.warn('Firebase init error:',e);resolve(false);}
@@ -3403,11 +3401,42 @@ function ouvrirPhotoModal(aid){
     <div class="mff"><button class="btn" onclick="closeModal()">Fermer</button></div>`);
 }
 
-// ─── UPLOAD PHOTO VERS FIREBASE STORAGE ───
+// ─── CLOUDINARY CONFIG ───
+const CLOUDINARY_CLOUD = 'dblvskqy9';
+const CLOUDINARY_PRESET = 'christ_media';
+const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`;
+
+// ─── FONCTION UPLOAD CLOUDINARY (avec progression) ───
+function cloudinaryUpload(file, onProgress){
+  return new Promise((resolve,reject)=>{
+    const fd=new FormData();
+    fd.append('file',file);
+    fd.append('upload_preset',CLOUDINARY_PRESET);
+    fd.append('folder','articles');
+    const xhr=new XMLHttpRequest();
+    xhr.open('POST',CLOUDINARY_URL);
+    if(onProgress){
+      xhr.upload.onprogress=e=>{
+        if(e.lengthComputable) onProgress(Math.round(e.loaded/e.total*100));
+      };
+    }
+    xhr.onload=()=>{
+      if(xhr.status===200){
+        const res=JSON.parse(xhr.responseText);
+        resolve(res.secure_url);
+      }else{
+        reject(new Error('Cloudinary error: '+xhr.status));
+      }
+    };
+    xhr.onerror=()=>reject(new Error('Réseau indisponible'));
+    xhr.send(fd);
+  });
+}
+
+// ─── UPLOAD PHOTO (réutilisable pour saveArt) ───
 async function uploadPhotoToStorage(aid, file){
   const a=ga(aid);if(!a||!file)return;
-  if(!storage||!fbReady||!navigator.onLine){
-    // Fallback base64 hors ligne
+  if(!navigator.onLine){
     return new Promise(resolve=>{
       const reader=new FileReader();
       reader.onload=e=>{a.photo=e.target.result;saveData();rStock();resolve();};
@@ -3415,18 +3444,12 @@ async function uploadPhotoToStorage(aid, file){
     });
   }
   try{
-    const ext=file.name.split('.').pop()||'jpg';
-    const path=`articles/${aid}_${Date.now()}.${ext}`;
-    const ref=storage.ref(path);
-    const snap=await ref.put(file);
-    const url=await snap.ref.getDownloadURL();
+    const url=await cloudinaryUpload(file);
     a.photo=url;
-    saveData();
-    rStock();
+    saveData();rStock();
     toast('📸 Photo synchronisée !');
   }catch(e){
     console.warn('uploadPhotoToStorage error:',e);
-    // Fallback base64
     const reader=new FileReader();
     reader.onload=ev=>{a.photo=ev.target.result;saveData();rStock();};
     reader.readAsDataURL(file);
@@ -3438,7 +3461,7 @@ async function traiterPhoto(aid, input){
   if(file.size>5*1024*1024){toast('⚠️ Photo trop lourde (max 5MB)');return;}
   const a=ga(aid);if(!a)return;
 
-  // Afficher progression dans la zone photo
+  // Afficher barre de progression
   const zone=document.getElementById('photo-zone');
   if(zone) zone.innerHTML=`<div style="padding:20px;text-align:center">
     <div style="font-size:24px;margin-bottom:8px">⏳</div>
@@ -3448,71 +3471,37 @@ async function traiterPhoto(aid, input){
     </div>
   </div>`;
 
+  if(!navigator.onLine){
+    const reader=new FileReader();
+    reader.onload=e=>{
+      a.photo=e.target.result;
+      saveData();toast('✅ Photo enregistrée (hors ligne)');closeModal();rStock();
+    };
+    reader.readAsDataURL(file);
+    return;
+  }
+
   try{
-    // Supprimer ancienne photo si elle est dans Firebase Storage
-    if(a.photo && a.photo.includes('firebasestorage')){
-      try{
-        await firebase.storage().refFromURL(a.photo).delete();
-      }catch(e){/* silencieux si déjà supprimé */}
-    }
-
-    if(!storage || !fbReady || !navigator.onLine){
-      // Fallback base64 si pas de connexion
-      const reader=new FileReader();
-      reader.onload=e=>{
-        a.photo=e.target.result;
-        saveData();toast('✅ Photo enregistrée (locale)');closeModal();rStock();
-      };
-      reader.readAsDataURL(file);
-      return;
-    }
-
-    // Upload vers Firebase Storage
-    const ext=file.name.split('.').pop()||'jpg';
-    const path=`articles/${aid}_${Date.now()}.${ext}`;
-    const ref=storage.ref(path);
-    const task=ref.put(file);
-
-    task.on('state_changed',
-      snap=>{
-        const pct=Math.round(snap.bytesTransferred/snap.totalBytes*100);
-        const bar=document.getElementById('upload-progress-bar');
-        const lbl=document.getElementById('upload-progress-label');
-        if(bar) bar.style.width=pct+'%';
-        if(lbl) lbl.textContent=`Upload en cours... ${pct}%`;
-      },
-      err=>{
-        console.warn('Upload error:',err);
-        toast('❌ Erreur upload — enregistrement local');
-        // Fallback base64
-        const reader=new FileReader();
-        reader.onload=e=>{a.photo=e.target.result;saveData();closeModal();rStock();};
-        reader.readAsDataURL(file);
-      },
-      async ()=>{
-        const url=await task.snapshot.ref.getDownloadURL();
-        a.photo=url;
-        saveData();
-        toast('✅ Photo synchronisée !');
-        closeModal();
-        rStock();
-      }
-    );
+    const url=await cloudinaryUpload(file, pct=>{
+      const bar=document.getElementById('upload-progress-bar');
+      const lbl=document.getElementById('upload-progress-label');
+      if(bar) bar.style.width=pct+'%';
+      if(lbl) lbl.textContent=`Upload en cours... ${pct}%`;
+    });
+    a.photo=url;
+    saveData();
+    toast('✅ Photo synchronisée !');
+    closeModal();
+    rStock();
   }catch(e){
     console.warn('traiterPhoto error:',e);
-    toast('❌ Erreur — essaie à nouveau');
+    toast('❌ Erreur upload — essaie à nouveau');
     closeModal();
   }
 }
 
 async function supprimerPhoto(aid){
   const a=ga(aid);if(!a)return;
-  // Supprimer dans Firebase Storage si URL distante
-  if(a.photo && a.photo.includes('firebasestorage')){
-    try{
-      await firebase.storage().refFromURL(a.photo).delete();
-    }catch(e){console.warn('Delete storage error:',e);}
-  }
   delete a.photo;
   saveData();toast('🗑️ Photo supprimée');closeModal();rStock();
 }
