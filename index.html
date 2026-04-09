@@ -1361,8 +1361,8 @@ const actionsMap={
   transactions:()=>'',
   vente:()=>'',
   services:()=>'<button class="btn btn-primary" onclick="addService()">+ Service</button>',
-  achats:()=>'<button class="btn btn-primary" onclick="addAchat()">+ Achat</button>',
-  stock:()=>`<div class="search-bar"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><input type="text" placeholder="Rechercher..." oninput="filterStock(this.value)" id="stock-search"></div><button class="btn" onclick="openScanner('stock')" title="Scanner code-barres">📷 Scanner</button><button class="btn btn-primary" onclick="addArticle()">+ Article</button>`,
+  achats:()=>'<button class="btn" onclick="modalExportExcel()">📊 Excel</button> <button class="btn btn-primary" onclick="addAchat()">+ Achat</button>',
+  stock:()=>`<div class="search-bar"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><input type="text" placeholder="Rechercher..." oninput="filterStock(this.value)" id="stock-search"></div><button class="btn" onclick="openScanner('stock')" title="Scanner code-barres">📷 Scanner</button><button class="btn" onclick="modalExportExcel()">📊 Excel</button><button class="btn btn-primary" onclick="addArticle()">+ Article</button>`,
   clients:()=>'<button class="btn btn-primary" onclick="addClient()">+ Client</button>',
   fournisseurs:()=>'<button class="btn btn-primary" onclick="addFour()">+ Fournisseur</button>',
   depenses:()=>'<button class="btn btn-danger" onclick="addDep()">+ Dépense</button>',
@@ -1711,9 +1711,10 @@ function rVente(){
           <td>${sb(v.statut)}</td>
           <td><div class="td-actions">
             ${v.statut==='Non payé'?`<button class="btn-icon btn-sm" onclick="payerVente(${v.id})" title="Encaisser">✓</button><button class="btn-icon btn-sm" onclick="gererAcompte(${v.id})" title="Acompte">💰</button>`:''}
-            <button class="btn-icon btn-sm" onclick="demanderMontantRecu(${v.id})" title="Reçu">🖨️</button>
+            <button class="btn-icon btn-sm" onclick="demanderMontantRecu(${v.id})" title="Reçu A4">🖨️</button>
+            <button class="btn-icon btn-sm" onclick="imprimerThermique(${v.id})" title="Reçu thermique 58mm" style="color:var(--teal)">🧾</button>
             <button class="btn-icon btn-sm" onclick="configurerTranches(${v.id})" title="Tranches">💳</button>
-            <button class="btn-icon btn-sm" onclick="printFacture(${v.id})" title="Facture">🧾</button>
+            <button class="btn-icon btn-sm" onclick="printFacture(${v.id})" title="Facture">📄</button>
             <button class="btn-icon btn-sm" onclick="partagerWhatsApp(${v.id},'recu')" title="WhatsApp">📱</button>
             <button class="btn-icon btn-sm" onclick="delVente(${v.id})" title="Supprimer" style="color:var(--red)">✕</button>
           </div></td>
@@ -2136,6 +2137,8 @@ function rStock(){
           <td class="cell-valeur">${F(s*a.pv)}</td>
           <td><div class="td-actions">
             <button class="btn-icon btn-sm" onclick="ouvrirPhotoModal(${a.id})" title="Photo">📸</button>
+            <button class="btn-icon btn-sm" onclick="voirHistoPrix(${a.id})" title="Historique prix" style="color:var(--purple)">📈</button>
+            <button class="btn-icon btn-sm" onclick="venteRapideArticle(${a.id})" title="Vente rapide" style="color:var(--green)">🛒</button>
             <button class="btn-icon btn-sm" onclick="editArticle(${a.id})" title="Modifier">✏️</button>
             <button class="btn-icon btn-sm" onclick="delArticle(${a.id})" style="color:var(--red)" title="Supprimer">✕</button>
           </div></td>
@@ -2418,23 +2421,76 @@ function delClient(id){
 
 // ─── FOURNISSEURS ───
 function rFour(){
+  const totalDettes=S.fournisseurs.reduce((s,f)=>s+(f.dette||0),0);
+  const totalAchats=S.achats.reduce((s,a)=>s+a.mt,0);
   document.getElementById('content').innerHTML=`
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Nom</th><th>Téléphone</th><th>Secteur</th><th>Dette</th><th>Statut</th><th></th></tr></thead>
-      <tbody>${S.fournisseurs.map(f=>`<tr>
-        <td class="tdm">${f.nom}</td><td>${f.tel}</td><td>${cb(f.secteur)}</td>
-        <td style="color:${f.dette>0?'var(--red)':'var(--text2)'};font-weight:${f.dette>0?'600':'400'}">${f.dette>0?F(f.dette):'—'}</td>
+      <thead><tr><th>Nom</th><th>Téléphone</th><th>Secteur</th><th>Total acheté</th><th>Nb achats</th><th>Dette</th><th>Statut</th><th></th></tr></thead>
+      <tbody>${S.fournisseurs.map(f=>{
+        const achatsF=S.achats.filter(a=>a.fid==f.id);
+        const totalF=achatsF.reduce((s,a)=>s+a.mt,0);
+        const nbF=achatsF.length;
+        return`<tr>
+        <td class="tdm" style="cursor:pointer" onclick="rapportFournisseur(${f.id})">${f.nom}</td>
+        <td>${f.tel||'—'}</td><td>${cb(f.secteur)}</td>
+        <td style="font-weight:600;color:var(--purple)">${F(totalF)}</td>
+        <td><span class="badge bb">${nbF} achat${nbF>1?'s':''}</span></td>
+        <td style="color:${(f.dette||0)>0?'var(--red)':'var(--text2)'};font-weight:${(f.dette||0)>0?'600':'400'}">${(f.dette||0)>0?F(f.dette):'—'}</td>
         <td>${sb(f.statut)}</td>
         <td><div class="td-actions">
+          <button class="btn-icon btn-sm" onclick="rapportFournisseur(${f.id})" title="Rapport détaillé">📊</button>
           <button class="btn-icon btn-sm" onclick="editFour(${f.id})">✏️</button>
           <button class="btn-icon btn-sm" onclick="delFour(${f.id})" style="color:var(--red)">✕</button>
         </div></td>
-      </tr>`).join('')}
+      </tr>`}).join('')}
       </tbody></table></div>
-    <div class="g2" style="margin-top:18px">
+    <div class="g4" style="margin-top:18px">
       <div class="card"><div class="ct">Total fournisseurs</div><div class="mv">${N(S.fournisseurs.length)}</div></div>
-      <div class="card"><div class="ct">Total dettes</div><div class="mv" style="color:var(--red)">${F(S.fournisseurs.reduce((s,f)=>s+f.dette,0))}</div></div>
+      <div class="card"><div class="ct">Total achats</div><div class="mv" style="color:var(--purple)">${F(totalAchats)}</div></div>
+      <div class="card"><div class="ct">Total dettes</div><div class="mv" style="color:var(--red)">${F(totalDettes)}</div></div>
+      <div class="card"><div class="ct">Fournisseurs actifs</div><div class="mv">${N(S.fournisseurs.filter(f=>f.statut==='Actif').length)}</div></div>
     </div>`;
+}
+
+function rapportFournisseur(fid){
+  const f=gf(fid);if(!f)return;
+  const achatsF=S.achats.filter(a=>a.fid==fid).slice().reverse();
+  const totalF=achatsF.reduce((s,a)=>s+a.mt,0);
+  const payes=achatsF.filter(a=>a.statut==='Payé').reduce((s,a)=>s+a.mt,0);
+  const dus=achatsF.filter(a=>a.statut!=='Payé').reduce((s,a)=>s+a.mt,0);
+  // Délai moyen de paiement (tranches)
+  let delaiMoy='—';
+  const avecTranches=achatsF.filter(a=>a.tranches&&a.tranches.length>0);
+  if(avecTranches.length>0){
+    const delais=avecTranches.map(a=>{
+      const premiere=a.tranches[0].date;
+      return Math.round((new Date(premiere)-new Date(a.date))/(1000*60*60*24));
+    });
+    delaiMoy=Math.round(delais.reduce((s,d)=>s+d,0)/delais.length)+' jours';
+  }
+  modal(`<div class="mft">📊 Rapport — ${f.nom}</div>
+    <div class="g3" style="margin-bottom:14px">
+      <div class="card" style="padding:10px 12px"><div class="ct">Total acheté</div><div class="mv" style="font-size:16px;color:var(--purple)">${F(totalF)}</div></div>
+      <div class="card" style="padding:10px 12px"><div class="ct">Payé</div><div class="mv" style="font-size:16px;color:var(--green)">${F(payes)}</div></div>
+      <div class="card" style="padding:10px 12px"><div class="ct">Restant dû</div><div class="mv" style="font-size:16px;color:var(--red)">${F(dus)}</div></div>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:14px;font-size:12px;color:var(--text2)">
+      <span>📦 ${achatsF.length} achats</span>
+      <span>⏱ Délai moyen paiement : ${delaiMoy}</span>
+      <span>📞 ${f.tel||'—'}</span>
+    </div>
+    <div class="tbl-wrap" style="max-height:240px;overflow-y:auto"><table>
+      <thead><tr><th>Date</th><th>Article</th><th>Qté</th><th>Montant</th><th>Statut</th></tr></thead>
+      <tbody>${achatsF.length===0?'<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--text3)">Aucun achat</td></tr>':
+        achatsF.map(a=>`<tr>
+          <td style="font-size:11px;font-family:'DM Mono',monospace">${a.date}</td>
+          <td class="tdm">${ga(a.aid)?ga(a.aid).nom:'—'}</td>
+          <td>${N(a.qte)}</td>
+          <td style="font-weight:600;color:var(--purple)">${F(a.mt)}</td>
+          <td>${a.statut==='Payé'?'<span class="badge bg">✅ Payé</span>':'<span class="badge br">⏳ Dû</span>'}</td>
+        </tr>`).join('')}
+      </tbody></table></div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Fermer</button></div>`);
 }
 function addFour(){
   modal(`<div class="mft">Ajouter un fournisseur</div>
@@ -3163,11 +3219,6 @@ function rParametres(){
         <div class="fg"><label class="fl">Email</label>
           <input class="fi" id="p-email" value="${p.email||''}" oninput="majParam('email',this.value)"></div>
       </div>
-      <div class="fg"><label class="fl">Devise</label>
-        <select class="fs" id="p-devise" onchange="majParam('devise',this.value)">
-          ${['FCFA','XOF','USD','EUR','GHS','NGN'].map(d=>`<option${p.devise===d?' selected':''}>${d}</option>`).join('')}
-        </select>
-      </div>
       <button class="btn btn-primary" onclick="sauvegarderParams()" style="margin-top:8px">💾 Sauvegarder</button>
     </div>
 
@@ -3213,10 +3264,49 @@ function rParametres(){
     </div>
 
     <div class="param-section">
+      <div class="param-section-title">🌍 Multi-devise</div>
+      <div class="fg"><label class="fl">Devise principale</label>
+        <select class="fs" id="p-devise" onchange="majParam('devise',this.value)">
+          ${['FCFA','XOF','USD','EUR','GHS','NGN'].map(d=>`<option${p.devise===d?' selected':''}>${d}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Devise secondaire (affichage côte à côte)</label>
+        <select class="fs" id="p-deviseSec" onchange="majParam('deviseSec',this.value)">
+          <option value="">— Aucune —</option>
+          ${['FCFA','XOF','USD','EUR','GHS','NGN'].map(d=>`<option value="${d}"${p.deviseSec===d?' selected':''}>${d}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Taux de conversion (1 ${p.devise||'FCFA'} = ? devise secondaire)</label>
+        <input class="fi" type="number" id="p-taux" value="${p.tauxConversion||1}" step="0.0001" oninput="majParam('tauxConversion',+this.value)">
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">Ex: 1 FCFA = 0.00152 EUR → taux = 0.00152</div>
+      <button class="btn btn-primary" onclick="sauvegarderParams()" style="margin-top:8px">💾 Sauvegarder</button>
+    </div>
+
+    <div class="param-section">
+      <div class="param-section-title">⏰ Sauvegarde automatique</div>
+      <div class="fg"><label class="fl">Fréquence de sync Firebase automatique</label>
+        <select class="fs" id="p-autoBackup" onchange="majParam('autoBackupFreq',+this.value);initAutoBackup()">
+          <option value="0"${(p.autoBackupFreq||0)==0?' selected':''}>Désactivée</option>
+          <option value="5"${p.autoBackupFreq==5?' selected':''}>Toutes les 5 minutes</option>
+          <option value="15"${p.autoBackupFreq==15?' selected':''}>Toutes les 15 minutes</option>
+          <option value="30"${p.autoBackupFreq==30?' selected':''}>Toutes les 30 minutes</option>
+          <option value="60"${p.autoBackupFreq==60?' selected':''}>Toutes les heures</option>
+        </select>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">La sync manuelle reste toujours disponible via le bouton 🔄 en haut.</div>
+      <button class="btn btn-primary" onclick="sauvegarderParams()" style="margin-top:8px">💾 Sauvegarder</button>
+    </div>
+
+    <div class="param-section">
       <div class="param-section-title">🔧 Données & Système</div>
       <div class="param-row">
         <div><div class="param-label">Exporter toutes les données</div><div class="param-desc">Sauvegarde JSON complète</div></div>
-        <button class="btn" onclick="exportData()">⬇️ Exporter</button>
+        <button class="btn" onclick="exportData()">⬇️ Exporter JSON</button>
+      </div>
+      <div class="param-row">
+        <div><div class="param-label">Exporter vers Excel</div><div class="param-desc">Ventes, achats, stock en CSV</div></div>
+        <button class="btn" onclick="modalExportExcel()">📊 Export Excel</button>
       </div>
       <div class="param-row">
         <div><div class="param-label">Importer des données</div><div class="param-desc">Restaurer depuis une sauvegarde</div></div>
@@ -5370,12 +5460,231 @@ S.utilisateurs=S.utilisateurs.map(u=>{
   if(u.role==='employe') u.role='vendeur';
   return u;
 });
-// Init objectifs si absent
-if(!S.objectifs)S.objectifs={ca_mensuel:500000,ventes_nb:50,depenses_max:200000,actif:true};
+// ─── VENTE RAPIDE DEPUIS STOCK ───
+function venteRapideArticle(aid){
+  const a=ga(aid);if(!a)return;
+  const stk=sa(a);
+  if(stk<=0)return toast('❌ Article en rupture de stock');
+  modal(`<div class="mft">🛒 Vente rapide — ${a.nom}</div>
+    <div style="background:var(--surface2);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text2)">
+      Stock dispo : <strong style="color:var(--green)">${N(stk)}</strong> · Prix : <strong>${F(a.pv)}</strong>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Quantité</label><input class="fi" type="number" id="vr-qte" value="1" min="1" max="${stk}" oninput="previewVenteRapide(${aid})"></div>
+      <div class="fg"><label class="fl">Prix unitaire</label>
+        <select class="fs" id="vr-type" onchange="previewVenteRapide(${aid})">
+          <option value="${a.pv}">Détail — ${F(a.pv)}</option>
+          ${a.pv2&&a.pv2!==a.pv?`<option value="${a.pv2}">Semi-gros — ${F(a.pv2)}</option>`:''}
+          ${a.pv3&&a.pv3!==a.pv?`<option value="${a.pv3}">Gros — ${F(a.pv3)}</option>`:''}
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Client (optionnel)</label><input class="fi" id="vr-client" placeholder="Nom du client"></div>
+    <div class="fg"><label class="fl">Compte encaissement</label>${selectComptes('vr-cid', premierCompteId())}</div>
+    <div class="total-preview" id="vr-preview">
+      <div class="total-preview-final"><span>TOTAL</span><span id="vr-total">${F(a.pv)}</span></div>
+    </div>
+    <div class="mff">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-success" onclick="saveVenteRapide(${aid})">✅ Enregistrer vente</button>
+    </div>`);
+}
+function previewVenteRapide(aid){
+  const qte=+document.getElementById('vr-qte')?.value||1;
+  const pu=+document.getElementById('vr-type')?.value||0;
+  const el=document.getElementById('vr-total');
+  if(el) el.textContent=F(qte*pu);
+}
+function saveVenteRapide(aid){
+  const a=ga(aid);if(!a)return;
+  const qte=+document.getElementById('vr-qte').value||1;
+  const pu=+document.getElementById('vr-type').value||a.pv;
+  const client=document.getElementById('vr-client').value||'Anonyme';
+  const cid=document.getElementById('vr-cid').value;
+  if(sa(a)<qte)return toast('❌ Stock insuffisant');
+  const mt=qte*pu;
+  const vid=genId();
+  S.ventes.push({id:vid,date:D(),aid,client,qte,pu,mt,cid,mode:nomCompte(cid),statut:'Payé',
+    lignes:[{aid,qte,pu,nom:a.nom}]});
+  a.qv=(a.qv||0)+qte;
+  crediterCompte(cid,mt);
+  addHistorique('Sortie',a,qte,`Vente rapide — ${client}`);
+  saveData();closeModal();
+  toast(`✅ Vente de ${N(qte)}x ${a.nom} — ${F(mt)}`);
+  rStock();
+}
+
+// ─── EXPORT EXCEL (XLSX) ───
+function exportExcel(type='ventes'){
+  const now=D();
+  let rows=[], titre='';
+  if(type==='ventes'){
+    titre='Ventes';
+    rows=[['Date','Client','Article','Quantité','Prix unit.','Montant','Statut','Compte']];
+    S.ventes.forEach(v=>{
+      const a=ga(v.aid);
+      rows.push([v.date,v.client||'—',a?a.nom:'—',v.qte||1,v.pu||v.mt,v.mt,v.statut,v.mode||'—']);
+    });
+  }else if(type==='achats'){
+    titre='Achats';
+    rows=[['Date','Fournisseur','Article','Quantité','Prix unit.','Montant','Statut','Compte']];
+    S.achats.forEach(a=>{
+      const art=ga(a.aid);const f=gf(a.fid);
+      rows.push([a.date,f?f.nom:'—',art?art.nom:'—',a.qte,a.pu,a.mt,a.statut,a.mode||'—']);
+    });
+  }else if(type==='stock'){
+    titre='Stock';
+    rows=[['Code','Nom','Catégorie','P. Achat','P. Vente','Stock Dispo','Valeur Stock','Seuil Alerte']];
+    S.stock.forEach(a=>{
+      const s=sa(a);
+      rows.push([a.code,a.nom,a.cat,a.pa,a.pv,s,s*a.pv,a.seuil]);
+    });
+  }else if(type==='depenses'){
+    titre='Dépenses';
+    rows=[['Date','Catégorie','Fournisseur','Montant','Notes']];
+    S.depenses.forEach(d=>{
+      rows.push([d.date,d.cat,d.four,d.mt,d.notes||'']);
+    });
+  }
+  // Créer CSV (compatible Excel)
+  const bom='\uFEFF'; // BOM pour Excel UTF-8
+  const csv=bom+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`ChristMedia_${titre}_${now}.csv`;
+  a.click();
+  toast(`✅ Export ${titre} téléchargé (compatible Excel)`);
+}
+function modalExportExcel(){
+  modal(`<div class="mft">📊 Exporter vers Excel</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Choisissez les données à exporter en fichier CSV (s'ouvre directement dans Excel) :</p>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <button class="btn" onclick="exportExcel('ventes');closeModal()" style="text-align:left;padding:10px 14px">🛒 Ventes (${S.ventes.length} enregistrements)</button>
+      <button class="btn" onclick="exportExcel('achats');closeModal()" style="text-align:left;padding:10px 14px">📦 Achats (${S.achats.length} enregistrements)</button>
+      <button class="btn" onclick="exportExcel('stock');closeModal()" style="text-align:left;padding:10px 14px">🗃️ Stock (${S.stock.length} articles)</button>
+      <button class="btn" onclick="exportExcel('depenses');closeModal()" style="text-align:left;padding:10px 14px">💸 Dépenses (${S.depenses.length} enregistrements)</button>
+    </div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Fermer</button></div>`);
+}
+
+// ─── SAUVEGARDE AUTOMATIQUE ───
+let _autoBackupTimer=null;
+function initAutoBackup(){
+  if(_autoBackupTimer) clearInterval(_autoBackupTimer);
+  const p=S.parametres||{};
+  const freq=p.autoBackupFreq||0; // 0=désactivé, sinon minutes
+  if(!freq)return;
+  _autoBackupTimer=setInterval(async()=>{
+    if(fbReady&&navigator.onLine){
+      await saveToFirebase(S);
+      const now=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      setSyncStatus('online',`Sauvegardé à ${now}`);
+    }
+  }, freq*60*1000);
+}
+
+// ─── HISTORIQUE PRIX ARTICLE (modal) ───
+function voirHistoPrix(aid){
+  const a=ga(aid);if(!a)return;
+  const hist=(S.historique_prix||[]).filter(h=>h.aid==aid);
+  modal(`<div class="mft">📈 Historique des prix — ${a.nom}</div>
+    <div style="background:var(--surface2);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;display:flex;gap:16px;font-size:12px">
+      <span>Prix achat actuel : <strong style="color:var(--purple)">${F(a.pa)}</strong></span>
+      <span>Prix vente actuel : <strong style="color:var(--green)">${F(a.pv)}</strong></span>
+    </div>
+    ${hist.length===0?'<div style="text-align:center;padding:20px;color:var(--text3)">Aucun changement de prix enregistré</div>':
+    `<div class="tbl-wrap" style="max-height:260px;overflow-y:auto"><table>
+      <thead><tr><th>Date</th><th>Anc. P.Achat</th><th>Nouv. P.Achat</th><th>Anc. P.Vente</th><th>Nouv. P.Vente</th></tr></thead>
+      <tbody>${hist.map(h=>`<tr>
+        <td style="font-size:11px;font-family:'DM Mono',monospace">${h.date}</td>
+        <td style="color:var(--text3)">${F(h.ancienPa)}</td>
+        <td style="color:${h.nvPa>h.ancienPa?'var(--red)':'var(--green)'};font-weight:600">${F(h.nvPa)} ${h.nvPa>h.ancienPa?'↑':'↓'}</td>
+        <td style="color:var(--text3)">${F(h.ancienPv)}</td>
+        <td style="color:${h.nvPv>h.ancienPv?'var(--green)':'var(--red)'};font-weight:600">${F(h.nvPv)} ${h.nvPv>h.ancienPv?'↑':'↓'}</td>
+      </tr>`).join('')}
+      </tbody></table></div>`}
+    <div class="mff"><button class="btn" onclick="closeModal()">Fermer</button></div>`);
+}
+
+// ─── ALERTES STOCK BAS AU DÉMARRAGE ───
+function checkAlertesStock(){
+  const al=S.stock.filter(a=>sa(a)<=a.seuil&&sa(a)>=0);
+  const ruptures=S.stock.filter(a=>sa(a)===0);
+  if(al.length===0)return;
+  const msg=ruptures.length>0
+    ?`⚠️ ${ruptures.length} rupture(s) · ${al.length-ruptures.length} article(s) bas`
+    :`⚠️ ${al.length} article(s) sous le seuil d'alerte`;
+  setTimeout(()=>{
+    toast(`${msg} — Voir Stock 📦`,4000);
+  },1500);
+}
+
+// ─── MULTI-DEVISE AFFICHAGE ───
+function getDeviseSec(){
+  return (S.parametres&&S.parametres.deviseSec)||null;
+}
+function getTauxConversion(){
+  return (S.parametres&&S.parametres.tauxConversion)||1;
+}
+function Fsec(montant){
+  const d=getDeviseSec();
+  if(!d||d===((S.parametres&&S.parametres.devise)||'FCFA'))return '';
+  const taux=getTauxConversion();
+  const conv=montant/taux;
+  return ` <span style="font-size:10px;color:var(--text3);font-weight:400">(${conv.toLocaleString('fr-FR',{maximumFractionDigits:2})} ${d})</span>`;
+}
+
+// ─── IMPRESSION THERMIQUE 58MM ───
+function imprimerThermique(vid){
+  const v=S.ventes.find(v=>v.id==vid);if(!v)return;
+  const lignes=v.lignes||[{aid:v.aid,qte:v.qte||1,pu:v.pu||v.mt,nom:ga(v.aid)?ga(v.aid).nom:'Article'}];
+  const p=S.parametres||{};
+  const nomShop=p.nom||'Christ Media';
+  const tel=p.tel||'';
+  const w=window.open('','_print_therm','width=300,height=600');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Courier New',monospace;font-size:11px;width:58mm;padding:2mm}
+    .center{text-align:center} .bold{font-weight:bold} .line{border-top:1px dashed #000;margin:3px 0}
+    .row{display:flex;justify-content:space-between}
+    .title{font-size:14px;font-weight:bold;text-align:center;margin:4px 0}
+    .total{font-size:13px;font-weight:bold}
+  </style></head><body>
+  <div class="title">${nomShop}</div>
+  ${tel?`<div class="center">${tel}</div>`:''}
+  <div class="center">${new Date().toLocaleDateString('fr-FR')} ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>
+  <div class="line"></div>
+  <div class="bold center">REÇU #${String(v.id).slice(-4)}</div>
+  <div class="line"></div>
+  ${lignes.map(l=>`
+    <div class="bold">${l.nom||'Article'}</div>
+    <div class="row"><span>${l.qte||1} x ${(l.pu||0).toLocaleString('fr-FR')}</span><span>${((l.qte||1)*(l.pu||0)).toLocaleString('fr-FR')}</span></div>
+  `).join('')}
+  <div class="line"></div>
+  <div class="row total"><span>TOTAL</span><span>${v.mt.toLocaleString('fr-FR')} ${p.devise||'FCFA'}</span></div>
+  <div class="row"><span>Mode</span><span>${v.mode||'—'}</span></div>
+  <div class="line"></div>
+  <div class="center" style="margin-top:4px">Merci pour votre achat !</div>
+  </body></html>`);
+  w.document.close();
+  setTimeout(()=>{w.print();w.close();},300);
+}
+
+// Initialiser les améliorations au démarrage
+function initAméliorations(){
+  initAutoBackup();
+  checkAlertesStock();
+}
+
+
 // Init dfState
 if(!window.dfState)window.dfState={};
 majLogo();
 initV9();
+// Init améliorations (alertes stock, sauvegarde auto)
+initAméliorations();
 // Toujours afficher le login au démarrage
 afficherLoginScreen();
 </script>
