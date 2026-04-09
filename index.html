@@ -1975,22 +1975,40 @@ function applyDf(key,items){
 function rAchats(){
   const filtered=applyDf('achats',S.achats);
   const tot=filtered.reduce((s,a)=>s+a.mt,0);
+  const totalDu=filtered.filter(a=>a.statut==='À payer').reduce((s,a)=>s+a.mt,0);
   document.getElementById('content').innerHTML=dfHtml('achats')+`
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Date</th><th>Fournisseur</th><th>Article</th><th>Qté</th><th>Montant</th><th>Compte</th><th>Notes</th><th></th></tr></thead>
-      <tbody>${filtered.length===0?'<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text3)">Aucun achat</td></tr>':
-        filtered.slice().reverse().map(a=>{const fnom=gf(a.fid)?gf(a.fid).nom:a.four||'—';const anom=ga(a.aid)?ga(a.aid).nom:'—';return`<tr>
+      <thead><tr><th>Date</th><th>Fournisseur</th><th>Article</th><th>Qté</th><th>Montant</th><th>Compte</th><th>Statut</th><th>Notes</th><th></th></tr></thead>
+      <tbody>${filtered.length===0?'<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text3)">Aucun achat</td></tr>':
+        filtered.slice().reverse().map(a=>{
+          const fnom=gf(a.fid)?gf(a.fid).nom:a.four||'—';
+          const anom=ga(a.aid)?ga(a.aid).nom:'—';
+          const totalPaye=a.tranches?a.tranches.reduce((s,t)=>s+t.mt,0):0;
+          const reste=a.mt-totalPaye;
+          const statutBadge=a.statut==='Payé'
+            ?`<span class="badge" style="background:var(--green-bg);color:var(--green)">✅ Payé</span>`
+            :`<span class="badge" style="background:var(--red-bg);color:var(--red)">⏳ Dû: ${F(reste)}</span>`;
+          const payerBtn=a.statut!=='Payé'
+            ?`<button class="btn-icon btn-sm" onclick="configurerTranchesAchat(${a.id})" title="Enregistrer un paiement" style="color:var(--green)">💳</button>`:'';
+          return`<tr>
           <td style="font-family:'DM Mono',monospace;font-size:12px">${a.date}</td>
           <td class="tdm">${fnom}</td><td>${anom}</td><td>${N(a.qte)}</td>
           <td style="font-weight:600;color:var(--purple)">${F(a.mt)}</td>
           <td><span class="badge bb">${a.cid?nomCompte(a.cid):(a.mode||'—')}</span></td>
+          <td>${statutBadge}</td>
           <td style="color:var(--text3);font-size:12px">${a.notes||'—'}</td>
           <td><div class="td-actions">
+            ${payerBtn}
             <button class="btn-icon btn-sm" onclick="delAchat(${a.id})" style="color:var(--red)">✕</button>
           </div></td>
         </tr>`;}).join('')}
-        <tr style="background:var(--surface2)"><td colspan="4" style="font-weight:600">Total (${filtered.length} achats)</td>
-          <td style="font-weight:700;color:var(--purple)">${F(tot)}</td><td></td><td></td><td></td></tr>
+        <tr style="background:var(--surface2)">
+          <td colspan="4" style="font-weight:600">Total (${filtered.length} achats)</td>
+          <td style="font-weight:700;color:var(--purple)">${F(tot)}</td>
+          <td></td>
+          <td style="font-weight:600;color:var(--red);font-size:12px">${totalDu>0?`Dû: ${F(totalDu)}`:'✅ Tout réglé'}</td>
+          <td></td><td></td>
+        </tr>
       </tbody></table></div>`;
 }
 function addAchat(){
@@ -2046,9 +2064,19 @@ function saveAchat(){
   const art=ga(aid);
   if(art){art.ea=(art.ea||0)+qte; if(pu>0) art.pa=pu;}
   const statut_achat=document.getElementById('mstatut')?.value||'Payé';
-  S.achats.push({id:genId(),date,fid,aid,qte,pu,mt:pu*qte,mode,cid,notes,statut:statut_achat});
-  if(statut_achat==='Payé') debiterCompte(cid,pu*qte);
-  else { const f=S.fournisseurs.find(f=>f.id==fid); if(f) f.dette=(f.dette||0)+(pu*qte); }
+  const achatId=genId();
+  const mt=pu*qte;
+  S.achats.push({id:achatId,date,fid,aid,qte,pu,mt,mode,cid,notes,statut:statut_achat});
+  if(statut_achat==='Payé'){
+    debiterCompte(cid,mt);
+  } else {
+    // À crédit : dette fournisseur + entrée dans les dettes comptes
+    const f=S.fournisseurs.find(f=>f.id==fid);
+    if(f) f.dette=(f.dette||0)+mt;
+    if(!S.dettesAchats) S.dettesAchats=[];
+    S.dettesAchats.push({id:achatId,fid,date,mt,reste:mt,statut:'À payer'});
+    toast(`⚠️ Achat à crédit — ${F(mt)} dû au fournisseur`);
+  }
   if(art) addHistorique('Entrée',art,qte,`Achat — ${notes||'réappro'}`);
   saveData();closeModal();toast(`✅ Achat enregistré — stock +${qte} pour ${art?art.nom:'article'}`);rAchats();
 }
@@ -2057,7 +2085,16 @@ function delAchat(id){
   const ac=S.achats.find(a=>a.id==id);
   if(ac){
     const art=ga(ac.aid);if(art)art.ea=Math.max(0,(art.ea||0)-ac.qte);
-    if(ac.statut!=='Payé'){const f=S.fournisseurs.find(f=>f.id==ac.fid);if(f)f.dette=Math.max(0,(f.dette||0)-ac.mt);}
+    if(ac.statut==='Payé'){
+      // Rembourser le compte débité
+      crediterCompte(ac.cid, ac.mt);
+    } else {
+      // Annuler la dette fournisseur
+      const f=S.fournisseurs.find(f=>f.id==ac.fid);
+      if(f) f.dette=Math.max(0,(f.dette||0)-ac.mt);
+      // Annuler dans dettesAchats
+      if(S.dettesAchats) S.dettesAchats=S.dettesAchats.filter(d=>d.id!=id);
+    }
   }
   S.achats=S.achats.filter(a=>a.id!=id);
   saveData();toast('🗑️ Achat supprimé');rAchats();
@@ -5213,12 +5250,27 @@ function saveTrancheAchat(acid){
   const cid=document.getElementById('tra-mode').value;
   const mode=nomCompte(cid);
   if(mt<=0)return toast('❌ Montant invalide');
+  const compte=S.comptes&&S.comptes.find(c=>c.id==cid);
+  if(compte&&compte.solde<mt)return toast(`❌ Solde insuffisant sur "${compte.nom}" (${F(compte.solde)})`);
   if(!ac.tranches)ac.tranches=[];
   ac.tranches.push({date:D(),mt,mode,cid});
   debiterCompte(cid,mt);
+  // Mettre à jour dettesAchats
+  if(S.dettesAchats){
+    const dette=S.dettesAchats.find(d=>d.id==acid);
+    if(dette){dette.reste=Math.max(0,(dette.reste||ac.mt)-mt);}
+  }
+  // Mettre à jour dette fournisseur
+  const f=S.fournisseurs&&S.fournisseurs.find(f=>f.id==ac.fid);
+  if(f) f.dette=Math.max(0,(f.dette||0)-mt);
   const totalPaye=ac.tranches.reduce((s,t)=>s+t.mt,0);
-  if(totalPaye>=ac.mt){ac.statut='Payé';toast(`✅ Achat soldé !`);}
-  else toast(`✅ Versement: ${F(mt)} · Reste: ${F(ac.mt-totalPaye)}`);
+  if(totalPaye>=ac.mt){
+    ac.statut='Payé';
+    if(S.dettesAchats) S.dettesAchats=S.dettesAchats.filter(d=>d.id!=acid);
+    toast(`✅ Achat soldé ! ${F(mt)} débité sur "${mode}"`);
+  } else {
+    toast(`✅ ${F(mt)} débité sur "${mode}" · Reste: ${F(ac.mt-totalPaye)}`);
+  }
   saveData();closeModal();rAchats();
 }
 
