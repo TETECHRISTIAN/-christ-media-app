@@ -1077,6 +1077,7 @@ const F=n=>{const dev=(S&&S.parametres&&S.parametres.devise)||'FCFA';return Math
 const N=n=>Math.round(n).toLocaleString('fr-FR');
 const D=()=>new Date().toISOString().split('T')[0];
 const genId=()=>++S.nid;
+const genVersion=()=>{ S.version=Date.now(); }; // timestamp indépendant du compteur d'IDs
 
 // ─── DATA ───
 const defaultData={
@@ -1271,14 +1272,15 @@ function activerListenerTempsReel(){
     }
     const remote=snap.val();
     if(!remote)return;
-    // Accepter les données distantes seulement si elles sont plus récentes
-    if(remote.nid && remote.nid > S.nid){
+    // Comparer par version (timestamp) — plus fiable que nid
+    const remoteVer = remote.version||remote.nid||0;
+    const localVer  = S.version||S.nid||0;
+    if(remoteVer > localVer){
       const savedSession=S.session;
       S=remote;
       if(savedSession&&savedSession.uid) S.session=savedSession;
       saveLocal(S);
       setSyncStatus('online','Synchronisé ✓');
-      // Rafraîchir la page courante discrètement
       try{
         ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,
           vente:rVente,services:rServices,achats:rAchats,stock:rStock,
@@ -1308,9 +1310,10 @@ function loadData(){
   return loadLocal(); // synchrone, Firebase sera chargé après init
 }
 async function saveData(){
+  genVersion(); // timestamp unique à chaque sauvegarde
   saveLocal(S);
   if(fbReady&&navigator.onLine){
-    _ignorerProchainUpdate=true; // on ignore notre propre écriture dans le listener
+    _ignorerProchainUpdate=true;
     await saveToFirebase(S);
   }else{
     setSyncStatus('offline','Non synchronisé');
@@ -1325,8 +1328,9 @@ async function manualSync(){
   toast('🔄 Synchronisation en cours...');
   const remote=await loadFromFirebase();
   if(remote){
-    // Fusionner : Firebase a priorité si nid > local (plus récent)
-    if(remote.nid && remote.nid >= S.nid){
+    const remoteVer=remote.version||remote.nid||0;
+    const localVer=S.version||S.nid||0;
+    if(remoteVer >= localVer){
       S=remote;
       saveLocal(S);
       setSyncStatus('online','Synchronisé ✓');
@@ -1351,7 +1355,9 @@ async function startFirebaseSync(){
     if(navigator.onLine){
       setSyncStatus('syncing','Chargement cloud...');
       const remote=await loadFromFirebase();
-      if(remote&&remote.nid>=S.nid){
+      const remoteVer=remote?(remote.version||remote.nid||0):0;
+      const localVer=S.version||S.nid||0;
+      if(remote && remoteVer>=localVer){
         const savedSession=S.session;
         S=remote;
         if(savedSession&&savedSession.uid) S.session=savedSession;
