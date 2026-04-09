@@ -1256,6 +1256,53 @@ async function saveToFirebase(data){
   });
 }
 
+// ─── LISTENER TEMPS RÉEL ───
+let _realtimeListener=null;
+let _ignorerProchainUpdate=false; // éviter boucle : on écrit → on reçoit notre propre écriture
+
+function activerListenerTempsReel(){
+  if(!fbReady||!db)return;
+  if(_realtimeListener) return; // déjà actif
+
+  _realtimeListener = db.ref('christmedia/data').on('value', snap=>{
+    if(_ignorerProchainUpdate){
+      _ignorerProchainUpdate=false;
+      return;
+    }
+    const remote=snap.val();
+    if(!remote)return;
+    // Accepter les données distantes seulement si elles sont plus récentes
+    if(remote.nid && remote.nid > S.nid){
+      const savedSession=S.session;
+      S=remote;
+      if(savedSession&&savedSession.uid) S.session=savedSession;
+      saveLocal(S);
+      setSyncStatus('online','Synchronisé ✓');
+      // Rafraîchir la page courante discrètement
+      try{
+        ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,
+          vente:rVente,services:rServices,achats:rAchats,stock:rStock,
+          clients:rClients,fournisseurs:rFour,depenses:rDep,
+          tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,
+          inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,
+          comptes:rComptes,devis:rDevis,planning:rPlanning,
+          calculatrice:rCalc,parametres:rParametres})[currentPage]();
+      }catch(e){}
+      toast('🔄 Données mises à jour',1500);
+    }
+  }, e=>{
+    console.warn('Realtime listener error:',e);
+    setSyncStatus('offline','Hors ligne');
+  });
+}
+
+function desactiverListenerTempsReel(){
+  if(_realtimeListener&&db){
+    db.ref('christmedia/data').off('value',_realtimeListener);
+    _realtimeListener=null;
+  }
+}
+
 // ─── MAIN LOAD / SAVE ───
 function loadData(){
   return loadLocal(); // synchrone, Firebase sera chargé après init
@@ -1263,6 +1310,7 @@ function loadData(){
 async function saveData(){
   saveLocal(S);
   if(fbReady&&navigator.onLine){
+    _ignorerProchainUpdate=true; // on ignore notre propre écriture dans le listener
     await saveToFirebase(S);
   }else{
     setSyncStatus('offline','Non synchronisé');
@@ -1313,6 +1361,8 @@ async function startFirebaseSync(){
       }else{
         await saveToFirebase(S);
       }
+      // Activer la sync temps réel après le chargement initial
+      activerListenerTempsReel();
     }else{
       setSyncStatus('offline','Mode hors ligne');
     }
@@ -1332,11 +1382,15 @@ window.addEventListener('online',async()=>{
   setSyncStatus('syncing','Reconnexion...');
   toast('🌐 Connexion rétablie — synchronisation...');
   if(!fbReady) await initFirebase();
-  if(fbReady) await saveToFirebase(S);
+  if(fbReady){
+    await saveToFirebase(S);
+    activerListenerTempsReel();
+  }
 });
 window.addEventListener('offline',()=>{
   setSyncStatus('offline','Hors ligne');
   toast('📵 Mode hors ligne activé');
+  desactiverListenerTempsReel();
 });
 
 // ─── HELPERS ───
