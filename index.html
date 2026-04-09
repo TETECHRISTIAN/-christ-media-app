@@ -2081,23 +2081,35 @@ function saveAchat(){
   saveData();closeModal();toast(`✅ Achat enregistré — stock +${qte} pour ${art?art.nom:'article'}`);rAchats();
 }
 function delAchat(id){
-  if(!confirm('Supprimer cet achat ? Le stock sera ajusté.'))return;
+  if(!confirm('Supprimer cet achat ? Le stock et les comptes seront ajustés.'))return;
   const ac=S.achats.find(a=>a.id==id);
   if(ac){
-    const art=ga(ac.aid);if(art)art.ea=Math.max(0,(art.ea||0)-ac.qte);
+    // 1. Déduire du stock (annuler les entrées liées à cet achat)
+    const art=ga(ac.aid);
+    if(art) art.ea=Math.max(0,(art.ea||0)-ac.qte);
+
     if(ac.statut==='Payé'){
-      // Rembourser le compte débité
+      // 2a. Achat entièrement payé → rembourser le compte débité
       crediterCompte(ac.cid, ac.mt);
     } else {
-      // Annuler la dette fournisseur
+      // 2b. Achat à crédit
+      // Rembourser les tranches déjà versées sur les comptes
+      if(ac.tranches && ac.tranches.length>0){
+        ac.tranches.forEach(t=>{
+          crediterCompte(t.cid, t.mt);
+        });
+      }
+      // Réduire la dette fournisseur du montant RESTANT (non encore payé)
+      const totalPaye=ac.tranches?ac.tranches.reduce((s,t)=>s+t.mt,0):0;
+      const restedu=ac.mt-totalPaye;
       const f=S.fournisseurs.find(f=>f.id==ac.fid);
-      if(f) f.dette=Math.max(0,(f.dette||0)-ac.mt);
-      // Annuler dans dettesAchats
+      if(f) f.dette=Math.max(0,(f.dette||0)-restedu);
+      // Supprimer de dettesAchats
       if(S.dettesAchats) S.dettesAchats=S.dettesAchats.filter(d=>d.id!=id);
     }
   }
   S.achats=S.achats.filter(a=>a.id!=id);
-  saveData();toast('🗑️ Achat supprimé');rAchats();
+  saveData();toast('🗑️ Achat annulé — stock et comptes mis à jour');rAchats();
 }
 
 // ─── STOCK ───
