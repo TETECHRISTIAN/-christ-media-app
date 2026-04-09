@@ -15,6 +15,7 @@
 <link rel="apple-touch-icon" href="icons/icon-192x192.png">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -1186,7 +1187,7 @@ const firebaseConfig = {
 };
 
 // ─── FIREBASE INIT (via CDN) ───
-let firebaseApp=null, db=null, fbReady=false;
+let firebaseApp=null, db=null, storage=null, fbReady=false;
 
 function initFirebase(){
   return new Promise(resolve=>{
@@ -1198,6 +1199,7 @@ function initFirebase(){
         firebaseApp = firebase.initializeApp(firebaseConfig);
       }
       db = firebase.database();
+      storage = firebase.storage();
       fbReady = true;
       resolve(true);
     }catch(e){console.warn('Firebase init error:',e);resolve(false);}
@@ -2125,7 +2127,29 @@ function addArticle(preCode=''){
       </div>
       <div id="prix-preview" class="total-preview" style="display:none"></div>
     </div>
+    <div style="margin-bottom:12px">
+      <label class="fl">📷 Photo (optionnelle)</label>
+      <div class="photo-upload-zone" id="photo-zone-new" onclick="document.getElementById('photo-input-new').click()" style="padding:12px">
+        <div style="font-size:24px;margin-bottom:4px">📷</div>
+        <div style="font-size:12px;color:var(--text2)">Cliquer pour ajouter une photo</div>
+      </div>
+      <input type="file" id="photo-input-new" accept="image/*" style="display:none" onchange="previewNewArtPhoto(this)">
+    </div>
     <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveArt()">Ajouter</button></div>`);
+  // Stocker temporairement la photo pour le nouvel article
+  window._newArtPhoto=null;
+}
+
+function previewNewArtPhoto(input){
+  const file=input.files[0];if(!file)return;
+  if(file.size>5*1024*1024){toast('⚠️ Photo trop lourde (max 5MB)');return;}
+  window._newArtPhoto=file;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const zone=document.getElementById('photo-zone-new');
+    if(zone) zone.innerHTML=`<img src="${e.target.result}" style="width:100%;max-height:140px;object-fit:cover;border-radius:6px;margin-bottom:4px"><div style="font-size:11px;color:var(--text3)">Cliquer pour changer</div>`;
+  };
+  reader.readAsDataURL(file);
 }
 
 function previewPrixArt(){
@@ -2161,14 +2185,15 @@ function ajouterNvCat(){
   toast(`✅ Catégorie "${nom.trim()}" ajoutée`);
 }
 
-function saveArt(){
+async function saveArt(){
   const c=document.getElementById('mc').value,n=document.getElementById('mn').value;
   if(!c||!n)return toast('❌ Code et nom requis');
   const pv=+document.getElementById('mpv').value||0;
   const pv2=+document.getElementById('mpv2').value||pv;
   const pv3=+document.getElementById('mpv3').value||pv;
+  const newId=genId();
   S.stock.push({
-    id:genId(),code:c,nom:n,
+    id:newId,code:c,nom:n,
     cat:document.getElementById('mcat').value,
     pa:isAdmin()?(+document.getElementById('mpa')?.value||0):(S.stock.find(a=>a.id==editId)?.pa||0),
     pv,pv2,pv3,
@@ -2177,6 +2202,12 @@ function saveArt(){
     seuil:+document.getElementById('mse').value||5
   });
   saveData();closeModal();toast('✅ Article ajouté');rStock();
+  // Upload photo si sélectionnée
+  if(window._newArtPhoto){
+    const photoFile=window._newArtPhoto;
+    window._newArtPhoto=null;
+    await uploadPhotoToStorage(newId, photoFile);
+  }
 }
 function editArticle(id){
   const a=ga(id);if(!a)return;
@@ -3372,23 +3403,116 @@ function ouvrirPhotoModal(aid){
     <div class="mff"><button class="btn" onclick="closeModal()">Fermer</button></div>`);
 }
 
-function traiterPhoto(aid, input){
-  const file=input.files[0];if(!file)return;
-  if(file.size>2*1024*1024){toast('⚠️ Photo trop lourde (max 2MB) — essaie de réduire la taille');return;}
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const a=ga(aid);if(!a)return;
-    a.photo=e.target.result;
+// ─── UPLOAD PHOTO VERS FIREBASE STORAGE ───
+async function uploadPhotoToStorage(aid, file){
+  const a=ga(aid);if(!a||!file)return;
+  if(!storage||!fbReady||!navigator.onLine){
+    // Fallback base64 hors ligne
+    return new Promise(resolve=>{
+      const reader=new FileReader();
+      reader.onload=e=>{a.photo=e.target.result;saveData();rStock();resolve();};
+      reader.readAsDataURL(file);
+    });
+  }
+  try{
+    const ext=file.name.split('.').pop()||'jpg';
+    const path=`articles/${aid}_${Date.now()}.${ext}`;
+    const ref=storage.ref(path);
+    const snap=await ref.put(file);
+    const url=await snap.ref.getDownloadURL();
+    a.photo=url;
     saveData();
-    toast('✅ Photo enregistrée');
-    closeModal();
     rStock();
-  };
-  reader.readAsDataURL(file);
+    toast('📸 Photo synchronisée !');
+  }catch(e){
+    console.warn('uploadPhotoToStorage error:',e);
+    // Fallback base64
+    const reader=new FileReader();
+    reader.onload=ev=>{a.photo=ev.target.result;saveData();rStock();};
+    reader.readAsDataURL(file);
+  }
 }
 
-function supprimerPhoto(aid){
+async function traiterPhoto(aid, input){
+  const file=input.files[0];if(!file)return;
+  if(file.size>5*1024*1024){toast('⚠️ Photo trop lourde (max 5MB)');return;}
   const a=ga(aid);if(!a)return;
+
+  // Afficher progression dans la zone photo
+  const zone=document.getElementById('photo-zone');
+  if(zone) zone.innerHTML=`<div style="padding:20px;text-align:center">
+    <div style="font-size:24px;margin-bottom:8px">⏳</div>
+    <div style="font-size:13px;color:var(--text2)" id="upload-progress-label">Upload en cours...</div>
+    <div style="margin-top:10px;background:var(--surface2);border-radius:6px;height:6px;overflow:hidden">
+      <div id="upload-progress-bar" style="height:100%;background:var(--navy);width:0%;transition:width .3s;border-radius:6px"></div>
+    </div>
+  </div>`;
+
+  try{
+    // Supprimer ancienne photo si elle est dans Firebase Storage
+    if(a.photo && a.photo.includes('firebasestorage')){
+      try{
+        await firebase.storage().refFromURL(a.photo).delete();
+      }catch(e){/* silencieux si déjà supprimé */}
+    }
+
+    if(!storage || !fbReady || !navigator.onLine){
+      // Fallback base64 si pas de connexion
+      const reader=new FileReader();
+      reader.onload=e=>{
+        a.photo=e.target.result;
+        saveData();toast('✅ Photo enregistrée (locale)');closeModal();rStock();
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    // Upload vers Firebase Storage
+    const ext=file.name.split('.').pop()||'jpg';
+    const path=`articles/${aid}_${Date.now()}.${ext}`;
+    const ref=storage.ref(path);
+    const task=ref.put(file);
+
+    task.on('state_changed',
+      snap=>{
+        const pct=Math.round(snap.bytesTransferred/snap.totalBytes*100);
+        const bar=document.getElementById('upload-progress-bar');
+        const lbl=document.getElementById('upload-progress-label');
+        if(bar) bar.style.width=pct+'%';
+        if(lbl) lbl.textContent=`Upload en cours... ${pct}%`;
+      },
+      err=>{
+        console.warn('Upload error:',err);
+        toast('❌ Erreur upload — enregistrement local');
+        // Fallback base64
+        const reader=new FileReader();
+        reader.onload=e=>{a.photo=e.target.result;saveData();closeModal();rStock();};
+        reader.readAsDataURL(file);
+      },
+      async ()=>{
+        const url=await task.snapshot.ref.getDownloadURL();
+        a.photo=url;
+        saveData();
+        toast('✅ Photo synchronisée !');
+        closeModal();
+        rStock();
+      }
+    );
+  }catch(e){
+    console.warn('traiterPhoto error:',e);
+    toast('❌ Erreur — essaie à nouveau');
+    closeModal();
+  }
+}
+
+async function supprimerPhoto(aid){
+  const a=ga(aid);if(!a)return;
+  // Supprimer dans Firebase Storage si URL distante
+  if(a.photo && a.photo.includes('firebasestorage')){
+    try{
+      await firebase.storage().refFromURL(a.photo).delete();
+    }catch(e){console.warn('Delete storage error:',e);}
+  }
   delete a.photo;
   saveData();toast('🗑️ Photo supprimée');closeModal();rStock();
 }
