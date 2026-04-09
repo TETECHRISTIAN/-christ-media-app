@@ -2611,13 +2611,83 @@ function rDep(){
           <td style="font-weight:700;color:var(--red)">${F(tot)}</td><td></td><td></td><td></td></tr>
       </tbody></table></div>`;
 }
+function getCatsDep(){
+  const defaut=['Lingerie','Audio-Vidéo','Bureautique','Loyer','Transport','Électricité','Salaires','Frais généraux'];
+  return (S.parametres&&S.parametres.categoriesDep)||defaut;
+}
+function getCatsRev(){
+  const defaut=['Prestation service','Transfert/Virement reçu','Commission','Location','Autre'];
+  return (S.parametres&&S.parametres.categoriesRev)||defaut;
+}
+function getCatsCharge(){
+  const defaut=['Loyer','Salaire','Électricité','Internet','Transport','Autre'];
+  return (S.parametres&&S.parametres.categoriesCharge)||defaut;
+}
+function selectCatDep(idSelect, selected=''){
+  const opts=getCatsDep().map(c=>`<option${c===selected?' selected':''}>${c}</option>`).join('');
+  return `<div style="display:flex;gap:6px;align-items:center">
+    <select class="fs" id="${idSelect}" style="flex:1">${opts}</select>
+    <button type="button" class="btn btn-sm" onclick="ajouterCatDep('${idSelect}')" style="white-space:nowrap;flex-shrink:0">+ Cat.</button>
+  </div>`;
+}
+function selectCatRev(idSelect, selected=''){
+  const opts=getCatsRev().map(c=>`<option${c===selected?' selected':''}>${c}</option>`).join('');
+  return `<div style="display:flex;gap:6px;align-items:center">
+    <select class="fs" id="${idSelect}" style="flex:1">${opts}</select>
+    <button type="button" class="btn btn-sm" onclick="ajouterCatRev('${idSelect}')" style="white-space:nowrap;flex-shrink:0">+ Cat.</button>
+  </div>`;
+}
+function selectCatCharge(idSelect, selected=''){
+  const opts=getCatsCharge().map(c=>`<option${c===selected?' selected':''}>${c}</option>`).join('');
+  return `<div style="display:flex;gap:6px;align-items:center">
+    <select class="fs" id="${idSelect}" style="flex:1">${opts}</select>
+    <button type="button" class="btn btn-sm" onclick="ajouterCatCharge('${idSelect}')" style="white-space:nowrap;flex-shrink:0">+ Cat.</button>
+  </div>`;
+}
+function ajouterCatDep(idSelect){
+  const nom=prompt('Nom de la nouvelle catégorie de dépense :');
+  if(!nom||!nom.trim())return;
+  if(!S.parametres)S.parametres={};
+  if(!S.parametres.categoriesDep)S.parametres.categoriesDep=getCatsDep();
+  if(S.parametres.categoriesDep.includes(nom.trim()))return toast('⚠️ Catégorie déjà existante');
+  S.parametres.categoriesDep.push(nom.trim());
+  saveData();
+  const sel=document.getElementById(idSelect);
+  if(sel){const opt=document.createElement('option');opt.value=nom.trim();opt.textContent=nom.trim();opt.selected=true;sel.appendChild(opt);}
+  toast(`✅ Catégorie "${nom.trim()}" ajoutée`);
+}
+function ajouterCatRev(idSelect){
+  const nom=prompt('Nom de la nouvelle catégorie de revenu :');
+  if(!nom||!nom.trim())return;
+  if(!S.parametres)S.parametres={};
+  if(!S.parametres.categoriesRev)S.parametres.categoriesRev=getCatsRev();
+  if(S.parametres.categoriesRev.includes(nom.trim()))return toast('⚠️ Catégorie déjà existante');
+  S.parametres.categoriesRev.push(nom.trim());
+  saveData();
+  const sel=document.getElementById(idSelect);
+  if(sel){const opt=document.createElement('option');opt.value=nom.trim();opt.textContent=nom.trim();opt.selected=true;sel.appendChild(opt);}
+  toast(`✅ Catégorie "${nom.trim()}" ajoutée`);
+}
+function ajouterCatCharge(idSelect){
+  const nom=prompt('Nom de la nouvelle catégorie de charge :');
+  if(!nom||!nom.trim())return;
+  if(!S.parametres)S.parametres={};
+  if(!S.parametres.categoriesCharge)S.parametres.categoriesCharge=getCatsCharge();
+  if(S.parametres.categoriesCharge.includes(nom.trim()))return toast('⚠️ Catégorie déjà existante');
+  S.parametres.categoriesCharge.push(nom.trim());
+  saveData();
+  const sel=document.getElementById(idSelect);
+  if(sel){const opt=document.createElement('option');opt.value=nom.trim();opt.textContent=nom.trim();opt.selected=true;sel.appendChild(opt);}
+  toast(`✅ Catégorie "${nom.trim()}" ajoutée`);
+}
+
 function addDep(){
   modal(`<div class="mft">Enregistrer une dépense</div>
     <div class="fr"><div class="fg"><label class="fl">Fournisseur</label><input class="fi" id="mf" placeholder="Nom du fournisseur"></div>
     <div class="fg"><label class="fl">Date</label><input class="fi" type="date" id="mda" value="${D()}"></div></div>
-    <div class="fr"><div class="fg"><label class="fl">Catégorie</label><select class="fs" id="mc"><option>Lingerie</option><option>Audio-Vidéo</option><option>Bureautique</option><option>Loyer</option><option>Transport</option><option>Électricité</option><option>Salaires</option><option>Frais généraux</option></select></div>
+    <div class="fr"><div class="fg"><label class="fl">Catégorie</label>${selectCatDep('mc')}</div>
     <div class="fg"><label class="fl">Compte débit</label>${selectComptes('mm', premierCompteId())}</div></div>
-    <div class="fg"><label class="fl">Montant (FCFA)</label><input class="fi" type="number" id="mt" placeholder="0"></div>
+    <div class="fg"><label class="fl">Montant (${(S.parametres&&S.parametres.devise)||'FCFA'})</label><input class="fi" type="number" id="mt" placeholder="0"></div>
     <div class="fg"><label class="fl">Notes</label><input class="fi" id="mno" placeholder="Description..."></div>
     <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-danger" onclick="saveDep()">Enregistrer</button></div>`);
 }
@@ -2635,9 +2705,9 @@ function editDep(id){
   modal(`<div class="mft">Modifier la dépense</div>
     <div class="fr"><div class="fg"><label class="fl">Fournisseur</label><input class="fi" id="mf" value="${d.four}"></div>
     <div class="fg"><label class="fl">Date</label><input class="fi" type="date" id="mda" value="${d.date}"></div></div>
-    <div class="fr"><div class="fg"><label class="fl">Catégorie</label><select class="fs" id="mc"><option${d.cat==='Lingerie'?' selected':''}>Lingerie</option><option${d.cat==='Audio-Vidéo'?' selected':''}>Audio-Vidéo</option><option${d.cat==='Bureautique'?' selected':''}>Bureautique</option><option${d.cat==='Loyer'?' selected':''}>Loyer</option><option${d.cat==='Transport'?' selected':''}>Transport</option><option${d.cat==='Électricité'?' selected':''}>Électricité</option><option${d.cat==='Salaires'?' selected':''}>Salaires</option><option${d.cat==='Frais généraux'?' selected':''}>Frais généraux</option></select></div>
+    <div class="fr"><div class="fg"><label class="fl">Catégorie</label>${selectCatDep('mc', d.cat)}</div>
     <div class="fg"><label class="fl">Compte débit</label>${selectComptes('mm', d.cid||premierCompteId())}</div></div>
-    <div class="fg"><label class="fl">Montant (FCFA)</label><input class="fi" type="number" id="mt" value="${d.mt}"></div>
+    <div class="fg"><label class="fl">Montant (${(S.parametres&&S.parametres.devise)||'FCFA'})</label><input class="fi" type="number" id="mt" value="${d.mt}"></div>
     <div class="fg"><label class="fl">Notes</label><input class="fi" id="mno" value="${d.notes||''}"></div>
     <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-danger" onclick="updateDep(${id})">Enregistrer</button></div>`);
 }
@@ -3080,9 +3150,7 @@ function addRevenu(){
   modal(`<div class="mft">Ajouter un revenu supplémentaire</div>
     <div class="fr">
       <div class="fg"><label class="fl">Date</label><input class="fi" type="date" id="mda" value="${D()}"></div>
-      <div class="fg"><label class="fl">Catégorie</label>
-        <select class="fs" id="mcat"><option>Prestation service</option><option>Transfert/Virement reçu</option><option>Commission</option><option>Location</option><option>Autre</option></select>
-      </div>
+      <div class="fg"><label class="fl">Catégorie</label>${selectCatRev('mcat')}</div>
     </div>
     <div class="fg"><label class="fl">Description</label><input class="fi" id="mdesc" placeholder="Ex: Réparation imprimante client..."></div>
     <div class="fr">
@@ -3110,9 +3178,7 @@ function addCharge(){
   revTab='charges';
   modal(`<div class="mft">Ajouter une charge fixe</div>
     <div class="fr">
-      <div class="fg"><label class="fl">Catégorie</label>
-        <select class="fs" id="mcat"><option>Loyer</option><option>Salaire</option><option>Électricité</option><option>Internet</option><option>Transport</option><option>Autre</option></select>
-      </div>
+      <div class="fg"><label class="fl">Catégorie</label>${selectCatCharge('mcat')}</div>
       <div class="fg"><label class="fl">Récurrence</label>
         <select class="fs" id="mrec"><option>Mensuel</option><option>Hebdomadaire</option><option>Annuel</option><option>Ponctuel</option></select>
       </div>
@@ -3293,6 +3359,36 @@ function rParametres(){
     </div>
 
     <div class="param-section">
+      <div class="param-section-title">💸 Catégories de dépenses</div>
+      ${getCatsDep().map((cat,i)=>`
+        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+          <input class="fi" value="${cat}" oninput="majCatDep(${i},this.value)" style="flex:1">
+          <button class="del-btn" onclick="supprimerCatDep(${i})">✕</button>
+        </div>`).join('')}
+      <button class="btn" onclick="ajouterCatDepParam()">+ Nouvelle catégorie</button>
+    </div>
+
+    <div class="param-section">
+      <div class="param-section-title">💰 Catégories de revenus</div>
+      ${getCatsRev().map((cat,i)=>`
+        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+          <input class="fi" value="${cat}" oninput="majCatRev(${i},this.value)" style="flex:1">
+          <button class="del-btn" onclick="supprimerCatRev(${i})">✕</button>
+        </div>`).join('')}
+      <button class="btn" onclick="ajouterCatRevParam()">+ Nouvelle catégorie</button>
+    </div>
+
+    <div class="param-section">
+      <div class="param-section-title">📋 Catégories de charges fixes</div>
+      ${getCatsCharge().map((cat,i)=>`
+        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+          <input class="fi" value="${cat}" oninput="majCatCharge(${i},this.value)" style="flex:1">
+          <button class="del-btn" onclick="supprimerCatCharge(${i})">✕</button>
+        </div>`).join('')}
+      <button class="btn" onclick="ajouterCatChargeParam()">+ Nouvelle catégorie</button>
+    </div>
+
+    <div class="param-section">
       <div class="param-section-title">🏪 Boutiques / Points de vente</div>
       ${S.boutiques.map(b=>`
         <div class="boutique-card${S.boutique_active===b.id?' active':''}" onclick="activerBoutique(${b.id})">
@@ -3416,6 +3512,45 @@ function ajouterCategorie(){
 function supprimerCategorie(i){
   if(S.parametres.categories.length<=1)return toast('⚠️ Au moins une catégorie requise');
   S.parametres.categories.splice(i,1);saveData();rParametres();
+}
+// Catégories dépenses
+function majCatDep(i,val){if(!S.parametres)S.parametres={};if(!S.parametres.categoriesDep)S.parametres.categoriesDep=getCatsDep();S.parametres.categoriesDep[i]=val;}
+function ajouterCatDepParam(){
+  if(!S.parametres)S.parametres={};
+  if(!S.parametres.categoriesDep)S.parametres.categoriesDep=getCatsDep();
+  S.parametres.categoriesDep.push('Nouvelle catégorie');
+  saveData();rParametres();
+}
+function supprimerCatDep(i){
+  if(!S.parametres||!S.parametres.categoriesDep)return;
+  if(S.parametres.categoriesDep.length<=1)return toast('⚠️ Au moins une catégorie requise');
+  S.parametres.categoriesDep.splice(i,1);saveData();rParametres();
+}
+// Catégories revenus
+function majCatRev(i,val){if(!S.parametres)S.parametres={};if(!S.parametres.categoriesRev)S.parametres.categoriesRev=getCatsRev();S.parametres.categoriesRev[i]=val;}
+function ajouterCatRevParam(){
+  if(!S.parametres)S.parametres={};
+  if(!S.parametres.categoriesRev)S.parametres.categoriesRev=getCatsRev();
+  S.parametres.categoriesRev.push('Nouvelle catégorie');
+  saveData();rParametres();
+}
+function supprimerCatRev(i){
+  if(!S.parametres||!S.parametres.categoriesRev)return;
+  if(S.parametres.categoriesRev.length<=1)return toast('⚠️ Au moins une catégorie requise');
+  S.parametres.categoriesRev.splice(i,1);saveData();rParametres();
+}
+// Catégories charges
+function majCatCharge(i,val){if(!S.parametres)S.parametres={};if(!S.parametres.categoriesCharge)S.parametres.categoriesCharge=getCatsCharge();S.parametres.categoriesCharge[i]=val;}
+function ajouterCatChargeParam(){
+  if(!S.parametres)S.parametres={};
+  if(!S.parametres.categoriesCharge)S.parametres.categoriesCharge=getCatsCharge();
+  S.parametres.categoriesCharge.push('Nouvelle catégorie');
+  saveData();rParametres();
+}
+function supprimerCatCharge(i){
+  if(!S.parametres||!S.parametres.categoriesCharge)return;
+  if(S.parametres.categoriesCharge.length<=1)return toast('⚠️ Au moins une catégorie requise');
+  S.parametres.categoriesCharge.splice(i,1);saveData();rParametres();
 }
 function activerBoutique(id){S.boutique_active=id;saveData();rParametres();toast('✅ Boutique activée');}
 function ajouterBoutique(){
