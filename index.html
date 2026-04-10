@@ -5800,8 +5800,7 @@ function rFlux(){
   const entrees=mois.map(m=>{
     const v=S.ventes.filter(x=>x.statut==='Payé'&&x.date&&x.date.startsWith(m)).reduce((s,x)=>s+x.mt,0);
     const r=(S.revenus||[]).filter(x=>x.date&&x.date.startsWith(m)).reduce((s,x)=>s+x.mt,0);
-    const sv=(S.services_ventes||S.servicesVentes||[]).filter(x=>x.date&&x.date.startsWith(m)).reduce((s,x)=>s+(x.mt||x.prix||0),0);
-    return v+r+sv;
+    return v+r;
   });
   const sorties=mois.map(m=>{
     const d=S.depenses.filter(x=>x.date&&x.date.startsWith(m)).reduce((s,x)=>s+x.mt,0);
@@ -5811,26 +5810,39 @@ function rFlux(){
   const soldes=mois.map((_,i)=>entrees[i]-sorties[i]);
   const maxVal=Math.max(...entrees,...sorties,1);
   const nomMois=m=>{const [y,mo]=m.split('-');return new Date(+y,+mo-1,1).toLocaleDateString('fr-FR',{month:'short',year:'2-digit'});};
-
-  // Calcul comptes
   const totalComptes=(S.comptes||[]).reduce((s,c)=>s+c.solde,0);
   const totalEntrees=entrees.reduce((s,v)=>s+v,0);
   const totalSorties=sorties.reduce((s,v)=>s+v,0);
 
+  // Historique unifié
+  const buildHist=(type)=>{
+    const h=[];
+    if(type==='Tout'||type==='Vente') S.ventes.filter(v=>v.statut==='Payé').forEach(v=>h.push({date:v.date,type:'Vente',label:v.client||'Client',montant:v.mt,sens:'+',couleur:'var(--green)',compte:v.cid?nomCompte(v.cid):v.mode||'—'}));
+    if(type==='Tout'||type==='Revenu') (S.revenus||[]).forEach(r=>h.push({date:r.date,type:'Revenu',label:r.desc||'',montant:r.mt,sens:'+',couleur:'var(--teal)',compte:r.cid?nomCompte(r.cid):r.mode||'—'}));
+    if(type==='Tout'||type==='Dépense') S.depenses.forEach(d=>h.push({date:d.date,type:'Dépense',label:d.four+' · '+d.cat,montant:d.mt,sens:'-',couleur:'var(--red)',compte:d.cid?nomCompte(d.cid):d.mode||'—'}));
+    if(type==='Tout'||type==='Achat') S.achats.filter(a=>a.statut==='Payé').forEach(a=>{const art=ga(a.aid);const f=gf(a.fid);h.push({date:a.date,type:'Achat',label:(f?f.nom:'')+(art?' · '+art.nom:''),montant:a.mt,sens:'-',couleur:'var(--purple)',compte:a.cid?nomCompte(a.cid):a.mode||'—'});});
+    if(type==='Tout'||type==='Transfert') (S.transferts||[]).forEach(t=>h.push({date:t.date,type:'Transfert',label:nomCompte(t.de)+' → '+nomCompte(t.vers),montant:t.mt,sens:'⇄',couleur:'var(--navy)',compte:nomCompte(t.de)}));
+    if(type==='Tout'||type==='Emprunt') (S.dettesPerso||[]).filter(d=>d.typeDette==='emprunter').forEach(d=>h.push({date:d.date,type:'Emprunt',label:d.personne,montant:d.montant,sens:'+',couleur:'var(--amber)',compte:d.cid?nomCompte(d.cid):'—'}));
+    if(type==='Tout'||type==='Prêt') (S.dettesPerso||[]).filter(d=>d.typeDette==='preter').forEach(d=>h.push({date:d.date,type:'Prêt',label:d.personne,montant:d.montant,sens:'-',couleur:'var(--pink)',compte:d.cid?nomCompte(d.cid):'—'}));
+    return h.sort((a,b)=>b.date.localeCompare(a.date));
+  };
+  window._fluxFiltre=window._fluxFiltre||'Tout';
+  const historique=buildHist(window._fluxFiltre);
+  const renderHist=(h)=>h.length===0?'<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text3)">Aucune opération</td></tr>':
+    h.slice(0,100).map(x=>`<tr>
+      <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text3)">${x.date}</td>
+      <td><span style="font-size:11px;font-weight:600;color:${x.couleur}">${x.type}</span></td>
+      <td class="tdm" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.label}</td>
+      <td><span class="badge bb" style="font-size:10px">${x.compte}</span></td>
+      <td style="font-weight:700;color:${x.sens==='+'?'var(--green)':x.sens==='-'?'var(--red)':'var(--navy)'};white-space:nowrap">${x.sens==='+'?'+':x.sens==='-'?'-':''}${F(x.montant)}</td>
+    </tr>`).join('')+(h.length>100?`<tr><td colspan="5" style="text-align:center;padding:10px;color:var(--text3);font-size:12px">… ${h.length-100} opérations supplémentaires</td></tr>`:'');
+
   document.getElementById('content').innerHTML=`
     <div class="g4" style="margin-bottom:20px">
-      <div class="card" style="border-left:3px solid var(--green)">
-        <div class="ct">Entrées (6 mois)</div><div class="mv" style="color:var(--green)">${F(totalEntrees)}</div>
-      </div>
-      <div class="card" style="border-left:3px solid var(--red)">
-        <div class="ct">Sorties (6 mois)</div><div class="mv" style="color:var(--red)">${F(totalSorties)}</div>
-      </div>
-      <div class="card" style="border-left:3px solid var(--navy)">
-        <div class="ct">Flux net</div><div class="mv" style="color:${totalEntrees-totalSorties>=0?'var(--green)':'var(--red)'}">${F(totalEntrees-totalSorties)}</div>
-      </div>
-      <div class="card" style="border-left:3px solid var(--teal)">
-        <div class="ct">Solde comptes</div><div class="mv" style="color:var(--teal)">${F(totalComptes)}</div>
-      </div>
+      <div class="card" style="border-left:3px solid var(--green)"><div class="ct">Entrées (6 mois)</div><div class="mv" style="color:var(--green)">${F(totalEntrees)}</div></div>
+      <div class="card" style="border-left:3px solid var(--red)"><div class="ct">Sorties (6 mois)</div><div class="mv" style="color:var(--red)">${F(totalSorties)}</div></div>
+      <div class="card" style="border-left:3px solid var(--navy)"><div class="ct">Flux net</div><div class="mv" style="color:${totalEntrees-totalSorties>=0?'var(--green)':'var(--red)'}">${F(totalEntrees-totalSorties)}</div></div>
+      <div class="card" style="border-left:3px solid var(--teal)"><div class="ct">Solde comptes</div><div class="mv" style="color:var(--teal)">${F(totalComptes)}</div></div>
     </div>
 
     <p class="st">Flux entrées / sorties — 6 derniers mois</p>
@@ -5838,7 +5850,6 @@ function rFlux(){
       <div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px">
         <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:var(--green);display:inline-block"></span>Entrées</span>
         <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:var(--red);display:inline-block"></span>Sorties</span>
-        <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:var(--navy);display:inline-block"></span>Flux net</span>
       </div>
       <div style="display:flex;align-items:flex-end;gap:8px;height:160px;padding-bottom:24px;position:relative">
         <div style="position:absolute;bottom:24px;left:0;right:0;border-top:1px dashed var(--border)"></div>
@@ -5859,12 +5870,7 @@ function rFlux(){
 
     <p class="st" style="margin-top:20px">Solde par compte</p>
     <div class="g3">
-      ${(S.comptes||[]).map(c=>`
-        <div class="card" style="border-left:3px solid ${c.couleur||'var(--navy)'}">
-          <div class="ct">${c.nom}</div>
-          <div class="mv" style="color:${c.solde>=0?'var(--text)':'var(--red)'}">${F(c.solde)}</div>
-          <div class="ms">${c.type||'Compte'}</div>
-        </div>`).join('')||'<div style="color:var(--text3);font-size:13px">Aucun compte configuré</div>'}
+      ${(S.comptes||[]).map(c=>`<div class="card" style="border-left:3px solid ${c.couleur||'var(--navy)'}"><div class="ct">${c.nom}</div><div class="mv" style="color:${c.solde>=0?'var(--text)':'var(--red)'}">${F(c.solde)}</div><div class="ms">${c.type||'Compte'}</div></div>`).join('')||'<div style="color:var(--text3);font-size:13px">Aucun compte configuré</div>'}
     </div>
 
     <p class="st" style="margin-top:20px">Détail mensuel</p>
@@ -5876,18 +5882,26 @@ function rFlux(){
         <td style="color:var(--red);font-weight:600">${F(sorties[i])}</td>
         <td style="font-weight:700;color:${soldes[i]>=0?'var(--green)':'var(--red)'}">${soldes[i]>=0?'+':''}${F(soldes[i])}</td>
       </tr>`).join('')}
-        <tr style="background:var(--surface2);font-weight:700">
-          <td>TOTAL</td>
-          <td style="color:var(--green)">${F(totalEntrees)}</td>
-          <td style="color:var(--red)">${F(totalSorties)}</td>
-          <td style="color:${totalEntrees-totalSorties>=0?'var(--green)':'var(--red)'}">${totalEntrees-totalSorties>=0?'+':''}${F(totalEntrees-totalSorties)}</td>
-        </tr>
-      </tbody></table></div>`;
+        <tr style="background:var(--surface2);font-weight:700"><td>TOTAL</td><td style="color:var(--green)">${F(totalEntrees)}</td><td style="color:var(--red)">${F(totalSorties)}</td><td style="color:${totalEntrees-totalSorties>=0?'var(--green)':'var(--red)'}">${totalEntrees-totalSorties>=0?'+':''}${F(totalEntrees-totalSorties)}</td></tr>
+      </tbody></table></div>
+
+    <p class="st" style="margin-top:24px">📋 Historique complet des opérations</p>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      ${['Tout','Vente','Revenu','Dépense','Achat','Transfert','Emprunt','Prêt'].map(t=>`
+        <button onclick="filtrerFlux('${t}')" class="btn btn-sm" style="${window._fluxFiltre===t?'background:var(--navy);color:#fff;border-color:var(--navy)':''}">${t}</button>
+      `).join('')}
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Date</th><th>Type</th><th>Libellé</th><th>Compte</th><th>Montant</th></tr></thead>
+      <tbody>${renderHist(historique)}</tbody>
+    </table></div>`;
 }
 
-// ════════════════════════════════════════════════════
-// ─── MODULE : LIMITES DE DÉPENSES ───
-// ════════════════════════════════════════════════════
+function filtrerFlux(type){
+  window._fluxFiltre=type;
+  rFlux();
+}
+
 function rLimites(){
   if(!S.limites)S.limites=[];
   const curM=new Date().toISOString().slice(0,7);
@@ -6169,6 +6183,7 @@ function rAgenda(){
           <option value="depense"${agendaFiltreType==='depense'?' selected':''}>💸 Dépense</option>
           <option value="revenu"${agendaFiltreType==='revenu'?' selected':''}>💰 Revenu</option>
           <option value="achat"${agendaFiltreType==='achat'?' selected':''}>📦 Achat</option>
+          <option value="transfert"${agendaFiltreType==='transfert'?' selected':''}>🔄 Transfert</option>
           <option value="rappel"${agendaFiltreType==='rappel'?' selected':''}>🔔 Rappel</option>
         </select>
       </div>
@@ -6211,6 +6226,7 @@ function addAgenda(){
           <option value="depense">💸 Dépense</option>
           <option value="revenu">💰 Revenu</option>
           <option value="achat">📦 Achat</option>
+          <option value="transfert">🔄 Transfert</option>
           <option value="rappel">🔔 Rappel</option>
         </select>
       </div>
@@ -6261,7 +6277,82 @@ function saveAgenda(){
 
 function marquerFait(id){
   const op=S.agenda.find(a=>a.id==id);if(!op)return;
-  op.fait=true;op.dateFait=D();
+  const devise=(S.parametres&&S.parametres.devise)||'FCFA';
+
+  // Construire les options selon le type
+  const compteLabel=op.type==='transfert'?'Compte source':'Compte';
+  const showCompteVers=op.type==='transfert';
+
+  modal(`<div class="mft">✅ Confirmer l'opération</div>
+    <div style="background:var(--surface2);border-radius:var(--rs);padding:10px 14px;margin-bottom:14px">
+      <div style="font-weight:600;font-size:14px;margin-bottom:4px">${op.titre}</div>
+      <div style="font-size:12px;color:var(--text3)">${op.date} · ${op.type}${op.recurrence?' · 🔁 '+op.recurrence:''}</div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Montant (${devise})</label>
+        <input class="fi" type="number" id="cf-mt" value="${op.montant||0}" placeholder="0">
+      </div>
+      <div class="fg"><label class="fl">Date effective</label>
+        <input class="fi" type="date" id="cf-date" value="${D()}">
+      </div>
+    </div>
+    <div class="fg"><label class="fl">${compteLabel}</label>
+      ${selectComptes('cf-cid', op.cid||premierCompteId())}
+    </div>
+    ${showCompteVers?`<div class="fg"><label class="fl">Compte destination</label>
+      ${selectComptes('cf-cid-vers', premierCompteId())}
+    </div>`:''}
+    ${op.type==='depense'?`<div class="fg"><label class="fl">Catégorie</label>
+      ${selectCatDep('cf-cat',(op.cat||''))}
+    </div>`:''}
+    ${op.type==='revenu'?`<div class="fg"><label class="fl">Catégorie</label>
+      ${selectCatRev('cf-cat',(op.cat||''))}
+    </div>`:''}
+    <div class="fg"><label class="fl">Notes</label>
+      <input class="fi" id="cf-notes" value="${op.notes||''}" placeholder="Notes optionnelles...">
+    </div>
+    <div class="mff">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-success" onclick="confirmerFait(${id})">✅ Confirmer</button>
+    </div>`);
+}
+
+function confirmerFait(id){
+  const op=S.agenda.find(a=>a.id==id);if(!op)return;
+  const mt=+document.getElementById('cf-mt').value||0;
+  const cid=document.getElementById('cf-cid').value;
+  const date=document.getElementById('cf-date').value||D();
+  const notes=document.getElementById('cf-notes').value||op.notes||'';
+  const cat=document.getElementById('cf-cat')?document.getElementById('cf-cat').value:'';
+
+  // Exécuter l'opération selon le type
+  if(mt>0){
+    if(op.type==='depense'){
+      S.depenses.push({id:genId(),date,four:op.titre,cat:cat||op.cat||'Agenda',mt,mode:nomCompte(cid),cid,notes});
+      debiterCompte(cid,mt);
+      verifierLimites();
+    } else if(op.type==='revenu'){
+      if(!S.revenus)S.revenus=[];
+      S.revenus.push({id:genId(),date,desc:op.titre,cat:cat||op.cat||'Agenda',mt,mode:nomCompte(cid),cid});
+      crediterCompte(cid,mt);
+    } else if(op.type==='achat'){
+      toast('📦 Achat — allez dans la section Achats pour enregistrer le détail');
+    } else if(op.type==='transfert'){
+      const cidVers=document.getElementById('cf-cid-vers')?document.getElementById('cf-cid-vers').value:null;
+      if(cidVers&&cidVers!==cid){
+        debiterCompte(cid,mt);
+        crediterCompte(cidVers,mt);
+        if(!S.transferts)S.transferts=[];
+        S.transferts.push({id:genId(),date,de:cid,vers:cidVers,mt,notes});
+        toast(`✅ Transfert de ${F(mt)} — ${nomCompte(cid)} → ${nomCompte(cidVers)}`);
+      } else {
+        return toast('❌ Comptes source et destination doivent être différents');
+      }
+    }
+  }
+
+  // Marquer comme fait et gérer récurrence
+  op.fait=true;op.dateFait=date;
   if(op.recurrence){
     const next=new Date(op.date);
     if(op.recurrence==='Quotidien') next.setDate(next.getDate()+1);
@@ -6269,7 +6360,9 @@ function marquerFait(id){
     else if(op.recurrence==='Mensuel') next.setMonth(next.getMonth()+1);
     S.agenda.push({...op,id:genId(),date:next.toISOString().split('T')[0],fait:false,dateFait:null});
   }
-  saveData();toast('✅ Opération marquée comme faite');rAgenda();
+  saveData();closeModal();
+  if(op.type!=='transfert') toast(`✅ ${op.titre}${mt?` — ${F(mt)}`:''} enregistré`);
+  rAgenda();
 }
 
 function delAgenda(id){
