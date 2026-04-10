@@ -5603,85 +5603,191 @@ function saveTrancheAchat(acid){
 // ════════════════════════════════════════════════════
 // ─── MODULE : GESTION DES DETTES ───
 // ════════════════════════════════════════════════════
+// État filtre dettes
+let dettesFiltreTab='tout';
+
 function rDettes(){
   if(!S.achats)S.achats=[];
   if(!S.ventes)S.ventes=[];
-  if(!S.clients)S.clients=[];
-  if(!S.fournisseurs)S.fournisseurs=[];
+  if(!S.dettesPerso)S.dettesPerso=[];
 
-  // Dettes fournisseurs (ce qu'on doit)
   const dettesF=S.achats.filter(a=>a.statut==='À payer');
-  const totalDettesF=dettesF.reduce((s,a)=>s+a.mt,0);
-  const totalPayeF=dettesF.reduce((s,a)=>s+(a.tranches?a.tranches.reduce((x,t)=>x+t.mt,0):0),0);
-  const resteF=totalDettesF-totalPayeF;
-
-  // Dettes clients (ce qu'on nous doit)
+  const resteF=dettesF.reduce((s,a)=>s+(a.mt-(a.tranches?a.tranches.reduce((x,t)=>x+t.mt,0):0)),0);
   const dettesC=S.ventes.filter(v=>v.statut==='Non payé');
-  const totalDettesC=dettesC.reduce((s,v)=>s+v.mt,0);
-  const totalPayeC=dettesC.reduce((s,v)=>s+(v.acomptes?v.acomptes.reduce((x,a)=>x+a.mt,0):0)+(v.tranches?v.tranches.reduce((x,t)=>x+t.mt,0):0),0);
-  const resteC=totalDettesC-totalPayeC;
+  const resteC=dettesC.reduce((s,v)=>s+(v.mt-((v.acomptes?v.acomptes.reduce((x,a)=>x+a.mt,0):0)+(v.tranches?v.tranches.reduce((x,t)=>x+t.mt,0):0))),0);
+  const emprunts=S.dettesPerso.filter(d=>d.typeDette==='emprunter'&&d.statut!=='Soldé');
+  const prets=S.dettesPerso.filter(d=>d.typeDette==='preter'&&d.statut!=='Soldé');
+  const totalEmprunts=emprunts.reduce((s,d)=>s+(d.montant-(d.rembourse||0)),0);
+  const totalPrets=prets.reduce((s,d)=>s+(d.montant-(d.rembourse||0)),0);
+
+  const tabs=[{id:'tout',label:'Tout'},{id:'fournisseurs',label:'📦 Fournisseurs'},{id:'clients',label:'👤 Clients'},{id:'emprunts',label:'📥 Emprunts'},{id:'prets',label:'📤 Prêts'}];
+
+  const renderDP=(liste)=>liste.length===0
+    ?`<tr><td colspan="9" style="text-align:center;padding:16px;color:var(--text3)">Aucune entrée</td></tr>`
+    :liste.slice().reverse().map(d=>{
+      const reste=d.montant-(d.rembourse||0);
+      const pct=Math.round((d.rembourse||0)/d.montant*100);
+      const compte=S.comptes&&S.comptes.find(c=>c.id==d.cid);
+      return`<tr>
+        <td style="font-size:11px;font-family:'DM Mono',monospace">${d.date}</td>
+        <td class="tdm">${d.personne}</td>
+        <td><span class="badge" style="background:${d.typeDette==='emprunter'?'var(--red-bg)':'var(--green-bg)'};color:${d.typeDette==='emprunter'?'var(--red)':'var(--green)'}">${d.typeDette==='emprunter'?'📥 Emprunt':'📤 Prêt'}</span></td>
+        <td style="font-weight:600">${F(d.montant)}</td>
+        <td style="color:var(--green)">${F(d.rembourse||0)}</td>
+        <td style="color:var(--red);font-weight:600">${F(reste)}</td>
+        <td><span class="badge bb">${compte?compte.nom:'—'}</span></td>
+        <td><div style="background:var(--surface2);border-radius:4px;height:6px;min-width:60px"><div style="width:${pct}%;background:${d.typeDette==='emprunter'?'var(--amber)':'var(--teal)'};height:100%;border-radius:4px"></div></div><div style="font-size:10px;color:var(--text3)">${pct}%</div></td>
+        <td>
+          ${reste>0?`<button class="btn btn-sm" onclick="rembourserDette(${d.id})" style="font-size:11px">${d.typeDette==='emprunter'?'💳 Rembourser':'💰 Récupérer'}</button>`:'<span style="color:var(--green);font-size:11px;font-weight:600">✅ Soldé</span>'}
+          <button class="btn-icon btn-sm" onclick="delDettePerso(${d.id})" style="color:var(--red);margin-left:4px">✕</button>
+        </td>
+      </tr>`;}).join('');
 
   document.getElementById('content').innerHTML=`
-    <div class="g3" style="margin-bottom:20px">
-      <div class="card" style="border-left:3px solid var(--red)">
-        <div class="ct">Ce que je dois (fournisseurs)</div>
-        <div class="mv" style="color:var(--red)">${F(resteF)}</div>
-        <div class="ms">${dettesF.length} achat(s) à régler</div>
-      </div>
-      <div class="card" style="border-left:3px solid var(--green)">
-        <div class="ct">Ce qu'on me doit (clients)</div>
-        <div class="mv" style="color:var(--green)">${F(resteC)}</div>
-        <div class="ms">${dettesC.length} vente(s) impayée(s)</div>
-      </div>
-      <div class="card" style="border-left:3px solid var(--navy)">
-        <div class="ct">Solde net dettes</div>
-        <div class="mv" style="color:${resteC-resteF>=0?'var(--green)':'var(--red)'}">${F(resteC-resteF)}</div>
-        <div class="ms">${resteC-resteF>=0?'Favorable':'Défavorable'}</div>
-      </div>
+    <div class="g4" style="margin-bottom:18px">
+      <div class="card" style="border-left:3px solid var(--red)"><div class="ct">Dettes fournisseurs</div><div class="mv" style="color:var(--red)">${F(resteF)}</div><div class="ms">${dettesF.length} achat(s)</div></div>
+      <div class="card" style="border-left:3px solid var(--green)"><div class="ct">Clients impayés</div><div class="mv" style="color:var(--green)">${F(resteC)}</div><div class="ms">${dettesC.length} vente(s)</div></div>
+      <div class="card" style="border-left:3px solid var(--amber)"><div class="ct">Emprunts perso</div><div class="mv" style="color:var(--amber)">${F(totalEmprunts)}</div><div class="ms">${emprunts.length} emprunt(s)</div></div>
+      <div class="card" style="border-left:3px solid var(--teal)"><div class="ct">Prêts perso</div><div class="mv" style="color:var(--teal)">${F(totalPrets)}</div><div class="ms">${prets.length} prêt(s)</div></div>
     </div>
-
-    <p class="st">📦 Dettes fournisseurs — ce que je dois</p>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+      ${tabs.map(t=>`<button onclick="dettesFiltreTab='${t.id}';rDettes()" class="btn btn-sm" style="${dettesFiltreTab===t.id?'background:var(--navy);color:#fff;border-color:var(--navy)':''}">${t.label}</button>`).join('')}
+      <button class="btn btn-sm btn-success" onclick="addDettePerso()" style="margin-left:auto">+ Emprunter / Prêter</button>
+    </div>
+    ${(dettesFiltreTab==='tout'||dettesFiltreTab==='fournisseurs')?`
+    <p class="st">📦 Dettes fournisseurs</p>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Date</th><th>Fournisseur</th><th>Article</th><th>Total</th><th>Payé</th><th>Reste</th><th>Progression</th><th></th></tr></thead>
-      <tbody>${dettesF.length===0?'<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text3)">✅ Aucune dette fournisseur</td></tr>':
+      <thead><tr><th>Date</th><th>Fournisseur</th><th>Article</th><th>Total</th><th>Payé</th><th>Reste</th><th>%</th><th></th></tr></thead>
+      <tbody>${dettesF.length===0?'<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--text3)">✅ Aucune dette fournisseur</td></tr>':
         dettesF.slice().reverse().map(a=>{
           const art=ga(a.aid);const f=gf(a.fid);
           const paye=a.tranches?a.tranches.reduce((s,t)=>s+t.mt,0):0;
-          const reste=a.mt-paye;
-          const pct=Math.round(paye/a.mt*100);
+          const reste=a.mt-paye;const pct=Math.round(paye/a.mt*100);
           return`<tr>
             <td style="font-size:11px;font-family:'DM Mono',monospace">${a.date}</td>
-            <td class="tdm">${f?f.nom:'—'}</td>
-            <td>${art?art.nom:'—'}</td>
+            <td class="tdm">${f?f.nom:'—'}</td><td>${art?art.nom:'—'}</td>
             <td style="color:var(--purple);font-weight:600">${F(a.mt)}</td>
             <td style="color:var(--green)">${F(paye)}</td>
             <td style="color:var(--red);font-weight:600">${F(reste)}</td>
-            <td style="min-width:80px"><div style="background:var(--surface2);border-radius:4px;height:6px"><div style="width:${pct}%;background:var(--green);height:100%;border-radius:4px"></div></div><div style="font-size:10px;color:var(--text3);margin-top:2px">${pct}%</div></td>
+            <td><div style="background:var(--surface2);border-radius:4px;height:6px;min-width:60px"><div style="width:${pct}%;background:var(--green);height:100%;border-radius:4px"></div></div><div style="font-size:10px;color:var(--text3)">${pct}%</div></td>
             <td><button class="btn btn-sm btn-success" onclick="configurerTranchesAchat(${a.id})">💳 Payer</button></td>
           </tr>`;}).join('')}
-      </tbody></table></div>
-
-    <p class="st" style="margin-top:20px">👤 Dettes clients — ce qu'on me doit</p>
+      </tbody></table></div>`:``}
+    ${(dettesFiltreTab==='tout'||dettesFiltreTab==='clients')?`
+    <p class="st" style="margin-top:16px">👤 Clients impayés</p>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Date</th><th>Client</th><th>Total</th><th>Payé</th><th>Reste</th><th>Progression</th><th></th></tr></thead>
-      <tbody>${dettesC.length===0?'<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text3)">✅ Aucune dette client</td></tr>':
+      <thead><tr><th>Date</th><th>Client</th><th>Total</th><th>Payé</th><th>Reste</th><th>%</th><th></th></tr></thead>
+      <tbody>${dettesC.length===0?'<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--text3)">✅ Aucun impayé client</td></tr>':
         dettesC.slice().reverse().map(v=>{
           const paye=(v.acomptes?v.acomptes.reduce((s,a)=>s+a.mt,0):0)+(v.tranches?v.tranches.reduce((s,t)=>s+t.mt,0):0);
-          const reste=v.mt-paye;
-          const pct=Math.round(paye/v.mt*100);
+          const reste=v.mt-paye;const pct=Math.round(paye/v.mt*100);
           return`<tr>
             <td style="font-size:11px;font-family:'DM Mono',monospace">${v.date}</td>
             <td class="tdm">${v.client||'Anonyme'}</td>
             <td style="color:var(--navy);font-weight:600">${F(v.mt)}</td>
             <td style="color:var(--green)">${F(paye)}</td>
             <td style="color:var(--red);font-weight:600">${F(reste)}</td>
-            <td style="min-width:80px"><div style="background:var(--surface2);border-radius:4px;height:6px"><div style="width:${pct}%;background:var(--teal);height:100%;border-radius:4px"></div></div><div style="font-size:10px;color:var(--text3);margin-top:2px">${pct}%</div></td>
+            <td><div style="background:var(--surface2);border-radius:4px;height:6px;min-width:60px"><div style="width:${pct}%;background:var(--teal);height:100%;border-radius:4px"></div></div><div style="font-size:10px;color:var(--text3)">${pct}%</div></td>
             <td><button class="btn btn-sm btn-primary" onclick="gererAcompte(${v.id})">💰 Encaisser</button></td>
           </tr>`;}).join('')}
-      </tbody></table></div>`;
+      </tbody></table></div>`:``}
+    ${(dettesFiltreTab==='tout'||dettesFiltreTab==='emprunts')?`
+    <p class="st" style="margin-top:16px">📥 Emprunts — argent que je dois rembourser</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Date</th><th>Personne</th><th>Type</th><th>Montant</th><th>Remboursé</th><th>Reste</th><th>Compte</th><th>%</th><th></th></tr></thead>
+      <tbody>${renderDP(emprunts)}</tbody></table></div>`:``}
+    ${(dettesFiltreTab==='tout'||dettesFiltreTab==='prets')?`
+    <p class="st" style="margin-top:16px">📤 Prêts — argent qu'on me doit rembourser</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Date</th><th>Personne</th><th>Type</th><th>Montant</th><th>Récupéré</th><th>Reste</th><th>Compte</th><th>%</th><th></th></tr></thead>
+      <tbody>${renderDP(prets)}</tbody></table></div>`:``}`;
 }
 
-// ════════════════════════════════════════════════════
+function addDettePerso(){
+  modal(`<div class="mft">💳 Nouvel emprunt / Prêt</div>
+    <div class="fg"><label class="fl">Type d'opération</label>
+      <select class="fs" id="dp-type">
+        <option value="emprunter">📥 Emprunter — je reçois de l'argent</option>
+        <option value="preter">📤 Prêter — je donne de l'argent</option>
+      </select>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Personne concernée</label>
+        <input class="fi" id="dp-pers" placeholder="Nom de la personne">
+      </div>
+      <div class="fg"><label class="fl">Date</label>
+        <input class="fi" type="date" id="dp-date" value="${D()}">
+      </div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Montant (${(S.parametres&&S.parametres.devise)||'FCFA'})</label>
+        <input class="fi" type="number" id="dp-mt" placeholder="0">
+      </div>
+      <div class="fg"><label class="fl">Compte lié</label>
+        ${selectComptes('dp-cid', premierCompteId())}
+      </div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Date d'échéance (optionnel)</label>
+        <input class="fi" type="date" id="dp-ech">
+      </div>
+      <div class="fg"><label class="fl">Taux d'intérêt % (optionnel)</label>
+        <input class="fi" type="number" id="dp-taux" placeholder="0" step="0.1">
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Notes</label>
+      <input class="fi" id="dp-notes" placeholder="Motif, conditions...">
+    </div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveDettePerso()">Enregistrer</button></div>`);
+}
+function saveDettePerso(){
+  const personne=document.getElementById('dp-pers').value;
+  const mt=+document.getElementById('dp-mt').value||0;
+  const cid=document.getElementById('dp-cid').value;
+  if(!personne)return toast('❌ Nom requis');
+  if(!mt)return toast('❌ Montant requis');
+  if(!S.dettesPerso)S.dettesPerso=[];
+  const typeDette=document.getElementById('dp-type').value;
+  S.dettesPerso.push({id:genId(),typeDette,personne,date:document.getElementById('dp-date').value||D(),montant:mt,rembourse:0,cid,echeance:document.getElementById('dp-ech').value||null,taux:+document.getElementById('dp-taux').value||0,notes:document.getElementById('dp-notes').value,statut:'En cours'});
+  if(typeDette==='emprunter') crediterCompte(cid,mt);
+  else debiterCompte(cid,mt);
+  saveData();closeModal();toast(`✅ ${typeDette==='emprunter'?'Emprunt':'Prêt'} de ${F(mt)} enregistré`);rDettes();
+}
+function rembourserDette(id){
+  const d=S.dettesPerso.find(x=>x.id==id);if(!d)return;
+  const reste=d.montant-(d.rembourse||0);
+  modal(`<div class="mft">${d.typeDette==='emprunter'?'💳 Rembourser':'💰 Récupérer'} — ${d.personne}</div>
+    <div style="background:var(--surface2);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:13px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Total</span><strong>${F(d.montant)}</strong></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Déjà ${d.typeDette==='emprunter'?'remboursé':'récupéré'}</span><strong style="color:var(--green)">${F(d.rembourse||0)}</strong></div>
+      <div style="display:flex;justify-content:space-between"><span>Reste</span><strong style="color:var(--red)">${F(reste)}</strong></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Montant</label><input class="fi" type="number" id="rb-mt" value="${reste}" max="${reste}"></div>
+      <div class="fg"><label class="fl">Compte</label>${selectComptes('rb-cid', d.cid||premierCompteId())}</div>
+    </div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-success" onclick="saveRembours(${id})">${d.typeDette==='emprunter'?'✅ Rembourser':'✅ Récupérer'}</button>
+    </div>`);
+}
+function saveRembours(id){
+  const d=S.dettesPerso.find(x=>x.id==id);if(!d)return;
+  const mt=+document.getElementById('rb-mt').value||0;
+  const cid=document.getElementById('rb-cid').value;
+  if(mt<=0)return toast('❌ Montant invalide');
+  d.rembourse=(d.rembourse||0)+mt;
+  if(d.typeDette==='emprunter') debiterCompte(cid,mt);
+  else crediterCompte(cid,mt);
+  if(d.rembourse>=d.montant){d.statut='Soldé';toast('✅ Entièrement soldé !');}
+  else toast(`✅ ${F(mt)} · Reste: ${F(d.montant-d.rembourse)}`);
+  saveData();closeModal();rDettes();
+}
+function delDettePerso(id){
+  if(!confirm('Supprimer ?'))return;
+  S.dettesPerso=S.dettesPerso.filter(d=>d.id!=id);
+  saveData();rDettes();toast('🗑️ Supprimé');
+}
+
 // ─── MODULE : FLUX FINANCIER ───
 // ════════════════════════════════════════════════════
 function rFlux(){
@@ -5979,61 +6085,117 @@ function confirmerModele(id){
 // ════════════════════════════════════════════════════
 // ─── MODULE : OPÉRATIONS SUIVANTES (AGENDA) ───
 // ════════════════════════════════════════════════════
+// Filtres agenda
+let agendaFiltrePeriode='tout';
+let agendaFiltreType='tout';
+let agendaFiltreCompte='tout';
+
 function rAgenda(){
   if(!S.agenda)S.agenda=[];
   const today=D();
   const demain=new Date();demain.setDate(demain.getDate()+1);
   const demainStr=demain.toISOString().split('T')[0];
+  const finSemaine=new Date();finSemaine.setDate(finSemaine.getDate()+7);
+  const finSemaineStr=finSemaine.toISOString().split('T')[0];
 
-  const enRetard=S.agenda.filter(a=>!a.fait&&a.date<today);
-  const aujd=S.agenda.filter(a=>!a.fait&&a.date===today);
-  const demainOps=S.agenda.filter(a=>!a.fait&&a.date===demainStr);
-  const suite=S.agenda.filter(a=>!a.fait&&a.date>demainStr).slice(0,10);
+  // Appliquer filtres
+  let ops=S.agenda.filter(a=>!a.fait);
+  if(agendaFiltreType!=='tout') ops=ops.filter(a=>a.type===agendaFiltreType);
+  if(agendaFiltreCompte!=='tout') ops=ops.filter(a=>a.cid==agendaFiltreCompte);
+  if(agendaFiltrePeriode==='aujourd\'hui') ops=ops.filter(a=>a.date===today);
+  else if(agendaFiltrePeriode==='semaine') ops=ops.filter(a=>a.date>=today&&a.date<=finSemaineStr);
+  else if(agendaFiltrePeriode==='retard') ops=ops.filter(a=>a.date<today);
+
+  // Groupes
+  const enRetard=ops.filter(a=>a.date<today);
+  const aujd=ops.filter(a=>a.date===today);
+  const demainOps=ops.filter(a=>a.date===demainStr);
+  const suite=ops.filter(a=>a.date>demainStr);
   const faits=S.agenda.filter(a=>a.fait).slice(-5).reverse();
 
-  const renderOps=(ops,style='')=>ops.length===0?'':`
-    <div style="display:flex;flex-direction:column;gap:8px${style?';'+style:''}">
-      ${ops.map(op=>`
-        <div class="card" style="padding:10px 14px;border-left:4px solid ${op.type==='depense'?'var(--red)':op.type==='revenu'?'var(--green)':op.type==='achat'?'var(--purple)':'var(--navy)'};${op.recurrence?'border-style:solid solid solid dashed':''}" >
-          <div style="display:flex;justify-content:space-between;align-items:center">
+  const couleurType={depense:'var(--red)',revenu:'var(--green)',achat:'var(--purple)',rappel:'var(--navy)',transfert:'var(--teal)'};
+
+  const renderOps=(ops)=>ops.length===0?'':`
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${ops.map(op=>{
+        const compte=S.comptes&&S.comptes.find(c=>c.id==op.cid);
+        return`<div class="card" style="padding:10px 14px;border-left:4px solid ${couleurType[op.type]||'var(--navy)'}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div style="flex:1">
               <div style="font-weight:600;font-size:13px">${op.titre}</div>
-              <div style="font-size:11px;color:var(--text3);margin-top:2px">${op.date} · ${op.type}${op.montant?` · ${F(op.montant)}`:''}</div>
-              ${op.recurrence?`<div style="font-size:10px;color:var(--navy);margin-top:2px">🔁 ${op.recurrence}</div>`:''}
-              ${op.notes?`<div style="font-size:11px;color:var(--text2);margin-top:2px;font-style:italic">${op.notes}</div>`:''}
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+                <span style="font-size:11px;color:var(--text3)">📅 ${op.date}</span>
+                <span style="font-size:11px;color:${couleurType[op.type]||'var(--navy)'}">● ${op.type}</span>
+                ${op.montant?`<span style="font-size:11px;font-weight:600">${F(op.montant)}</span>`:''}
+                ${compte?`<span style="font-size:11px;color:var(--text3)">🏦 ${compte.nom}</span>`:''}
+                ${op.recurrence?`<span style="font-size:10px;color:var(--navy);background:var(--navy-bg);padding:1px 6px;border-radius:8px">🔁 ${op.recurrence}</span>`:''}
+              </div>
+              ${op.notes?`<div style="font-size:11px;color:var(--text2);margin-top:4px;font-style:italic">${op.notes}</div>`:''}
             </div>
-            <div style="display:flex;gap:6px;flex-shrink:0;margin-left:10px">
-              <button class="btn btn-sm btn-success" onclick="marquerFait(${op.id})">✓ Fait</button>
-              ${op.modeleId?`<button class="btn btn-sm btn-primary" onclick="appliquerModele(${op.modeleId})">▶</button>`:''}
+            <div style="display:flex;gap:5px;flex-shrink:0;margin-left:10px">
+              <button class="btn btn-sm btn-success" onclick="marquerFait(${op.id})">✓</button>
+              ${op.modeleId?`<button class="btn btn-sm btn-primary" onclick="appliquerModele(${op.modeleId})" title="Appliquer modèle">▶</button>`:''}
               <button class="btn-icon btn-sm" onclick="delAgenda(${op.id})" style="color:var(--red)">✕</button>
             </div>
           </div>
-        </div>`).join('')}
+        </div>`;}).join('')}
     </div>`;
 
+  // Comptes pour filtre
+  const comptesOpts=(S.comptes||[]).map(c=>`<option value="${c.id}"${agendaFiltreCompte==c.id?' selected':''}>${c.nom}</option>`).join('');
+
   document.getElementById('content').innerHTML=`
-    <div class="g3" style="margin-bottom:18px">
-      <div class="card" style="border-left:3px solid var(--red)"><div class="ct">En retard</div><div class="mv" style="color:var(--red)">${enRetard.length}</div></div>
-      <div class="card" style="border-left:3px solid var(--amber)"><div class="ct">Aujourd'hui</div><div class="mv" style="color:var(--amber)">${aujd.length}</div></div>
-      <div class="card" style="border-left:3px solid var(--navy)"><div class="ct">À venir</div><div class="mv">${demainOps.length+suite.length}</div></div>
+    <div class="g3" style="margin-bottom:16px">
+      <div class="card" style="border-left:3px solid var(--red)"><div class="ct">En retard</div><div class="mv" style="color:var(--red)">${S.agenda.filter(a=>!a.fait&&a.date<today).length}</div></div>
+      <div class="card" style="border-left:3px solid var(--amber)"><div class="ct">Aujourd'hui</div><div class="mv" style="color:var(--amber)">${S.agenda.filter(a=>!a.fait&&a.date===today).length}</div></div>
+      <div class="card" style="border-left:3px solid var(--navy)"><div class="ct">À venir (7j)</div><div class="mv">${S.agenda.filter(a=>!a.fait&&a.date>today&&a.date<=finSemaineStr).length}</div></div>
     </div>
 
-    ${enRetard.length?`<p class="st" style="color:var(--red)">🚨 En retard (${enRetard.length})</p>${renderOps(enRetard)}`:''}
-    <p class="st" style="margin-top:${enRetard.length?16:0}px">📅 Aujourd'hui — ${today}</p>
-    ${aujd.length?renderOps(aujd):'<div style="color:var(--text3);font-size:13px;padding:8px 0">Aucune opération aujourd\'hui</div>'}
+    <!-- Filtres -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;padding:12px;background:var(--surface2);border-radius:var(--rs)">
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase">Période</label>
+        <select class="fs" style="min-width:130px" onchange="agendaFiltrePeriode=this.value;rAgenda()">
+          <option value="tout"${agendaFiltrePeriode==='tout'?' selected':''}>Toutes</option>
+          <option value="retard"${agendaFiltrePeriode==='retard'?' selected':''}>En retard</option>
+          <option value="aujourd'hui"${agendaFiltrePeriode==="aujourd'hui"?' selected':''}>Aujourd'hui</option>
+          <option value="semaine"${agendaFiltrePeriode==='semaine'?' selected':''}>7 prochains jours</option>
+        </select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase">Type</label>
+        <select class="fs" style="min-width:120px" onchange="agendaFiltreType=this.value;rAgenda()">
+          <option value="tout"${agendaFiltreType==='tout'?' selected':''}>Tous</option>
+          <option value="depense"${agendaFiltreType==='depense'?' selected':''}>💸 Dépense</option>
+          <option value="revenu"${agendaFiltreType==='revenu'?' selected':''}>💰 Revenu</option>
+          <option value="achat"${agendaFiltreType==='achat'?' selected':''}>📦 Achat</option>
+          <option value="rappel"${agendaFiltreType==='rappel'?' selected':''}>🔔 Rappel</option>
+        </select>
+      </div>
+      ${comptesOpts?`<div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase">Compte</label>
+        <select class="fs" style="min-width:140px" onchange="agendaFiltreCompte=this.value;rAgenda()">
+          <option value="tout">Tous les comptes</option>
+          ${comptesOpts}
+        </select>
+      </div>`:''}
+      <button class="btn btn-sm" onclick="agendaFiltrePeriode='tout';agendaFiltreType='tout';agendaFiltreCompte='tout';rAgenda()" style="margin-top:14px">↺ Réinitialiser</button>
+    </div>
 
-    <p class="st" style="margin-top:16px">📅 Demain</p>
-    ${demainOps.length?renderOps(demainOps):'<div style="color:var(--text3);font-size:13px;padding:8px 0">Aucune opération demain</div>'}
-
-    ${suite.length?`<p class="st" style="margin-top:16px">📅 À venir</p>${renderOps(suite)}`:''}
-
-    ${faits.length?`<p class="st" style="margin-top:16px;color:var(--text3)">✅ Récemment effectués</p>
+    ${enRetard.length?`<p class="st" style="color:var(--red)">🚨 En retard (${enRetard.length})</p>${renderOps(enRetard)}<div style="margin-bottom:16px"></div>`:''}
+    ${agendaFiltrePeriode==='tout'||agendaFiltrePeriode==="aujourd'hui"?`<p class="st">📅 Aujourd'hui — ${today}</p>
+    ${aujd.length?renderOps(aujd):'<div style="color:var(--text3);font-size:13px;padding:6px 0;margin-bottom:12px">Aucune opération aujourd\'hui</div>'}`:''}
+    ${(agendaFiltrePeriode==='tout'||agendaFiltrePeriode==='semaine')&&demainOps.length?`<p class="st" style="margin-top:12px">📅 Demain</p>${renderOps(demainOps)}<div style="margin-bottom:12px"></div>`:''}
+    ${(agendaFiltrePeriode==='tout'||agendaFiltrePeriode==='semaine')&&suite.length?`<p class="st" style="margin-top:12px">📅 À venir</p>${renderOps(suite)}`:''}
+    ${ops.length===0&&agendaFiltrePeriode!=='tout'?`<div style="text-align:center;padding:24px;color:var(--text3)">Aucune opération pour ce filtre</div>`:''}
+    ${faits.length&&agendaFiltrePeriode==='tout'?`<p class="st" style="margin-top:16px;color:var(--text3)">✅ Récemment effectués</p>
     <div style="display:flex;flex-direction:column;gap:6px;opacity:.6">
       ${faits.map(op=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 10px;background:var(--surface2);border-radius:var(--rs)">
-        <span>✓ ${op.titre}</span><span style="color:var(--text3)">${op.date}</span>
+        <span>✓ ${op.titre}${op.montant?` — ${F(op.montant)}`:''}</span><span style="color:var(--text3)">${op.dateFait||op.date}</span>
       </div>`).join('')}
     </div>`:''}`;
 }
+
 function addAgenda(){
   const modelesOpts=(S.modeles||[]).map(m=>`<option value="${m.id}">[${m.type}] ${m.nom} — ${F(m.montant)}</option>`).join('');
   modal(`<div class="mft">📅 Nouvelle opération planifiée</div>
@@ -6057,19 +6219,21 @@ function addAgenda(){
       <div class="fg"><label class="fl">Montant (optionnel)</label>
         <input class="fi" type="number" id="ag-mt" placeholder="0">
       </div>
-      <div class="fg"><label class="fl">Récurrence</label>
-        <select class="fs" id="ag-rec">
-          <option value="">Aucune (ponctuel)</option>
-          <option value="Quotidien">Quotidien</option>
-          <option value="Hebdomadaire">Hebdomadaire</option>
-          <option value="Mensuel">Mensuel</option>
-        </select>
+      <div class="fg"><label class="fl">Compte lié</label>
+        ${selectComptes('ag-cid', premierCompteId())}
       </div>
+    </div>
+    <div class="fg"><label class="fl">Récurrence</label>
+      <select class="fs" id="ag-rec">
+        <option value="">Aucune (ponctuel)</option>
+        <option value="Quotidien">Quotidien</option>
+        <option value="Hebdomadaire">Hebdomadaire</option>
+        <option value="Mensuel">Mensuel</option>
+      </select>
     </div>
     ${modelesOpts?`<div class="fg"><label class="fl">Lier à un modèle (optionnel)</label>
       <select class="fs" id="ag-modele">
-        <option value="">— Aucun modèle —</option>
-        ${modelesOpts}
+        <option value="">— Aucun —</option>${modelesOpts}
       </select>
     </div>`:''}
     <div class="fg"><label class="fl">Notes</label>
@@ -6077,6 +6241,7 @@ function addAgenda(){
     </div>
     <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveAgenda()">Planifier</button></div>`);
 }
+
 function saveAgenda(){
   const titre=document.getElementById('ag-titre').value;
   const date=document.getElementById('ag-date').value;
@@ -6087,17 +6252,16 @@ function saveAgenda(){
     id:genId(),titre,date,
     type:document.getElementById('ag-type').value,
     montant:+document.getElementById('ag-mt').value||0,
+    cid:document.getElementById('ag-cid').value||null,
     recurrence:document.getElementById('ag-rec').value||null,
-    modeleId,
-    notes:document.getElementById('ag-notes').value,
-    fait:false
+    modeleId,notes:document.getElementById('ag-notes').value,fait:false
   });
   saveData();closeModal();toast('✅ Opération planifiée');rAgenda();
 }
+
 function marquerFait(id){
   const op=S.agenda.find(a=>a.id==id);if(!op)return;
   op.fait=true;op.dateFait=D();
-  // Créer opération récurrente suivante si besoin
   if(op.recurrence){
     const next=new Date(op.date);
     if(op.recurrence==='Quotidien') next.setDate(next.getDate()+1);
@@ -6107,11 +6271,13 @@ function marquerFait(id){
   }
   saveData();toast('✅ Opération marquée comme faite');rAgenda();
 }
+
 function delAgenda(id){
   if(!confirm('Supprimer cette opération ?'))return;
   S.agenda=S.agenda.filter(a=>a.id!=id);
   saveData();rAgenda();toast('🗑️ Opération supprimée');
 }
+
 // Vérifier les opérations en retard au démarrage
 function checkAgendaRetard(){
   if(!S.agenda)return;
