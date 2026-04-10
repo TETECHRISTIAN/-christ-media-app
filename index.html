@@ -413,6 +413,35 @@ body.theme-teal{--navy:#1a5c5c;--navy2:#207070;--navy-bg:#e8f5f5;--navy-light:#a
 .panier-ligne-v2{display:grid;grid-template-columns:1fr 80px 90px 80px 28px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
 .panier-ligne-v2:last-child{border-bottom:none}
 
+/* ─── CALCULATRICE FLOTTANTE ─── */
+#calc-float{position:fixed;bottom:90px;right:16px;z-index:500;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.22);width:290px;overflow:hidden;display:flex;flex-direction:column;user-select:none;transition:transform .2s,opacity .2s}
+#calc-float.hidden-float{transform:translateY(20px) scale(.95);opacity:0;pointer-events:none}
+#calc-float-header{background:var(--navy);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;cursor:move;touch-action:none}
+#calc-float-header span{font-size:12px;font-weight:600;color:rgba(255,255,255,.7);letter-spacing:.3px}
+#calc-float-header .cf-btns{display:flex;gap:4px}
+#calc-float-header button{background:rgba(255,255,255,.1);border:none;border-radius:5px;width:24px;height:24px;cursor:pointer;color:rgba(255,255,255,.8);font-size:13px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+#calc-float-header button:hover{background:rgba(255,255,255,.25)}
+#calc-float-toggle{position:fixed;bottom:90px;right:16px;z-index:499;width:46px;height:46px;border-radius:50%;background:var(--navy);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(15,31,61,.35);display:flex;align-items:center;justify-content:center;transition:all .2s}
+#calc-float-toggle:hover{background:var(--navy2);transform:scale(1.08)}
+#calc-float-toggle.hidden-toggle{display:none}
+@media(max-width:768px){#calc-float{bottom:110px;right:8px;width:270px}#calc-float-toggle{bottom:110px;right:8px}}
+
+/* ─── JOURNAL PRIVÉ ─── */
+.journal-entry{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow);cursor:pointer;transition:all .15s}
+.journal-entry:hover{border-color:var(--navy);box-shadow:0 4px 16px rgba(15,31,61,.1)}
+.journal-entry-date{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.journal-entry-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.journal-entry-preview{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.journal-entry-mood{font-size:18px;margin-right:6px}
+.journal-lock-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center}
+.journal-lock-icon{font-size:48px;margin-bottom:16px}
+.journal-pin-dots{display:flex;gap:12px;justify-content:center;margin:16px 0}
+.journal-pin-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--border2);background:transparent;transition:all .2s}
+.journal-pin-dot.filled{background:var(--navy);border-color:var(--navy)}
+.journal-pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:200px;margin:0 auto}
+.journal-pin-key{padding:14px 0;font-size:18px;font-weight:600;border:1.5px solid var(--border2);border-radius:var(--r);background:var(--surface);cursor:pointer;font-family:inherit;transition:all .15s;color:var(--text)}
+.journal-pin-key:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
+
 /* ─── THÈME PICKER ─── */
 .theme-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}
 .theme-swatch{width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:3px solid transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;font-size:16px}
@@ -826,6 +855,10 @@ body.dark th{background:var(--surface3)}
       <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M1 7h14M5 1v4M11 1v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       Planification
     </div>
+    <div class="ni" data-page="journal" onclick="nav(this,'journal')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M3 1h10v14H3z" stroke="currentColor" stroke-width="1.5"/><path d="M5 4h6M5 7h6M5 10h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="12" cy="12" r="3" fill="var(--navy)" stroke="var(--navy)"/><path d="M11 12l.8.8L13.2 11" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Journal privé
+    </div>
     <div class="ni" data-page="parametres" onclick="nav(this,'parametres')">
       <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       Paramètres
@@ -1029,6 +1062,10 @@ body.dark th{background:var(--surface3)}
     <div class="mn-dd-item admin-only" onclick="nav(document.querySelector('[data-page=planning]'),'planning')">
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
       Planification
+    </div>
+    <div class="mn-dd-item" onclick="nav(document.querySelector('[data-page=journal]'),'journal')">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 1h10v14H3z" stroke="currentColor" stroke-width="1.5"/><path d="M5 4h6M5 7h6M5 10h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Journal privé
     </div>
     <div class="mn-dd-item admin-only" onclick="nav(document.querySelector('[data-page=parametres]'),'parametres')">
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -1310,7 +1347,7 @@ function activerListenerTempsReel(){
           tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,
           inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,
           comptes:rComptes,devis:rDevis,planning:rPlanning,
-          calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda})[currentPage]();
+          calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal})[currentPage]();
       }catch(e){}
       toast('🔄 Données mises à jour',1500);
     }
@@ -1358,7 +1395,7 @@ async function manualSync(){
       saveLocal(S);
       setSyncStatus('online','Synchronisé ✓');
       toast('✅ Données synchronisées depuis le cloud');
-      ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda})[currentPage]();
+      ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal})[currentPage]();
     }else{
       await saveToFirebase(S);
       toast('✅ Données locales envoyées au cloud');
@@ -1386,7 +1423,7 @@ async function startFirebaseSync(){
         if(savedSession&&savedSession.uid) S.session=savedSession;
         saveLocal(S);
         setSyncStatus('online','Synchronisé ✓');
-        ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda})[currentPage]();
+        ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal})[currentPage]();
       }else{
         await saveToFirebase(S);
       }
@@ -1437,7 +1474,7 @@ function toast(msg,dur=2200){
 }
 
 // ─── NAVIGATION ───
-const titles={dashboard:'Tableau de bord',objectifs:'Objectifs & KPIs',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres',dettes:'Gestion des dettes',flux:'Flux financier',limites:'Limites de dépenses',modeles:"Modèles d'opération",agenda:'Opérations suivantes'};
+const titles={dashboard:'Tableau de bord',objectifs:'Objectifs & KPIs',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres',dettes:'Gestion des dettes',flux:'Flux financier',limites:'Limites de dépenses',modeles:"Modèles d'opération",agenda:'Opérations suivantes',journal:'Journal privé'};
 const actionsMap={
   dashboard:()=>'<button class="btn btn-success" onclick="nav(document.querySelector(\'[data-page=vente]\'),\'vente\')">+ Vente</button>',
   objectifs:()=>'<button class="btn btn-primary" onclick="editObjectifs()">⚙️ Modifier objectifs</button>',
@@ -1455,7 +1492,8 @@ const actionsMap={
   flux:()=>'',
   limites:()=>'<button class="btn btn-primary" onclick="addLimite()">+ Limite</button>',
   modeles:()=>'<button class="btn btn-primary" onclick="addModele()">+ Modèle</button>',
-  agenda:()=>'<button class="btn btn-primary" onclick="addAgenda()">+ Opération</button>'
+  agenda:()=>'<button class="btn btn-primary" onclick="addAgenda()">+ Opération</button>',
+  journal:()=>'<button class="btn" onclick="journalVerrouiller()">🔒 Verrouiller</button> <button class="btn btn-primary" onclick="journalNouveau()">+ Note</button>'
 };
 
 let currentPage='dashboard';
@@ -1470,7 +1508,7 @@ function nav(el,page){
   document.getElementById('topbar-title').textContent=titles[page]||'';
   document.getElementById('topbar-actions').innerHTML=actionsMap[page]?actionsMap[page]():'';
   currentPage=page;
-  ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda})[page]();
+  ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal})[page]();
   closeMobileSidebar();
   document.getElementById('mn-dropdown').classList.remove('open');
 }
@@ -3584,6 +3622,24 @@ function rParametres(){
       </div>
     </div>
 
+    <div class="param-section">
+      <div class="param-section-title">🖥️ Plan de travail</div>
+      <div class="fg"><label class="fl">Nom du plan de travail (affiché en haut de la sidebar)</label>
+        <input class="fi" id="p-plannom" value="${p.planNom||p.nom||'Christ Media'}" oninput="majParam('planNom',this.value)" placeholder="Ex: Christ Media, Mon Commerce..."></div>
+      <div class="fg"><label class="fl">Sous-titre / Slogan</label>
+        <input class="fi" id="p-plansub" value="${p.planSub||p.ville||''}" oninput="majParam('planSub',this.value)" placeholder="Ex: Lomé, Togo · Gérance Pro"></div>
+      <div class="fg"><label class="fl">Icône (emoji)</label>
+        <input class="fi" id="p-planico" value="${p.planIco||'🏪'}" oninput="majParam('planIco',this.value)" placeholder="🏪" maxlength="4" style="width:80px"></div>
+      <div style="margin-top:10px;background:var(--navy);color:#fff;border-radius:var(--rs);padding:10px 14px;font-size:13px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:20px">${p.planIco||'🏪'}</span>
+        <div>
+          <div style="font-weight:700;font-size:14px">${p.planNom||p.nom||'Christ Media'}</div>
+          <div style="font-size:11px;opacity:.5">${p.planSub||p.ville||'Lomé, Togo'}</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="sauvegarderPlanTravail()" style="margin-top:12px">💾 Appliquer</button>
+    </div>
+
     <div class="param-section" style="border:1px solid var(--red-light)">
       <div class="param-section-title" style="color:var(--red)">🔐 Session</div>
       <div class="param-row">
@@ -3606,11 +3662,7 @@ function rParametres(){
 function majParam(k,v){if(!S.parametres)S.parametres={};S.parametres[k]=v;}
 function sauvegarderParams(){
   saveData();
-  // Mettre à jour logo sidebar
-  const ln=document.getElementById('logo-name');
-  const ls=document.getElementById('logo-sub');
-  if(ln)ln.textContent=S.parametres.nom||'Christ Media';
-  if(ls)ls.textContent=(S.parametres.ville||'Lomé, Togo');
+  majLogo();
   toast('✅ Paramètres sauvegardés');
 }
 function majCategorie(i,val){if(S.parametres&&S.parametres.categories)S.parametres.categories[i]=val;}
@@ -3765,8 +3817,15 @@ function majLogo(){
   if(!p)return;
   const ln=document.getElementById('logo-name');
   const ls=document.getElementById('logo-sub');
-  if(ln)ln.textContent=p.nom||'Christ Media';
-  if(ls)ls.textContent=p.ville||'Lomé, Togo';
+  if(ln)ln.textContent=p.planNom||p.nom||'Christ Media';
+  if(ls)ls.textContent=p.planSub||p.ville||'Lomé, Togo';
+}
+
+function sauvegarderPlanTravail(){
+  saveData();
+  majLogo();
+  toast('✅ Plan de travail mis à jour');
+  rParametres();
 }
 
 // ─── RECHERCHE RAPIDE PAR CODE ───
@@ -5150,17 +5209,17 @@ const PERMISSIONS = {
     pages: ['dashboard','objectifs','transactions','vente','services','achats','stock','clients',
             'fournisseurs','depenses','tresorerie','revenus','rapports','inventaire','historique',
             'comptes','devis','planning','calculatrice','workspace','parametres',
-            'dettes','flux','limites','modeles','agenda'],
+            'dettes','flux','limites','modeles','agenda','journal'],
     label: '👑 Administrateur',
     couleur: '#f5c060'
   },
   caissier: {
-    pages: ['dashboard','vente','services','stock','clients','calculatrice','transactions','agenda','dettes'],
+    pages: ['dashboard','vente','services','stock','clients','calculatrice','transactions','agenda','dettes','journal'],
     label: '💰 Caissier',
     couleur: '#8ecba8'
   },
   vendeur: {
-    pages: ['dashboard','vente','services','clients','calculatrice','agenda'],
+    pages: ['dashboard','vente','services','clients','calculatrice','agenda','journal'],
     label: '🛒 Vendeur',
     couleur: '#c5d0e8'
   }
@@ -5284,6 +5343,7 @@ function rWorkspace(){
     {id:'devis',label:'Devis',icon:'📄'},
     {id:'planning',label:'Planning',icon:'📅'},
     {id:'calculatrice',label:'Calculatrice',icon:'🧮'},
+    {id:'journal',label:'Journal privé',icon:'📔'},
   ];
   const visible=p.menu_visible||allMenus.map(m=>m.id);
 
@@ -6809,6 +6869,294 @@ function modalExportExcel(){
     <div class="mff"><button class="btn" onclick="closeModal()">Fermer</button></div>`);
 }
 
+// ─── CALCULATRICE FLOTTANTE ───
+let cfExpr='',cfResult='0',cfJustEval=false,cfHistory=[];
+function initCalcFloat(){
+  const grid=document.getElementById('cf-btns-grid');
+  if(!grid)return;
+  const keys=[['C','±','%','÷'],['7','8','9','×'],['4','5','6','−'],['1','2','3','+'],[' ','0',',','=']];
+  grid.innerHTML=keys.map(row=>row.map(k=>{
+    const isOp=['÷','×','−','+','='].includes(k);
+    const isClear=k==='C';
+    const bg=isOp?'var(--navy)':isClear?'var(--red-bg)':'var(--surface)';
+    const color=isOp?'#fff':isClear?'var(--red)':'var(--text)';
+    const fw=isOp||isClear?'700':'500';
+    if(k===' ')return `<button disabled style="background:var(--surface2);border:none"></button>`;
+    return `<button onclick="cfKey('${k}')" style="padding:14px 0;font-size:16px;font-weight:${fw};background:${bg};color:${color};border:none;cursor:pointer;font-family:inherit;transition:opacity .1s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='.7'" onmouseup="this.style.opacity='1'" onmouseleave="this.style.opacity='1'">${k}</button>`;
+  }).join('')).join('');
+  makeDraggable(document.getElementById('calc-float'),document.getElementById('calc-float-header'));
+}
+function cfKey(k){
+  if(k==='C'){cfExpr='';cfResult='0';cfJustEval=false;}
+  else if(k==='='){
+    try{
+      const expr=cfExpr.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-').replace(/,/g,'.');
+      if(!expr)return;
+      const res=Function('"use strict";return ('+expr+')')();
+      const fmt=parseFloat(res.toFixed(10)).toLocaleString('fr-FR');
+      cfHistory.unshift({expr:cfExpr,res:fmt});
+      if(cfHistory.length>8)cfHistory.pop();
+      cfExpr=String(parseFloat(res.toFixed(10)));
+      cfResult=fmt;cfJustEval=true;
+    }catch{cfResult='Erreur';cfExpr='';}
+  }
+  else if(k==='±'){try{const v=parseFloat(cfResult.replace(/\s/g,'').replace(',','.'));cfResult=parseFloat((-v).toFixed(10)).toLocaleString('fr-FR');cfExpr=String(-parseFloat(cfResult.replace(/\s/g,'').replace(',','.')));}catch{}}
+  else if(k==='%'){try{const v=parseFloat(cfResult.replace(/\s/g,'').replace(',','.'));cfResult=parseFloat((v/100).toFixed(10)).toLocaleString('fr-FR');}catch{}}
+  else{
+    if(cfJustEval&&['+','−','×','÷'].includes(k)){cfExpr+=k;cfJustEval=false;}
+    else if(cfJustEval){cfExpr=k;cfJustEval=false;}
+    else cfExpr+=k;
+    const last=cfExpr.split(/[+\-×÷]/).pop().replace(',','.');
+    try{cfResult=parseFloat(last).toLocaleString('fr-FR');}catch{}
+  }
+  const de=document.getElementById('cf-disp'),ee=document.getElementById('cf-expr'),hl=document.getElementById('cf-hist');
+  if(de)de.textContent=cfResult;
+  if(ee)ee.textContent=cfExpr||'\u00a0';
+  if(hl)hl.innerHTML=cfHistory.length?cfHistory.map(h=>`<div style="display:flex;justify-content:space-between;gap:8px"><span style="color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${h.expr}</span><span style="font-weight:600;white-space:nowrap">${h.res}</span></div>`).join(''):'<span style="color:var(--text3)">Historique vide</span>';
+}
+function calcFloatClear(){cfExpr='';cfResult='0';cfJustEval=false;const de=document.getElementById('cf-disp'),ee=document.getElementById('cf-expr');if(de)de.textContent='0';if(ee)ee.textContent='\u00a0';}
+let calcFloatVisible=false;
+function toggleCalcFloat(){
+  calcFloatVisible=!calcFloatVisible;
+  const w=document.getElementById('calc-float'),t=document.getElementById('calc-float-toggle');
+  if(calcFloatVisible){w.classList.remove('hidden-float');t.classList.add('hidden-toggle');}
+  else{w.classList.add('hidden-float');t.classList.remove('hidden-toggle');}
+}
+function makeDraggable(el,handle){
+  let ox=0,oy=0,sx=0,sy=0;
+  function start(e){
+    e.preventDefault();
+    const pt=e.touches?e.touches[0]:e;
+    sx=pt.clientX;sy=pt.clientY;
+    ox=el.offsetLeft;oy=el.offsetTop;
+    // Switch to absolute positioning
+    el.style.left=ox+'px';el.style.bottom='auto';el.style.top=oy+'px';el.style.right='auto';
+    document.addEventListener('mousemove',move);document.addEventListener('touchmove',move,{passive:false});
+    document.addEventListener('mouseup',stop);document.addEventListener('touchend',stop);
+  }
+  function move(e){
+    e.preventDefault();
+    const pt=e.touches?e.touches[0]:e;
+    const dx=pt.clientX-sx,dy=pt.clientY-sy;
+    el.style.left=Math.max(0,Math.min(window.innerWidth-el.offsetWidth,ox+dx))+'px';
+    el.style.top=Math.max(0,Math.min(window.innerHeight-el.offsetHeight,oy+dy))+'px';
+  }
+  function stop(){document.removeEventListener('mousemove',move);document.removeEventListener('touchmove',move);document.removeEventListener('mouseup',stop);document.removeEventListener('touchend',stop);}
+  handle.addEventListener('mousedown',start);handle.addEventListener('touchstart',start,{passive:false});
+}
+
+// ─── JOURNAL PRIVÉ ───
+const JOURNAL_KEY='cm_journal_v1';
+const JOURNAL_PIN_KEY='cm_journal_pin';
+let journalUnlocked=false;
+let journalPinEntry='';
+
+function loadJournal(){
+  try{return JSON.parse(localStorage.getItem(JOURNAL_KEY))||[];}catch{return[];}
+}
+function saveJournal(entries){
+  localStorage.setItem(JOURNAL_KEY,JSON.stringify(entries));
+}
+function getJournalPin(){
+  return localStorage.getItem(JOURNAL_PIN_KEY)||null;
+}
+function setJournalPin(pin){
+  localStorage.setItem(JOURNAL_PIN_KEY,pin);
+}
+
+function rJournal(){
+  const pin=getJournalPin();
+  if(!journalUnlocked&&pin){
+    renderJournalLock();
+    return;
+  }
+  journalUnlocked=true;
+  if(!pin){
+    renderJournalSetPin();
+    return;
+  }
+  renderJournalMain();
+}
+
+function renderJournalLock(){
+  journalPinEntry='';
+  document.getElementById('content').innerHTML=`
+  <div class="page">
+    <div class="journal-lock-screen">
+      <div class="journal-lock-icon">🔒</div>
+      <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px">Journal privé</div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:20px">Entrez votre code PIN pour accéder</div>
+      <div class="journal-pin-dots" id="jpin-dots">
+        ${[0,1,2,3].map(i=>`<div class="journal-pin-dot" id="jdot-${i}"></div>`).join('')}
+      </div>
+      <div class="journal-pin-keypad">
+        ${[1,2,3,4,5,6,7,8,9,'','0','⌫'].map(k=>`<button class="journal-pin-key" onclick="journalPinInput('${k}')">${k}</button>`).join('')}
+      </div>
+      <div id="jpin-err" style="margin-top:12px;font-size:12px;color:var(--red);min-height:18px"></div>
+    </div>
+  </div>`;
+}
+
+function journalPinInput(k){
+  if(k==='⌫'){journalPinEntry=journalPinEntry.slice(0,-1);}
+  else if(k!==''&&journalPinEntry.length<4){journalPinEntry+=k;}
+  // Mettre à jour les points
+  for(let i=0;i<4;i++){
+    const dot=document.getElementById('jdot-'+i);
+    if(dot)dot.classList.toggle('filled',i<journalPinEntry.length);
+  }
+  if(journalPinEntry.length===4){
+    const pin=getJournalPin();
+    if(journalPinEntry===pin){
+      journalUnlocked=true;
+      renderJournalMain();
+    }else{
+      document.getElementById('jpin-err').textContent='❌ Code incorrect';
+      journalPinEntry='';
+      for(let i=0;i<4;i++){const dot=document.getElementById('jdot-'+i);if(dot)dot.classList.remove('filled');}
+    }
+  }
+}
+
+function renderJournalSetPin(){
+  let step=1,firstPin='';
+  journalPinEntry='';
+  document.getElementById('content').innerHTML=`
+  <div class="page">
+    <div class="journal-lock-screen">
+      <div class="journal-lock-icon">📔</div>
+      <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px">Créer un code PIN</div>
+      <div id="jpin-step-msg" style="font-size:13px;color:var(--text3);margin-bottom:20px">Choisissez un code PIN à 4 chiffres</div>
+      <div class="journal-pin-dots" id="jpin-dots">
+        ${[0,1,2,3].map(i=>`<div class="journal-pin-dot" id="jdot-${i}"></div>`).join('')}
+      </div>
+      <div class="journal-pin-keypad">
+        ${[1,2,3,4,5,6,7,8,9,'','0','⌫'].map(k=>`<button class="journal-pin-key" onclick="journalSetPinInput('${k}')">${k}</button>`).join('')}
+      </div>
+      <div id="jpin-err" style="margin-top:12px;font-size:12px;color:var(--red);min-height:18px"></div>
+    </div>
+  </div>`;
+  window._jSetPinStep=1;window._jFirstPin='';
+}
+
+function journalSetPinInput(k){
+  if(k==='⌫'){journalPinEntry=journalPinEntry.slice(0,-1);}
+  else if(k!==''&&journalPinEntry.length<4){journalPinEntry+=k;}
+  for(let i=0;i<4;i++){const dot=document.getElementById('jdot-'+i);if(dot)dot.classList.toggle('filled',i<journalPinEntry.length);}
+  if(journalPinEntry.length===4){
+    if(window._jSetPinStep===1){
+      window._jFirstPin=journalPinEntry;
+      window._jSetPinStep=2;
+      journalPinEntry='';
+      document.getElementById('jpin-step-msg').textContent='Confirmez votre code PIN';
+      for(let i=0;i<4;i++){const dot=document.getElementById('jdot-'+i);if(dot)dot.classList.remove('filled');}
+    }else{
+      if(journalPinEntry===window._jFirstPin){
+        setJournalPin(journalPinEntry);
+        journalUnlocked=true;
+        toast('✅ Code PIN créé !');
+        renderJournalMain();
+      }else{
+        document.getElementById('jpin-err').textContent='❌ Les codes ne correspondent pas, recommencez';
+        window._jSetPinStep=1;journalPinEntry='';window._jFirstPin='';
+        document.getElementById('jpin-step-msg').textContent='Choisissez un code PIN à 4 chiffres';
+        for(let i=0;i<4;i++){const dot=document.getElementById('jdot-'+i);if(dot)dot.classList.remove('filled');}
+      }
+    }
+  }
+}
+
+function renderJournalMain(){
+  const entries=loadJournal();
+  const moods=['😊','😔','😤','😌','🤔','💡','🎉','😴'];
+  document.getElementById('content').innerHTML=`
+  <div class="page">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div style="font-size:16px;font-weight:700">📔 Journal privé</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">${entries.length} note${entries.length>1?'s':''} · Privé & local</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="journalChangerPin()">🔑 PIN</button>
+        <button class="btn btn-primary" onclick="journalNouveau()">+ Nouvelle note</button>
+      </div>
+    </div>
+    ${entries.length===0?`
+    <div class="empty">
+      <svg viewBox="0 0 40 40" fill="none"><path d="M8 6h24v28H8z" stroke="currentColor" stroke-width="1.5"/><path d="M13 13h14M13 19h14M13 25h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".4"/></svg>
+      <p>Aucune note</p>
+      <small>Créez votre première note privée</small>
+    </div>`:
+    entries.map((e,i)=>`
+    <div class="journal-entry" onclick="journalVoir(${i})">
+      <div class="journal-entry-date">${e.date}</div>
+      <div style="display:flex;align-items:center">
+        <span class="journal-entry-mood">${e.mood||'📝'}</span>
+        <span class="journal-entry-title">${e.titre||'Sans titre'}</span>
+      </div>
+      <div class="journal-entry-preview">${(e.contenu||'').replace(/<[^>]+>/g,'').substring(0,80)}${(e.contenu||'').length>80?'...':''}</div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function journalNouveau(){
+  const moods=['😊','😔','😤','😌','🤔','💡','🎉','😴'];
+  modal(`<div class="mft">📝 Nouvelle note</div>
+    <div class="fg"><label class="fl">Titre</label><input class="fi" id="j-titre" placeholder="Mon idée du jour..."></div>
+    <div class="fg"><label class="fl">Humeur</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${moods.map(m=>`<button onclick="document.getElementById('j-mood-val').value='${m}';document.querySelectorAll('.j-mood-btn').forEach(b=>b.style.opacity='.4');this.style.opacity='1'" class="j-mood-btn" style="font-size:22px;background:none;border:none;cursor:pointer;transition:opacity .15s">${m}</button>`).join('')}</div>
+      <input type="hidden" id="j-mood-val" value="📝">
+    </div>
+    <div class="fg"><label class="fl">Contenu</label><textarea class="fi" id="j-contenu" rows="6" placeholder="Écrivez votre note ici..." style="resize:vertical;line-height:1.6"></textarea></div>
+    <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="journalSauver()">💾 Sauvegarder</button></div>`);
+}
+
+function journalSauver(){
+  const titre=document.getElementById('j-titre').value.trim();
+  const contenu=document.getElementById('j-contenu').value.trim();
+  const mood=document.getElementById('j-mood-val').value;
+  if(!contenu&&!titre)return toast('❌ Note vide');
+  const entries=loadJournal();
+  entries.unshift({id:Date.now(),titre:titre||'Note sans titre',contenu,mood,date:new Date().toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'long',year:'numeric'})});
+  saveJournal(entries);
+  closeModal();
+  toast('✅ Note sauvegardée');
+  renderJournalMain();
+}
+
+function journalVoir(i){
+  const entries=loadJournal();
+  const e=entries[i];if(!e)return;
+  modal(`<div class="mft">${e.mood||'📝'} ${e.titre||'Note'}</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:12px">${e.date}</div>
+    <div style="background:var(--surface2);border-radius:var(--rs);padding:14px;font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap;min-height:80px">${e.contenu||'(vide)'}</div>
+    <div class="mff">
+      <button class="btn btn-danger" onclick="journalSupprimer(${i})">🗑️ Supprimer</button>
+      <button class="btn" onclick="closeModal()">Fermer</button>
+    </div>`);
+}
+
+function journalSupprimer(i){
+  if(!confirm('Supprimer cette note ?'))return;
+  const entries=loadJournal();
+  entries.splice(i,1);
+  saveJournal(entries);
+  closeModal();
+  toast('🗑️ Note supprimée');
+  renderJournalMain();
+}
+
+function journalChangerPin(){
+  journalUnlocked=false;
+  localStorage.removeItem(JOURNAL_PIN_KEY);
+  renderJournalSetPin();
+}
+
+function journalVerrouiller(){
+  journalUnlocked=false;
+  rJournal();
+}
+
 // ─── SAUVEGARDE AUTOMATIQUE ───
 let _autoBackupTimer=null;
 function initAutoBackup(){
@@ -6930,6 +7278,34 @@ initV9();
 initAméliorations();
 // Toujours afficher le login au démarrage
 afficherLoginScreen();
+// Init calculatrice flottante — après que le DOM soit complet
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', initCalcFloat);
+} else {
+  setTimeout(initCalcFloat, 50);
+}
 </script>
+
+<!-- ─── CALCULATRICE FLOTTANTE ─── -->
+<div id="calc-float" class="hidden-float">
+  <div id="calc-float-header">
+    <span>🧮 Calculatrice</span>
+    <div class="cf-btns">
+      <button onclick="calcFloatClear()" title="Effacer">C</button>
+      <button onclick="toggleCalcFloat()" title="Masquer" style="font-size:16px">−</button>
+    </div>
+  </div>
+  <div style="background:var(--navy);padding:14px 16px 10px;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end">
+    <div id="cf-expr" style="font-size:12px;color:rgba(255,255,255,.4);min-height:16px;word-break:break-all;text-align:right">&nbsp;</div>
+    <div id="cf-disp" style="font-size:32px;font-weight:700;color:#fff;letter-spacing:-1px;word-break:break-all;text-align:right">0</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border)">
+  </div>
+  <div id="cf-btns-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border)"></div>
+  <div style="padding:8px 12px;border-top:1px solid var(--border);max-height:100px;overflow-y:auto">
+    <div id="cf-hist" style="font-size:11px;color:var(--text2);line-height:1.8"><span style="color:var(--text3)">Historique vide</span></div>
+  </div>
+</div>
+<button id="calc-float-toggle" onclick="toggleCalcFloat()" title="Ouvrir la calculatrice">🧮</button>
 </body>
 </html>
