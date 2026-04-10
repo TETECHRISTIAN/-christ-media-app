@@ -1332,8 +1332,9 @@ function loadData(){
   return loadLocal(); // synchrone, Firebase sera chargé après init
 }
 async function saveData(){
-  genVersion(); // timestamp unique à chaque sauvegarde
+  genVersion();
   saveLocal(S);
+  if(typeof majNotifBadge==='function') majNotifBadge();
   if(fbReady&&navigator.onLine){
     _ignorerProchainUpdate=true;
     await saveToFirebase(S);
@@ -1422,7 +1423,7 @@ window.addEventListener('offline',()=>{
 });
 
 // ─── HELPERS ───
-const sa=a=>Math.max(0,a.si+((a.ea||0))-a.qv);
+const sa=a=>Math.max(0,(a.si||0)+((a.ea||0))-Math.max(0,a.qv||0));
 const ga=id=>S.stock.find(a=>a.id==id);
 const gf=id=>S.fournisseurs.find(f=>f.id==id);
 const cb=cat=>{const m={'Lingerie':'cat-l','Audio-Vidéo':'cat-a','Bureautique':'cat-b'};return`<span class="${m[cat]||'cat-b'}">${cat}</span>`};
@@ -2006,11 +2007,22 @@ function delVente(id){
   if(!confirm('Supprimer cette vente ?'))return;
   const v=S.ventes.find(v=>v.id==id);
   if(v){
-    const lignes=v.lignes||[{aid:v.aid,qte:v.qte}];
-    lignes.forEach(l=>{const a=ga(l.aid);if(a)a.qv=Math.max(0,a.qv-l.qte);});
+    // 1. Remettre le stock
+    const lignes=v.lignes||[{aid:v.aid,qte:v.qte||1}];
+    lignes.forEach(l=>{const a=ga(l.aid);if(a)a.qv=Math.max(0,(a.qv||0)-l.qte);});
+
+    // 2. Annuler les encaissements réels sur les comptes
+    if(v.statut==='Payé' && v.cid){
+      // Vente entièrement payée d'un coup → annuler le crédit
+      debiterCompte(v.cid, v.mt);
+    } else {
+      // Vente à crédit : annuler uniquement ce qui a été versé
+      if(v.acomptes) v.acomptes.forEach(a=>{if(a.cid) debiterCompte(a.cid, a.mt);});
+      if(v.tranches) v.tranches.forEach(t=>{if(t.cid) debiterCompte(t.cid, t.mt);});
+    }
   }
   S.ventes=S.ventes.filter(v=>v.id!=id);
-  saveData();toast('🗑️ Vente supprimée');rVente();
+  saveData();toast('🗑️ Vente supprimée — stock et comptes mis à jour');rVente();
 }
 
 // ─── ACHATS ───
@@ -2202,25 +2214,66 @@ function delAchat(id){
 
 // ─── STOCK ───
 let stockFilter='';
+let stockCatFiltre='';
+let stockTri='nom';
 function filterStock(v){stockFilter=v.toLowerCase();rStock();}
+
 function rStock(){
-  const al=S.stock.filter(a=>sa(a)<=a.seuil);
-  const filtered=stockFilter?S.stock.filter(a=>a.nom.toLowerCase().includes(stockFilter)||a.code.toLowerCase().includes(stockFilter)||a.cat.toLowerCase().includes(stockFilter)):S.stock;
+  const al=S.stock.filter(a=>sa(a)<=a.seuil&&sa(a)>=0);
+  const cats=(S.parametres&&S.parametres.categories)||['Lingerie','Audio-Vidéo','Bureautique'];
+  const allCats=[...new Set([...cats,...S.stock.map(a=>a.cat).filter(Boolean)])];
+
+  // Filtrage
+  let filtered=S.stock.filter(a=>{
+    const matchText=!stockFilter||(a.nom.toLowerCase().includes(stockFilter)||a.code.toLowerCase().includes(stockFilter)||a.cat.toLowerCase().includes(stockFilter));
+    const matchCat=!stockCatFiltre||a.cat===stockCatFiltre;
+    return matchText&&matchCat;
+  });
+
+  // Tri
+  if(stockTri==='stock_asc') filtered=filtered.slice().sort((a,b)=>sa(a)-sa(b));
+  else if(stockTri==='stock_desc') filtered=filtered.slice().sort((a,b)=>sa(b)-sa(a));
+  else if(stockTri==='nom') filtered=filtered.slice().sort((a,b)=>a.nom.localeCompare(b.nom));
+  else if(stockTri==='valeur') filtered=filtered.slice().sort((a,b)=>(sa(b)*b.pv)-(sa(a)*a.pv));
+
   document.getElementById('content').innerHTML=`
-    ${al.length?`<div class="alert alert-a">⚠️ ${al.length} article(s) à réapprovisionner : ${al.map(a=>a.nom).join(' · ')}</div>`:''}
+    ${al.length?`<div class="alert alert-a">⚠️ ${al.length} article(s) à réapprovisionner : ${al.slice(0,4).map(a=>`<strong>${a.nom}</strong> (${sa(a)})`).join(' · ')}${al.length>4?` +${al.length-4} autres`:''}</div>`:''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        <button onclick="stockCatFiltre='';rStock()" class="btn btn-sm" style="${!stockCatFiltre?'background:var(--navy);color:#fff;border-color:var(--navy)':''}">Toutes</button>
+        ${allCats.map(c=>`<button onclick="stockCatFiltre='${c}';rStock()" class="btn btn-sm" style="${stockCatFiltre===c?'background:var(--navy);color:#fff;border-color:var(--navy)':''}">${c}</button>`).join('')}
+      </div>
+      <select class="fs" style="margin-left:auto;width:auto;min-width:140px" onchange="stockTri=this.value;rStock()">
+        <option value="nom"${stockTri==='nom'?' selected':''}>Trier : Nom A→Z</option>
+        <option value="stock_asc"${stockTri==='stock_asc'?' selected':''}>Trier : Stock ↑</option>
+        <option value="stock_desc"${stockTri==='stock_desc'?' selected':''}>Trier : Stock ↓</option>
+        <option value="valeur"${stockTri==='valeur'?' selected':''}>Trier : Valeur ↓</option>
+      </select>
+    </div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Photo</th><th>Code</th><th>Article</th><th>Catégorie</th><th class="th-pa">P. achat</th><th>P. vente</th><th class="th-marge">Marge</th><th>Stock dispo</th><th class="th-valeur">Valeur</th><th></th></tr></thead>
-      <tbody>${filtered.map(a=>{
-        const s=sa(a),p=Math.round(s/Math.max(a.si+(a.ea||0),1)*100),c=s<=a.seuil?'var(--red)':s<=a.seuil*2?'var(--amber)':'var(--green)';
-        const mg=Math.round((a.pv-a.pa)/a.pv*100);
+      <thead><tr><th>Photo</th><th>Code</th><th>Article</th><th>Catégorie</th><th class="th-pa">P. achat</th><th>P. vente</th><th class="th-marge">Marge</th><th>Entrées</th><th>Vendus</th><th>Stock dispo</th><th class="th-valeur">Valeur</th><th></th></tr></thead>
+      <tbody>${filtered.length===0?`<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--text3)">Aucun article trouvé</td></tr>`:filtered.map(a=>{
+        const s=sa(a);
+        const entrees=(a.si||0)+(a.ea||0);
+        const vendus=Math.max(0,a.qv||0);
+        const stockMax=Math.max(entrees,s,1);
+        const p=Math.min(100,Math.round(s/stockMax*100));
+        const c=s===0?'var(--red)':s<=a.seuil?'var(--amber)':'var(--green)';
+        const mg=a.pv>0?Math.round((a.pv-a.pa)/a.pv*100):0;
         const imgEl=a.photo?`<img src="${a.photo}" class="art-img" onerror="this.outerHTML='<div class=\\'art-img-placeholder\\'>📦</div>'">`:`<div class="art-img-placeholder">📦</div>`;
         return`<tr>
-          <td><div onclick="ouvrirPhotoModal(${a.id})" style="cursor:pointer" title="Cliquer pour ajouter/modifier photo">${imgEl}</div></td>
+          <td><div onclick="ouvrirPhotoModal(${a.id})" style="cursor:pointer" title="Photo">${imgEl}</div></td>
           <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text3)">${a.code}</td>
           <td class="tdm">${a.nom}</td><td>${cb(a.cat)}</td>
           <td class="cell-pa">${F(a.pa)}</td><td>${F(a.pv)}</td>
-          <td class="cell-marge"><span class="badge bg">${mg}%</span></td>
-          <td><span style="color:${c};font-weight:600">${N(s)}</span><div class="sbar"><div class="sfill" style="width:${p}%;background:${c}"></div></div></td>
+          <td class="cell-marge"><span class="badge ${mg>=0?'bg':'br'}">${mg}%</span></td>
+          <td style="font-size:12px;color:var(--text3)">${N(entrees)}</td>
+          <td style="font-size:12px;color:var(--text3)">${N(vendus)}</td>
+          <td>
+            <span style="color:${c};font-weight:700;font-size:14px">${N(s)}</span>
+            <div class="sbar"><div class="sfill" style="width:${p}%;background:${c}"></div></div>
+            ${s===0?'<div style="font-size:9px;color:var(--red);font-weight:600">RUPTURE</div>':s<=a.seuil?`<div style="font-size:9px;color:var(--amber);font-weight:600">Seuil: ${a.seuil}</div>`:''}
+          </td>
           <td class="cell-valeur">${F(s*a.pv)}</td>
           <td><div class="td-actions">
             <button class="btn-icon btn-sm" onclick="ouvrirPhotoModal(${a.id})" title="Photo">📸</button>
@@ -2231,9 +2284,10 @@ function rStock(){
           </div></td>
         </tr>`;}).join('')}
       </tbody></table></div>
-    <div class="g3" style="margin-top:18px">
+    <div class="g4" style="margin-top:18px">
       <div class="card col-valeur"><div class="ct">Valeur totale stock</div><div class="mv">${F(S.stock.reduce((s,a)=>s+(sa(a)*a.pv),0))}</div></div>
-      <div class="card"><div class="ct">Articles en rupture</div><div class="mv" style="color:var(--red)">${N(S.stock.filter(a=>sa(a)===0).length)}</div></div>
+      <div class="card"><div class="ct">Nb articles</div><div class="mv">${N(S.stock.length)}</div><div class="ms">${N(filtered.length)} affichés</div></div>
+      <div class="card"><div class="ct">Ruptures</div><div class="mv" style="color:var(--red)">${N(S.stock.filter(a=>sa(a)===0).length)}</div></div>
       <div class="card"><div class="ct">Stock bas</div><div class="mv" style="color:var(--amber)">${N(S.stock.filter(a=>sa(a)>0&&sa(a)<=a.seuil).length)}</div></div>
     </div>`;
   if(document.getElementById('stock-search'))document.getElementById('stock-search').value=stockFilter;
@@ -2348,14 +2402,32 @@ async function saveArt(){
 }
 function editArticle(id){
   const a=ga(id);if(!a)return;
+  const cats=(S.parametres&&S.parametres.categories)||['Lingerie','Audio-Vidéo','Bureautique'];
+  const catOpts=cats.map(c=>`<option${a.cat===c?' selected':''}>${c}</option>`).join('');
+  const devise=(S.parametres&&S.parametres.devise)||'FCFA';
   modal(`<div class="mft">Modifier — ${a.nom}</div>
-    <div class="fr"><div class="fg"><label class="fl">Code</label><input class="fi" id="mc" value="${a.code}"></div>
-    <div class="fg"><label class="fl">Catégorie</label><select class="fs" id="mcat"><option${a.cat==='Lingerie'?' selected':''}>Lingerie</option><option${a.cat==='Audio-Vidéo'?' selected':''}>Audio-Vidéo</option><option${a.cat==='Bureautique'?' selected':''}>Bureautique</option></select></div></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Code</label><input class="fi" id="mc" value="${a.code}"></div>
+      <div class="fg"><label class="fl">Catégorie</label><select class="fs" id="mcat">${catOpts}</select></div>
+    </div>
     <div class="fg"><label class="fl">Nom</label><input class="fi" id="mn" value="${a.nom}"></div>
-    ${isAdmin()?`<div class="fr"><div class="fg"><label class="fl">Prix achat (FCFA)</label><input class="fi" type="number" id="mpa" value="${a.pa}"></div>`:'<div class="fr"><div class="fg" style="visibility:hidden"></div>'}
-    <div class="fg"><label class="fl">Prix vente (FCFA)</label><input class="fi" type="number" id="mpv" value="${a.pv}"></div></div>
-    <div class="fr"><div class="fg"><label class="fl">Stock initial</label><input class="fi" type="number" id="msi" value="${a.si}"></div>
-    <div class="fg"><label class="fl">Seuil alerte</label><input class="fi" type="number" id="mse" value="${a.seuil}"></div></div>
+    ${isAdmin()?`<div class="fr">
+      <div class="fg"><label class="fl">Prix achat (${devise})</label><input class="fi" type="number" id="mpa" value="${a.pa}" oninput="previewPrixArt()"></div>
+      <div class="fg"><label class="fl">Seuil alerte</label><input class="fi" type="number" id="mse" value="${a.seuil}"></div>
+    </div>`:''}
+    <div style="background:var(--surface2);border-radius:var(--rs);padding:12px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">💰 Prix de vente</div>
+      <div class="fr3">
+        <div class="fg"><label class="fl"><span class="prix-tag prix-detail">Détail</span></label><input class="fi" type="number" id="mpv" value="${a.pv}" oninput="previewPrixArt()"></div>
+        <div class="fg"><label class="fl"><span class="prix-tag prix-semi">Semi-gros</span></label><input class="fi" type="number" id="mpv2" value="${a.pv2||''}"></div>
+        <div class="fg"><label class="fl"><span class="prix-tag prix-gros">Gros</span></label><input class="fi" type="number" id="mpv3" value="${a.pv3||''}"></div>
+      </div>
+      <div id="prix-preview" class="total-preview" style="display:none"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Stock initial</label><input class="fi" type="number" id="msi" value="${a.si}"></div>
+      ${!isAdmin()?`<div class="fg"><label class="fl">Seuil alerte</label><input class="fi" type="number" id="mse" value="${a.seuil}"></div>`:''}
+    </div>
     <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="updateArt(${id})">Enregistrer</button></div>`);
 }
 function updateArt(id){
@@ -2366,6 +2438,8 @@ function updateArt(id){
   a.cat=document.getElementById('mcat').value;
   if(isAdmin()) a.pa=+document.getElementById('mpa')?.value||a.pa;
   a.pv=+document.getElementById('mpv').value||0;
+  a.pv2=+document.getElementById('mpv2')?.value||a.pv;
+  a.pv3=+document.getElementById('mpv3')?.value||a.pv;
   a.si=+document.getElementById('msi').value||0;
   a.seuil=+document.getElementById('mse').value||5;
   enregistrerHistoPrix(a, ancienPv, ancienPa);
@@ -2752,8 +2826,10 @@ function updateDep(id){
 }
 function delDep(id){
   if(!confirm('Supprimer cette dépense ?'))return;
-  S.depenses=S.depenses.filter(d=>d.id!=id);
-  saveData();toast('🗑️ Dépense supprimée');rDep();
+  const d=S.depenses.find(x=>x.id==id);
+  if(d&&d.cid) crediterCompte(d.cid, d.mt);
+  S.depenses=S.depenses.filter(x=>x.id!=id);
+  saveData();toast('🗑️ Dépense supprimée — compte mis à jour');rDep();
 }
 
 // ─── RAPPORTS AVEC GRAPHIQUES ───
@@ -3199,8 +3275,10 @@ function saveRevenu(){
 }
 function delRevenu(id){
   if(!confirm('Supprimer ce revenu ?'))return;
-  S.revenus=S.revenus.filter(r=>r.id!=id);
-  saveData();toast('🗑️ Revenu supprimé');rRevenus();
+  const r=(S.revenus||[]).find(x=>x.id==id);
+  if(r&&r.cid) debiterCompte(r.cid, r.mt);
+  S.revenus=S.revenus.filter(x=>x.id!=id);
+  saveData();toast('🗑️ Revenu supprimé — compte mis à jour');rRevenus();
 }
 function addCharge(){
   revTab='charges';
@@ -3497,6 +3575,10 @@ function rParametres(){
         <button class="btn" onclick="importData()">⬆️ Importer</button>
       </div>
       <div class="param-row">
+        <div><div class="param-label">Recalculer le stock</div><div class="param-desc">Recalcule qv depuis les ventes réelles si le stock est incohérent</div></div>
+        <button class="btn" onclick="recalculerStock()">🔄 Recalculer</button>
+      </div>
+      <div class="param-row">
         <div><div class="param-label">Réinitialiser l'application</div><div class="param-desc" style="color:var(--red)">⚠️ Supprime toutes les données</div></div>
         <button class="btn btn-danger" onclick="reinitApp()">🗑️ Réinitialiser</button>
       </div>
@@ -3646,6 +3728,28 @@ function delEmploye(id){
   S.employes=S.employes.filter(e=>e.id!=id);
   saveData();toast('🗑️ Employé supprimé');rParametres();
 }
+function recalculerStock(){
+  if(!confirm('Recalculer le stock depuis les ventes et achats réels ?'))return;
+  // Remettre qv à 0 pour tous les articles
+  S.stock.forEach(a=>{a.qv=0;a.ea=0;});
+  // Recalculer qv depuis les ventes
+  S.ventes.forEach(v=>{
+    const lignes=v.lignes||[{aid:v.aid,qte:v.qte||1}];
+    lignes.forEach(l=>{
+      const a=ga(l.aid);
+      if(a) a.qv=(a.qv||0)+(l.qte||1);
+    });
+  });
+  // Recalculer ea depuis les achats
+  S.achats.forEach(ac=>{
+    const a=ga(ac.aid);
+    if(a) a.ea=(a.ea||0)+ac.qte;
+  });
+  saveData();
+  toast('✅ Stock recalculé depuis les ventes et achats réels');
+  if(currentPage==='stock') rStock();
+}
+
 function reinitApp(){
   if(!confirm('⚠️ ATTENTION : Toutes les données seront supprimées !\n\nEs-tu sûr ?'))return;
   if(!confirm('Dernière confirmation — vraiment tout supprimer ?'))return;
@@ -4116,8 +4220,10 @@ function confirmerPaiementService(id){
 }
 function delVenteService(id){
   if(!confirm('Supprimer cette prestation ?'))return;
+  const v=S.ventes_services&&S.ventes_services.find(x=>x.id==id);
+  if(v && v.statut==='Payé' && v.cid) debiterCompte(v.cid, v.mt);
   S.ventes_services=S.ventes_services.filter(v=>v.id!=id);
-  saveData();toast('🗑️ Prestation supprimée');rServices();
+  saveData();toast('🗑️ Prestation supprimée — compte mis à jour');rServices();
 }
 
 // ─── MODE SOMBRE ───
@@ -4137,48 +4243,88 @@ function appliquerTheme(){
 // ─── NOTIFICATIONS ───
 function getNotifs(){
   const notifs=[];
-  // Stock bas
+  const today=D();
+
+  // Stock bas / ruptures
   S.stock.forEach(a=>{
-    if(sa(a)<=a.seuil&&sa(a)>=0){
-      notifs.push({icon:'⚠️',msg:`Stock bas : ${a.nom} (${sa(a)} restants)`,type:'stock',urgent:sa(a)===0});
+    if(sa(a)===0){
+      notifs.push({icon:'🔴',msg:`Rupture : ${a.nom}`,type:'stock',urgent:true});
+    } else if(sa(a)<=a.seuil){
+      notifs.push({icon:'⚠️',msg:`Stock bas : ${a.nom} (${sa(a)} restants)`,type:'stock',urgent:false});
     }
   });
+
   // Ventes à percevoir
   const aPercevoir=S.ventes.filter(v=>v.statut==='Non payé');
   if(aPercevoir.length>0){
     const total=aPercevoir.reduce((s,v)=>s+v.mt,0);
     notifs.push({icon:'💰',msg:`${aPercevoir.length} vente(s) à percevoir : ${F(total)}`,type:'vente'});
   }
+
   // Achats à payer
   const aPayerAchats=S.achats.filter(a=>a.statut==='À payer');
   if(aPayerAchats.length>0){
     const total=aPayerAchats.reduce((s,a)=>s+a.mt,0);
     notifs.push({icon:'📦',msg:`${aPayerAchats.length} achat(s) à payer : ${F(total)}`,type:'achat'});
   }
-  // Plannings en retard
-  const today=D();
-  if(S.plannings){
-    S.plannings.filter(p=>p.date<today&&p.statut!=='Terminé').forEach(p=>{
-      const jours=Math.ceil((new Date()-new Date(p.date))/864e5);
-      notifs.push({icon:'⏰',msg:`Tâche en retard (${jours}j) : ${p.titre}`,type:'planning',urgent:true,priority:p.priorite||'moyenne'});
+
+  // Agenda en retard
+  if(S.agenda){
+    const retard=S.agenda.filter(a=>!a.fait&&a.date<today);
+    if(retard.length>0){
+      notifs.push({icon:'🚨',msg:`${retard.length} opération(s) en retard dans l'agenda`,type:'agenda',urgent:true});
+    }
+    // Agenda aujourd'hui
+    const aujd=S.agenda.filter(a=>!a.fait&&a.date===today);
+    aujd.forEach(op=>{
+      notifs.push({icon:'📅',msg:`Aujourd'hui : ${op.titre}${op.montant?` — ${F(op.montant)}`:''}`,type:'agenda',urgent:false});
     });
-    // Tâches du jour
-    S.plannings.filter(p=>p.date===today&&p.statut!=='Terminé').forEach(p=>{
-      notifs.push({icon:'📅',msg:`Échéance aujourd'hui : ${p.titre}`,type:'planning',urgent:true,priority:p.priorite||'moyenne'});
-    });
-    // Alertes de date (rappel avant échéance)
-    S.plannings.filter(p=>p.dateAlerte&&p.statut!=='Terminé').forEach(p=>{
-      const diffAlerte=Math.ceil((new Date(p.dateAlerte)-new Date())/864e5);
-      if(diffAlerte>=0&&diffAlerte<=0){
-        // Alerte du jour
-        notifs.push({icon:'🔔',msg:`Rappel : ${p.titre} — échéance le ${p.date}`,type:'alerte',urgent:false,alerte:true});
-      } else if(diffAlerte>0&&diffAlerte<=3){
-        // Alerte proche (dans 1-3 jours)
-        notifs.push({icon:'🔔',msg:`Rappel dans ${diffAlerte}j : ${p.titre}`,type:'alerte',urgent:false,alerte:true});
+  }
+
+  // Dettes perso échéances proches
+  if(S.dettesPerso){
+    S.dettesPerso.filter(d=>d.statut!=='Soldé'&&d.echeance).forEach(d=>{
+      const diff=Math.ceil((new Date(d.echeance)-new Date())/864e5);
+      if(diff<0){
+        notifs.push({icon:'⏰',msg:`Échéance dépassée : ${d.typeDette==='emprunter'?'Remboursement':'Récupération'} — ${d.personne}`,type:'dette',urgent:true});
+      } else if(diff<=3){
+        notifs.push({icon:'⏰',msg:`Échéance dans ${diff}j : ${d.personne} — ${F(d.montant-(d.rembourse||0))} restants`,type:'dette',urgent:diff===0});
       }
     });
   }
-  return notifs;
+
+  // Limites dépassées
+  if(S.limites){
+    const curM=new Date().toISOString().slice(0,7);
+    S.limites.forEach(l=>{
+      const dep=S.depenses.filter(d=>d.date&&d.date.startsWith(curM)&&(l.cat==='Toutes'||d.cat===l.cat)).reduce((s,d)=>s+d.mt,0);
+      const pct=Math.round(dep/l.montant*100);
+      if(pct>=100) notifs.push({icon:'🚨',msg:`Limite "${l.cat}" dépassée (${pct}%)`,type:'limite',urgent:true});
+      else if(pct>=80) notifs.push({icon:'⚠️',msg:`Limite "${l.cat}" à ${pct}%`,type:'limite',urgent:false});
+    });
+  }
+
+  // Plannings en retard
+  if(S.plannings){
+    S.plannings.filter(p=>p.date<today&&p.statut!=='Terminé').forEach(p=>{
+      const jours=Math.ceil((new Date()-new Date(p.date))/864e5);
+      notifs.push({icon:'⏰',msg:`Tâche en retard (${jours}j) : ${p.titre}`,type:'planning',urgent:true});
+    });
+    S.plannings.filter(p=>p.date===today&&p.statut!=='Terminé').forEach(p=>{
+      notifs.push({icon:'📅',msg:`Échéance aujourd'hui : ${p.titre}`,type:'planning',urgent:true});
+    });
+    S.plannings.filter(p=>p.dateAlerte&&p.statut!=='Terminé').forEach(p=>{
+      const diffAlerte=Math.ceil((new Date(p.dateAlerte)-new Date())/864e5);
+      if(diffAlerte>=0&&diffAlerte<=0){
+        notifs.push({icon:'🔔',msg:`Rappel : ${p.titre} — échéance le ${p.date}`,type:'alerte'});
+      } else if(diffAlerte>0&&diffAlerte<=3){
+        notifs.push({icon:'🔔',msg:`Rappel dans ${diffAlerte}j : ${p.titre}`,type:'alerte'});
+      }
+    });
+  }
+
+  // Trier : urgents d'abord
+  return notifs.sort((a,b)=>(b.urgent?1:0)-(a.urgent?1:0));
 }
 
 function majNotifBadge(){
@@ -6602,7 +6748,11 @@ function saveVenteRapide(aid){
   addHistorique('Sortie',a,qte,`Vente rapide — ${client}`);
   saveData();closeModal();
   toast(`✅ Vente de ${N(qte)}x ${a.nom} — ${F(mt)}`);
-  rStock();
+  // Rafraîchir la page courante
+  if(currentPage==='stock') rStock();
+  else if(currentPage==='vente') rVente();
+  else if(currentPage==='dashboard') rDash();
+  else rStock();
 }
 
 // ─── EXPORT EXCEL (XLSX) ───
