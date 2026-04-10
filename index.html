@@ -5003,17 +5003,18 @@ const PERMISSIONS = {
   admin: {
     pages: ['dashboard','objectifs','transactions','vente','services','achats','stock','clients',
             'fournisseurs','depenses','tresorerie','revenus','rapports','inventaire','historique',
-            'comptes','devis','planning','calculatrice','workspace','parametres'],
+            'comptes','devis','planning','calculatrice','workspace','parametres',
+            'dettes','flux','limites','modeles','agenda'],
     label: '👑 Administrateur',
     couleur: '#f5c060'
   },
   caissier: {
-    pages: ['dashboard','vente','services','stock','clients','calculatrice','transactions'],
+    pages: ['dashboard','vente','services','stock','clients','calculatrice','transactions','agenda','dettes'],
     label: '💰 Caissier',
     couleur: '#8ecba8'
   },
   vendeur: {
-    pages: ['dashboard','vente','services','clients','calculatrice'],
+    pages: ['dashboard','vente','services','clients','calculatrice','agenda'],
     label: '🛒 Vendeur',
     couleur: '#c5d0e8'
   }
