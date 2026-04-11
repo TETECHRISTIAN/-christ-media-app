@@ -982,6 +982,10 @@ body.dark th{background:var(--surface3)}
       <svg viewBox="0 0 16 16" fill="none"><path d="M8 1v9M5 7l3 3 3-3M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Exporter données
     </div>
+    <div class="ni admin-only" onclick="sauvegarderGoogleDrive()">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M13 10.5a3 3 0 00-2.5-4.9 5 5 0 00-9.5 2A2.5 2.5 0 002 13h11a2 2 0 000-4v1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Google Drive
+    </div>
     <div class="ni admin-only" onclick="importData()">
       <svg viewBox="0 0 16 16" fill="none"><path d="M8 11V2M5 5l3-3 3 3M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Importer données
@@ -4217,6 +4221,29 @@ function rParametres(){
       </div>
     </div>
 
+    <div class="param-section admin-only">
+      <div class="param-section-title">☁️ Sauvegarde Google Drive</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Enregistrez une copie de vos données directement dans votre Google Drive. Fonctionne en plus de Firebase.</div>
+      <div class="param-row">
+        <div>
+          <div class="param-label">Sauvegarder maintenant</div>
+          <div class="param-desc">Exporte un fichier JSON dans votre Drive</div>
+        </div>
+        <button class="btn btn-primary" onclick="sauvegarderGoogleDrive()">☁️ Envoyer vers Drive</button>
+      </div>
+      <div class="param-row">
+        <div>
+          <div class="param-label">Sauvegarde auto quotidienne</div>
+          <div class="param-desc">Sauvegarde automatique chaque jour à la première ouverture</div>
+        </div>
+        <div class="toggle${(p.gdriveAutoBackup)?' on':''}" onclick="toggleGdriveAuto();rParametres()"></div>
+      </div>
+      ${p.gdriveLastBackup?`<div style="font-size:11px;color:var(--text3);margin-top:8px">Dernière sauvegarde Drive : <strong>${p.gdriveLastBackup}</strong></div>`:''}
+      <div style="background:var(--navy-bg);border:1px solid var(--navy-light);border-radius:var(--rs);padding:10px 12px;margin-top:12px;font-size:12px;color:var(--navy)">
+        💡 Le fichier sera nommé <strong>ChristMedia_backup_[date].json</strong> et placé dans votre Drive racine. Vous pouvez le restaurer via le bouton Importer.
+      </div>
+    </div>
+
     <div class="param-section">
       <div class="param-section-title">🖥️ Plan de travail</div>
       <div class="fg"><label class="fl">Nom du plan de travail (affiché en haut de la sidebar)</label>
@@ -5823,6 +5850,8 @@ function connexionEmail(){
   toast(`✅ Bienvenue ${u.nom} !`);
   // Démarrer la présence en temps réel
   setTimeout(initPresence, 1000);
+  // Vérifier sauvegarde Drive auto
+  if(u.role === 'admin') setTimeout(checkGdriveAutoBackup, 3000);
   if(!S.ventes)S.ventes=[];
   if(!S.stock)S.stock=[];
   if(!S.achats)S.achats=[];
@@ -8568,6 +8597,223 @@ function effacerHistoriqueConnexions(){
   if(!confirm('Effacer tout l\'historique des connexions ?')) return;
   localStorage.removeItem(CONNEXIONS_KEY);
   toast('🗑️ Historique effacé');
+}
+
+
+// ─── SAUVEGARDE GOOGLE DRIVE ───
+// Utilise l'API Google Drive via OAuth2 + fetch
+// Pas de SDK externe nécessaire - utilise le flux OAuth2 natif du navigateur
+
+const GDRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+const GDRIVE_CLIENT_ID = ''; // Optionnel - fonctionne via méthode de téléchargement sinon
+let _gdriveToken = null;
+
+// Méthode principale : génère le fichier et propose l'upload
+async function sauvegarderGoogleDrive(){
+  const p = S.parametres || {};
+  const dateStr = D();
+  const heure = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const nomFichier = 'ChristMedia_backup_' + dateStr + '.json';
+  const contenu = JSON.stringify(S, null, 2);
+  const taille = Math.round(contenu.length/1024);
+
+  // Si token dispo : upload direct
+  if(_gdriveToken){
+    await uploadVersDrive(_gdriveToken, nomFichier, contenu);
+    return;
+  }
+
+  // Sinon : afficher modal d'options
+  const infoHtml = '<div style="background:var(--surface2);border-radius:var(--rs);padding:12px 14px;margin-bottom:16px">' +
+    '<div style="font-size:13px;font-weight:600;margin-bottom:4px">' + nomFichier + '</div>' +
+    '<div style="font-size:12px;color:var(--text3)">' + taille + ' Ko · ' + (S.ventes||[]).length + ' ventes · ' + (S.stock||[]).length + ' articles</div>' +
+    '</div>';
+
+  const opt1 = '<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:13px;font-weight:700;margin-bottom:6px">📥 Étape 1 — Télécharger</div>' +
+    '<div style="font-size:12px;color:var(--text3);margin-bottom:10px">Téléchargez le fichier de sauvegarde sur votre appareil.</div>' +
+    '<button class="btn btn-primary" style="width:100%" onclick="exportData();majDateDriveBackup()">⬇️ Télécharger ' + nomFichier + '</button>' +
+    '</div>';
+
+  const opt2 = '<div style="background:var(--surface);border:1.5px solid var(--navy-light);border-radius:var(--rs);padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:13px;font-weight:700;margin-bottom:6px">☁️ Étape 2 — Envoyer vers Drive</div>' +
+    '<div style="font-size:12px;color:var(--text3);margin-bottom:10px">Ouvrez Google Drive et glissez-y le fichier téléchargé. Ou cliquez ci-dessous pour ouvrir Drive directement.</div>' +
+    '<button class="btn" style="width:100%" onclick="ouvrirGDrive()">🌐 Ouvrir Google Drive</button>' +
+    '</div>';
+
+  const authOpt = '<div style="background:var(--navy-bg);border:1.5px solid var(--navy-light);border-radius:var(--rs);padding:14px">' +
+    '<div style="font-size:13px;font-weight:700;margin-bottom:6px">🔗 Upload direct (avancé)</div>' +
+    '<div style="font-size:12px;color:var(--text3);margin-bottom:10px">Connectez Google pour envoyer automatiquement sans téléchargement manuel.</div>' +
+    '<button class="btn btn-primary" style="width:100%" onclick="initGoogleAuth()">Connecter mon compte Google</button>' +
+    '</div>';
+
+  modal('<div class="mft">☁️ Sauvegarder vers Google Drive</div>' +
+    infoHtml + opt1 + opt2 + authOpt +
+    '<div class="mff"><button class="btn" onclick="closeModal()">Fermer</button></div>');
+}
+
+function majDateDriveBackup(){
+  if(!S.parametres) S.parametres = {};
+  S.parametres.gdriveLastBackup = new Date().toLocaleDateString('fr-FR') + ' ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  saveData();
+  toast('✅ Fichier téléchargé — pensez à le glisser dans Drive !', 4000);
+}
+
+function initGoogleAuth(){
+  if(!window.google || !window.google.accounts){
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.onload = lancerTokenClient;
+    script.onerror = () => { toast('❌ Impossible de charger Google Auth'); exportData(); };
+    document.head.appendChild(script);
+    toast('⏳ Chargement de Google Auth...', 2000);
+  } else {
+    lancerTokenClient();
+  }
+}
+
+function lancerTokenClient(){
+  try {
+    // Client ID Google OAuth2 — à configurer dans Paramètres avancés
+    const clientId = (S.parametres && S.parametres.googleClientId) || '';
+    if(!clientId){
+      modal('<div class="mft">⚙️ Configuration Google OAuth</div>' +
+        '<div style="font-size:13px;color:var(--text2);margin-bottom:14px">Pour l\'upload direct, entrez votre Client ID Google OAuth2. Créez-le sur <a href="https://console.cloud.google.com" target="_blank" style="color:var(--navy)">console.cloud.google.com</a>.</div>' +
+        '<div class="fg"><label class="fl">Google Client ID</label>' +
+        '<input class="fi" id="g-clientid" placeholder="...apps.googleusercontent.com"></div>' +
+        '<div class="mff"><button class="btn" onclick="closeModal()">Annuler</button>' +
+        '<button class="btn btn-primary" onclick="sauvegarderGoogleClientId()">Enregistrer</button></div>');
+      return;
+    }
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: GDRIVE_SCOPE,
+      callback: async (resp) => {
+        if(resp.error){ toast('❌ Auth Google annulée'); return; }
+        _gdriveToken = resp.access_token;
+        closeModal();
+        const nomF = 'ChristMedia_backup_' + D() + '.json';
+        await uploadVersDrive(_gdriveToken, nomF, JSON.stringify(S, null, 2));
+      }
+    });
+    client.requestAccessToken();
+  } catch(e) {
+    toast('❌ Erreur Auth : ' + e.message);
+    exportData();
+  }
+}
+
+function sauvegarderGoogleClientId(){
+  const val = document.getElementById('g-clientid')?.value?.trim();
+  if(!val) return toast('❌ Client ID requis');
+  if(!S.parametres) S.parametres = {};
+  S.parametres.googleClientId = val;
+  saveData();
+  closeModal();
+  toast('✅ Client ID enregistré');
+  setTimeout(()=>lancerTokenClient(), 500);
+}
+
+
+function authGoogleDrive(nomFichier, contenuPreview){
+  // Utiliser Google Identity Services (OAuth2 implicite)
+  // Charge le script GIS si pas encore chargé
+  if(!window.google || !window.google.accounts){
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.onload = () => lancerAuthGdrive(nomFichier);
+    script.onerror = () => toast('❌ Impossible de charger Google Auth. Vérifiez votre connexion.');
+    document.head.appendChild(script);
+  } else {
+    lancerAuthGdrive(nomFichier);
+  }
+}
+
+function lancerAuthGdrive(nomFichier){
+  try {
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: '577902596845-0p8r6o9q9q9q9q9q9q9q9q9q9q9q9q9.apps.googleusercontent.com',
+      scope: GDRIVE_SCOPE,
+      callback: async (resp) => {
+        if(resp.error){ toast('❌ Connexion Google annulée'); return; }
+        _gdriveToken = resp.access_token;
+        const contenu = JSON.stringify(S, null, 2);
+        closeModal();
+        await uploadVersDrive(_gdriveToken, nomFichier, contenu);
+      }
+    });
+    client.requestAccessToken();
+  } catch(e) {
+    // Fallback : téléchargement simple
+    toast('⚠️ Auth Google non disponible — téléchargement du fichier...');
+    exportData();
+    closeModal();
+  }
+}
+
+async function uploadVersDrive(token, nomFichier, contenu){
+  setSyncStatus('syncing', 'Upload Drive...');
+  toast('☁️ Envoi vers Google Drive...', 3000);
+  try {
+    // Créer le fichier via l'API Drive multipart
+    const boundary = '-------ChristMedia';
+    const delimiter = '\r\n--' + boundary + '\r\n';
+    const close_delim = '\r\n--' + boundary + '--';
+    const metadata = JSON.stringify({name: nomFichier, mimeType: 'application/json'});
+    const body = delimiter +
+      'Content-Type: application/json\r\n\r\n' + metadata +
+      delimiter + 'Content-Type: application/json\r\n\r\n' + contenu +
+      close_delim;
+    const resp = await fetch(
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'multipart/related; boundary=' + boundary
+        },
+        body
+      }
+    );
+    if(resp.ok){
+      const file = await resp.json();
+      if(!S.parametres) S.parametres = {};
+      S.parametres.gdriveLastBackup = new Date().toLocaleString('fr-FR');
+      S.parametres.gdriveLastFile = nomFichier;
+      saveData();
+      setSyncStatus('online', 'Synchronisé ✓');
+      toast('✅ Sauvegarde Drive réussie : ' + nomFichier, 4000);
+    } else {
+      throw new Error('HTTP ' + resp.status);
+    }
+  } catch(e) {
+    setSyncStatus('online', 'Synchronisé ✓');
+    console.error('Drive upload error:', e);
+    toast('❌ Erreur Drive : ' + e.message + ' — Fichier téléchargé à la place');
+    exportData();
+  }
+}
+
+function toggleGdriveAuto(){
+  if(!S.parametres) S.parametres = {};
+  S.parametres.gdriveAutoBackup = !S.parametres.gdriveAutoBackup;
+  saveData();
+  toast(S.parametres.gdriveAutoBackup ? '✅ Sauvegarde Drive auto activée' : '⚫ Sauvegarde Drive auto désactivée');
+}
+
+// Vérifier sauvegarde auto au démarrage
+function checkGdriveAutoBackup(){
+  const p = S.parametres || {};
+  if(!p.gdriveAutoBackup) return;
+  const today = D();
+  if(p.gdriveLastBackup && p.gdriveLastBackup.startsWith(today)) return;
+  // Délai de 5 secondes après démarrage pour ne pas ralentir le chargement
+  setTimeout(()=>{
+    if(navigator.onLine){
+      toast('☁️ Sauvegarde Drive auto en cours...', 2000);
+      sauvegarderGoogleDrive();
+    }
+  }, 5000);
 }
 
 // ─── SAUVEGARDE AUTOMATIQUE ───
