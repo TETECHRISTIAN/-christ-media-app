@@ -442,6 +442,86 @@ body.theme-teal{--navy:#1a5c5c;--navy2:#207070;--navy-bg:#e8f5f5;--navy-light:#a
 .journal-pin-key{padding:14px 0;font-size:18px;font-weight:600;border:1.5px solid var(--border2);border-radius:var(--r);background:var(--surface);cursor:pointer;font-family:inherit;transition:all .15s;color:var(--text)}
 .journal-pin-key:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
 
+/* ─── DASHBOARD VENDEUR ─── */
+.vd-header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);border-radius:var(--r);padding:20px 24px;color:#fff;margin-bottom:20px;position:relative;overflow:hidden}
+.vd-header::before{content:'';position:absolute;top:-40px;right:-40px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.05)}
+.vd-header::after{content:'';position:absolute;bottom:-30px;left:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.04)}
+.vd-avatar{font-size:36px;margin-bottom:8px}
+.vd-name{font-size:20px;font-weight:800;letter-spacing:-.4px}
+.vd-role{font-size:12px;color:rgba(255,255,255,.55);margin-top:3px}
+.vd-date{font-size:11px;color:rgba(255,255,255,.4);margin-top:6px}
+.vd-score{position:absolute;top:20px;right:24px;text-align:right}
+.vd-score-val{font-size:32px;font-weight:900;letter-spacing:-1px}
+.vd-score-lbl{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.8px}
+.vd-kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);position:relative}
+.vd-kpi-icon{font-size:22px;margin-bottom:8px}
+.vd-kpi-val{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.vd-kpi-lbl{font-size:11px;color:var(--text3);margin-top:3px;font-weight:500}
+.vd-kpi-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.vd-obj-bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:8px}
+.vd-obj-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.vd-obj-pct{font-size:10px;font-weight:700;margin-top:4px}
+.vd-rank-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.vd-rank-item:last-child{border-bottom:none}
+.vd-rank-pos{width:24px;height:24px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.vd-rank-pos.first{background:#f5c060;color:#8a5200}
+.vd-rank-pos.second{background:#c5c3bb;color:#5a5853}
+.vd-rank-pos.third{background:#d4a574;color:#7a4a2a}
+.vd-tip{background:var(--navy-bg);border:1px solid var(--navy-light);border-radius:var(--rs);padding:12px 14px;font-size:12px;color:var(--navy);margin-top:12px;line-height:1.5}
+
+/* ─── MODE CAISSE RAPIDE ─── */
+.cr-overlay{position:fixed;inset:0;background:var(--bg);z-index:600;display:flex;flex-direction:column;overflow:hidden}
+.cr-topbar{background:var(--navy);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.cr-topbar-title{font-size:15px;font-weight:700;flex:1}
+.cr-total-badge{background:rgba(255,255,255,.15);border-radius:8px;padding:6px 14px;font-size:18px;font-weight:800;letter-spacing:-.5px}
+.cr-body{flex:1;display:flex;overflow:hidden;gap:0}
+/* Gauche : recherche + grille produits */
+.cr-left{flex:1;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+.cr-search{padding:10px 12px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;gap:8px;align-items:center;flex-shrink:0}
+.cr-search input{flex:1;border:1.5px solid var(--border2);border-radius:8px;padding:8px 12px;font-size:15px;outline:none;font-family:inherit;background:var(--surface);color:var(--text)}
+.cr-search input:focus{border-color:var(--navy)}
+.cr-cats{padding:6px 10px;display:flex;gap:6px;overflow-x:auto;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--surface2)}
+.cr-cat-btn{padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--surface);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;color:var(--text2);flex-shrink:0;transition:all .15s}
+.cr-cat-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.cr-grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;padding:10px}
+.cr-prod{background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:10px 8px;cursor:pointer;transition:all .15s;text-align:center;user-select:none;position:relative}
+.cr-prod:hover{border-color:var(--navy);transform:translateY(-1px);box-shadow:0 4px 12px rgba(15,31,61,.12)}
+.cr-prod:active{transform:scale(.96)}
+.cr-prod.added{border-color:var(--green);background:var(--green-bg)}
+.cr-prod.rupture{opacity:.5}
+.cr-prod-icon{font-size:28px;margin-bottom:4px}
+.cr-prod-nom{font-size:11px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px}
+.cr-prod-prix{font-size:13px;font-weight:800;color:var(--navy)}
+.cr-prod-stock{position:absolute;top:4px;right:4px;font-size:9px;font-weight:700;background:var(--surface2);border-radius:8px;padding:1px 5px;color:var(--text3)}
+.cr-prod-qty{position:absolute;top:4px;left:4px;background:var(--green);color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
+/* Droite : panier + validation */
+.cr-right{width:280px;display:flex;flex-direction:column;background:var(--surface);flex-shrink:0}
+.cr-panier-header{padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text2);background:var(--surface2);flex-shrink:0}
+.cr-panier-list{flex:1;overflow-y:auto;padding:8px}
+.cr-panier-item{display:flex;align-items:center;gap:8px;padding:8px 6px;border-bottom:1px solid var(--border);font-size:12px}
+.cr-panier-item:last-child{border-bottom:none}
+.cr-panier-nom{flex:1;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cr-panier-ctrl{display:flex;align-items:center;gap:4px}
+.cr-qty-btn{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border2);background:var(--surface);cursor:pointer;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:all .15s;color:var(--text)}
+.cr-qty-btn:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
+.cr-panier-mt{font-weight:700;color:var(--navy);width:70px;text-align:right;font-size:12px;flex-shrink:0}
+/* Footer validation */
+.cr-footer{padding:12px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.cr-total-line{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.cr-total-lbl{font-size:12px;color:var(--text2);font-weight:600}
+.cr-total-val{font-size:22px;font-weight:900;color:var(--navy);letter-spacing:-.5px}
+.cr-mode-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.cr-mode-btn{padding:8px 4px;border-radius:8px;border:2px solid var(--border2);background:var(--surface);cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;transition:all .15s;text-align:center;color:var(--text2)}
+.cr-mode-btn.active{border-color:var(--navy);background:var(--navy);color:#fff}
+.cr-valider-btn{width:100%;padding:14px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .15s;letter-spacing:-.2px}
+.cr-valider-btn:hover{opacity:.9;transform:translateY(-1px)}
+.cr-valider-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.cr-vider-btn{width:100%;padding:6px;background:none;color:var(--red);border:none;cursor:pointer;font-size:11px;font-family:inherit;margin-top:6px}
+@media(max-width:768px){
+  .cr-right{width:220px}
+  .cr-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px;padding:8px}
+}
+
 /* ─── THÈME PICKER ─── */
 .theme-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}
 .theme-swatch{width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:3px solid transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;font-size:16px}
@@ -840,6 +920,10 @@ body.dark th{background:var(--surface3)}
       Opérations suivantes
     </div>
     <div class="nav-sec">Système</div>
+    <div class="ni" onclick="ouvrirCaisseRapide()" title="Mode caisse rapide — plein écran">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="14" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 4V3a2 2 0 014 0v1" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8.5" r="1.5" fill="currentColor" opacity=".7"/></svg>
+      ⚡ Caisse Rapide
+    </div>
     <div class="ni" data-page="calculatrice" onclick="nav(this,'calculatrice')">
       <svg viewBox="0 0 16 16" fill="none"><rect x="1.5" y="1.5" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M4 4h8M4 7.5h2M7 7.5h2M10 7.5h2M4 10h2M7 10h2M10 10h2M4 12.5h2M7 12.5h2M10 12.5h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
       Calculatrice
@@ -925,6 +1009,10 @@ body.dark th{background:var(--surface3)}
       <div class="qb-center" id="qb-vente" onclick="nav(document.querySelector('[data-page=vente]'),'vente');qbActivate('qb-vente')">
         <svg viewBox="0 0 16 16" fill="none"><circle cx="6" cy="12" r="1.5" fill="white"/><circle cx="11" cy="12" r="1.5" fill="white"/><path d="M1 2h2l2.4 7h5.6l1.6-5H5" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
         <span>Vente Rapide</span>
+      </div>
+      <div class="qb-item" id="qb-caisse-rapide" onclick="ouvrirCaisseRapide()" title="Mode caisse rapide">
+        <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="14" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 4V3a2 2 0 014 0v1" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8.5" r="1.5" fill="currentColor" opacity=".7"/></svg>
+        <span>⚡ Caisse</span>
       </div>
       <div class="qb-item admin-only" id="qb-tresorerie" onclick="nav(document.querySelector('[data-page=tresorerie]'),'tresorerie');qbActivate('qb-tresorerie')">
         <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="currentColor" opacity=".6"/><path d="M1 6h14" stroke="currentColor" stroke-width="1"/></svg>
@@ -1630,7 +1718,7 @@ const actionsMap={
   dashboard:()=>'<button class="btn btn-success" onclick="nav(document.querySelector(\'[data-page=vente]\'),\'vente\')">+ Vente</button>',
   objectifs:()=>'<button class="btn btn-primary" onclick="editObjectifs()">⚙️ Modifier objectifs</button>',
   transactions:()=>'',
-  vente:()=>'',
+  vente:()=>'<button class="btn" onclick="ouvrirCaisseRapide()" title="Mode plein écran optimisé caisse">⚡ Caisse Rapide</button>',
   services:()=>'<button class="btn btn-primary" onclick="addService()">+ Service</button>',
   achats:()=>'<button class="btn" onclick="modalExportExcel()">📊 Excel</button> <button class="btn btn-primary" onclick="addAchat()">+ Achat</button>',
   stock:()=>`<div class="search-bar"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><input type="text" placeholder="Rechercher..." oninput="filterStock(this.value)" id="stock-search"></div><button class="btn" onclick="openScanner('stock')" title="Scanner code-barres">📷 Scanner</button><button class="btn" onclick="modalExportExcel()">📊 Excel</button><button class="btn btn-primary" onclick="addArticle()">+ Article</button>`,
@@ -1715,8 +1803,211 @@ function modal(html){
 function closeModal(){document.getElementById('modal-root').innerHTML=''}
 
 // ─── DASHBOARD ───
+
+// ─── TABLEAU DE BORD VENDEUR / CAISSIER ───
+function rDashVendeur(){
+  const session = S.session || {};
+  const uid = session.uid;
+  const nom = session.nom || 'Utilisateur';
+  const emoji = session.emoji || '👤';
+  const role = session.role || 'vendeur';
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0,10);
+  const curM = now.toISOString().slice(0,7);
+  const heureLabel = now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const dateLabel = now.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+
+  // Ventes de CE vendeur uniquement
+  const mesVentes = S.ventes.filter(v => v.caissier_uid == uid || v.caissier_nom === nom);
+  const mesVentesAuj = mesVentes.filter(v => v.date && v.date.startsWith(todayStr) && v.statut === 'Payé');
+  const mesVentesMois = mesVentes.filter(v => v.date && v.date.startsWith(curM) && v.statut === 'Payé');
+  const mesVentesAujCredit = mesVentes.filter(v => v.date && v.date.startsWith(todayStr) && v.statut === 'Non payé');
+
+  const caAuj = mesVentesAuj.reduce((s,v) => s+v.mt, 0);
+  const caMois = mesVentesMois.reduce((s,v) => s+v.mt, 0);
+  const creditAuj = mesVentesAujCredit.reduce((s,v) => s+v.mt, 0);
+  const nbAuj = mesVentesAuj.length;
+  const nbMois = mesVentesMois.length;
+
+  // Objectif journalier (objectif mensuel / 26 jours ouvrés)
+  const obj = S.objectifs || {ca_mensuel:500000, ventes_nb:50};
+  const objJour = Math.round((obj.ca_mensuel||500000) / 26);
+  const objNbJour = Math.round((obj.ventes_nb||50) / 26);
+  const caPct = Math.min(100, objJour ? Math.round(caAuj/objJour*100) : 0);
+  const nbPct = Math.min(100, objNbJour ? Math.round(nbAuj/objNbJour*100) : 0);
+
+  // Score / motivation
+  let scoreEmoji, scoreMsg;
+  if(caPct >= 100){ scoreEmoji = '🏆'; scoreMsg = 'Objectif atteint !'; }
+  else if(caPct >= 75){ scoreEmoji = '🔥'; scoreMsg = 'Très bien !'; }
+  else if(caPct >= 50){ scoreEmoji = '💪'; scoreMsg = 'Bon rythme'; }
+  else if(caPct >= 25){ scoreEmoji = '⏳'; scoreMsg = 'Continue !'; }
+  else { scoreEmoji = '🚀'; scoreMsg = 'Lance-toi !'; }
+
+  // Classement de la journée (tous vendeurs)
+  const classement = [];
+  const vendeursMap = {};
+  S.ventes.filter(v => v.date && v.date.startsWith(todayStr) && v.statut === 'Payé').forEach(v => {
+    const n = v.caissier_nom || '—';
+    const e = v.caissier_emoji || '👤';
+    if(!vendeursMap[n]) vendeursMap[n] = {nom:n, emoji:e, mt:0, nb:0};
+    vendeursMap[n].mt += v.mt;
+    vendeursMap[n].nb++;
+  });
+  const classArr = Object.values(vendeursMap).sort((a,b) => b.mt - a.mt);
+  const maPosition = classArr.findIndex(v => v.nom === nom) + 1;
+
+  // Dernière vente
+  const derniereVente = mesVentesAuj.length > 0 ? mesVentesAuj[mesVentesAuj.length-1] : null;
+  const dvArt = derniereVente ? (ga(derniereVente.aid)||{}).nom || 'Article' : null;
+
+  // Modes de paiement aujourd'hui
+  const modes = {};
+  mesVentesAuj.forEach(v => { const m=v.mode||'Espèces'; modes[m]=(modes[m]||0)+v.mt; });
+
+  // Conseil du jour
+  const conseils = [
+    '💡 Proposez toujours un article complémentaire à vos clients.',
+    '💡 Un client satisfait revient et recommande. Soignez l\'accueil !',
+    '💡 Vérifiez le stock avant de promettre un article à un client.',
+    '💡 Encaissez toujours avant de remettre la marchandise.',
+    '💡 Un bon suivi des débiteurs améliore la trésorerie.',
+    '💡 Notez les demandes des clients pour adapter le stock.',
+    '💡 La rapidité à la caisse fidélise les clients pressés.',
+  ];
+  const conseil = conseils[now.getDay() % conseils.length];
+
+  document.getElementById('content').innerHTML = `
+  <div class="page">
+
+    <!-- En-tête personnalisé -->
+    <div class="vd-header">
+      <div class="vd-avatar">${emoji}</div>
+      <div class="vd-name">${nom}</div>
+      <div class="vd-role">${role==='caissier'?'💰 Caissier':'🛒 Vendeur'}</div>
+      <div class="vd-date">📅 ${dateLabel} · ${heureLabel}</div>
+      <div class="vd-score">
+        <div style="font-size:36px">${scoreEmoji}</div>
+        <div class="vd-score-lbl">${scoreMsg}</div>
+      </div>
+    </div>
+
+    <!-- KPIs aujourd'hui -->
+    <p class="st">Aujourd'hui</p>
+    <div class="g4" style="margin-bottom:20px">
+      <div class="vd-kpi">
+        <div class="vd-kpi-icon">💰</div>
+        <div class="vd-kpi-val" style="color:var(--green)">${F(caAuj)}</div>
+        <div class="vd-kpi-lbl">Encaissé</div>
+        <div class="vd-obj-bar"><div class="vd-obj-fill" style="width:${caPct}%;background:${caPct>=100?'var(--green)':caPct>=60?'var(--navy)':'var(--amber)'}"></div></div>
+        <div class="vd-obj-pct" style="color:${caPct>=100?'var(--green)':caPct>=60?'var(--navy)':'var(--amber)'}">${caPct}% de l'objectif jour (${F(objJour)})</div>
+      </div>
+      <div class="vd-kpi">
+        <div class="vd-kpi-icon">🛒</div>
+        <div class="vd-kpi-val">${nbAuj}</div>
+        <div class="vd-kpi-lbl">Ventes</div>
+        <div class="vd-obj-bar"><div class="vd-obj-fill" style="width:${nbPct}%;background:${nbPct>=100?'var(--green)':'var(--teal)'}"></div></div>
+        <div class="vd-obj-pct" style="color:var(--text3)">Obj. : ${objNbJour} ventes/jour</div>
+      </div>
+      <div class="vd-kpi">
+        <div class="vd-kpi-icon">⏳</div>
+        <div class="vd-kpi-val" style="color:var(--amber)">${F(creditAuj)}</div>
+        <div class="vd-kpi-lbl">Crédit accordé</div>
+        <div class="vd-kpi-sub">${mesVentesAujCredit.length} client${mesVentesAujCredit.length>1?'s':''} en attente</div>
+      </div>
+      <div class="vd-kpi">
+        <div class="vd-kpi-icon">📅</div>
+        <div class="vd-kpi-val" style="color:var(--navy)">${F(caMois)}</div>
+        <div class="vd-kpi-lbl">CA du mois</div>
+        <div class="vd-kpi-sub">${nbMois} ventes ce mois</div>
+      </div>
+    </div>
+
+    <div class="g2">
+      <div>
+        <!-- Classement du jour -->
+        <p class="st">🏅 Classement du jour</p>
+        <div class="card">
+          ${classArr.length === 0
+            ? '<div style="color:var(--text3);font-size:13px;padding:8px 0">Aucune vente enregistrée aujourd\'hui</div>'
+            : classArr.slice(0,5).map((v,i) => `
+            <div class="vd-rank-item">
+              <div class="vd-rank-pos ${i===0?'first':i===1?'second':i===2?'third':''}">${i+1}</div>
+              <span style="font-size:20px">${v.emoji}</span>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:${v.nom===nom?'800':'500'};color:${v.nom===nom?'var(--navy)':'var(--text)'}">${v.nom}${v.nom===nom?' 👈':''}</div>
+                <div style="font-size:11px;color:var(--text3)">${v.nb} vente${v.nb>1?'s':''}</div>
+              </div>
+              <div style="font-weight:700;color:${i===0?'var(--amber)':'var(--text2)'}">${F(v.mt)}</div>
+            </div>`).join('')
+          }
+          ${maPosition > 0 ? `<div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:center">Ta position : <strong style="color:var(--navy)">#${maPosition}</strong> sur ${classArr.length}</div>` : ''}
+        </div>
+
+        <!-- Modes de paiement aujourd'hui -->
+        ${Object.keys(modes).length > 0 ? `
+        <p class="st" style="margin-top:16px">💳 Mes encaissements</p>
+        <div class="card">
+          ${Object.entries(modes).map(([m,mt]) => `
+          <div class="stat-row">
+            <span style="font-size:13px">${m}</span>
+            <span style="font-weight:700;color:var(--green)">${F(mt)}</span>
+          </div>`).join('')}
+        </div>` : ''}
+      </div>
+
+      <div>
+        <!-- Mes dernières ventes aujourd'hui -->
+        <p class="st">🛒 Mes ventes aujourd'hui</p>
+        ${mesVentesAuj.length === 0
+          ? `<div class="empty"><p>Pas encore de vente</p><small>Lance-toi !</small></div>`
+          : `<div class="tbl-wrap" style="max-height:260px;overflow-y:auto">
+            <table>
+              <thead><tr><th>Article</th><th>Montant</th><th>Mode</th></tr></thead>
+              <tbody>
+                ${mesVentesAuj.slice().reverse().slice(0,10).map(v => {
+                  const a = ga(v.aid);
+                  return `<tr>
+                    <td class="tdm">${a?a.nom:'Article'}</td>
+                    <td style="font-weight:600;color:var(--green)">${F(v.mt)}</td>
+                    <td><span class="badge bb" style="font-size:10px">${v.mode||'—'}</span></td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>`
+        }
+
+        <!-- Alerte stock bas (info utile pour vendeur) -->
+        ${S.stock.filter(a=>sa(a)<=a.seuil&&sa(a)>=0).length > 0 ? `
+        <p class="st" style="margin-top:16px">⚠️ Stock bas à signaler</p>
+        <div class="card">
+          ${S.stock.filter(a=>sa(a)<=a.seuil).slice(0,4).map(a => `
+          <div class="stat-row">
+            <span style="font-size:13px">${a.nom}</span>
+            <span class="badge ${sa(a)===0?'br':'ba'}">${sa(a)===0?'Rupture':sa(a)+' restants'}</span>
+          </div>`).join('')}
+        </div>` : ''}
+
+        <!-- Conseil du jour -->
+        <div class="vd-tip">${conseil}</div>
+      </div>
+    </div>
+
+    <!-- Bouton accès rapide vente -->
+    <div style="margin-top:20px;text-align:center">
+      <button class="btn btn-primary" onclick="nav(document.querySelector('[data-page=vente]'),'vente')" style="padding:12px 32px;font-size:15px;font-weight:700">
+        🛒 Nouvelle vente
+      </button>
+    </div>
+  </div>`;
+}
+
 function rDash(){
   if(!S||!S.ventes)return;
+  // Tableau de bord adapté au rôle
+  const role = S.session?.role || 'vendeur';
+  if(role !== 'admin') { rDashVendeur(); return; }
   // Mois courant et mois précédent
   const now=new Date();
   const curM=now.toISOString().slice(0,7);
@@ -7596,6 +7887,208 @@ Total : ${Math.round(totalDepenses).toLocaleString('fr-FR')} ${dev}
 📊 *SOLDE NET : ${Math.round(soldeNet).toLocaleString('fr-FR')} ${dev}* ${soldeNet>=0?'✅':'⚠️'}`;
 
   window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+
+// ─── MODE CAISSE RAPIDE ───
+let crPanier = [];
+let crMode = 'Espèces';
+let crSearch = '';
+let crCat = 'Tout';
+
+function ouvrirCaisseRapide(){
+  crPanier = [];
+  crMode = 'Espèces';
+  crSearch = '';
+  crCat = 'Tout';
+  // Créer l'overlay plein écran
+  let overlay = document.getElementById('cr-overlay');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'cr-overlay';
+    overlay.className = 'cr-overlay';
+    document.body.appendChild(overlay);
+  }
+  overlay.style.display = 'flex';
+  renderCaisseRapide();
+  // Focus sur la recherche
+  setTimeout(()=>{
+    const inp = document.getElementById('cr-search-inp');
+    if(inp) inp.focus();
+  }, 100);
+}
+
+function fermerCaisseRapide(){
+  const overlay = document.getElementById('cr-overlay');
+  if(overlay) overlay.style.display = 'none';
+}
+
+function renderCaisseRapide(){
+  const overlay = document.getElementById('cr-overlay');
+  if(!overlay) return;
+
+  const total = crPanier.reduce((s,l) => s+l.mt, 0);
+  const nbItems = crPanier.reduce((s,l) => s+l.qte, 0);
+  const cats = ['Tout', ...new Set(S.stock.map(a => a.cat).filter(Boolean))];
+  const p = S.parametres || {};
+  const modes = ['Espèces','Flooz','Mixx','Carte','Autre'];
+
+  // Filtrer stock
+  let stockFiltre = S.stock.filter(a => sa(a) >= 0);
+  if(crCat !== 'Tout') stockFiltre = stockFiltre.filter(a => a.cat === crCat);
+  if(crSearch){
+    const q = crSearch.toLowerCase();
+    stockFiltre = stockFiltre.filter(a => a.nom.toLowerCase().includes(q) || a.code.toLowerCase().includes(q));
+  }
+
+  overlay.innerHTML = `
+  <!-- TOPBAR -->
+  <div class="cr-topbar">
+    <button onclick="fermerCaisseRapide()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit">✕ Fermer</button>
+    <div class="cr-topbar-title">⚡ Caisse Rapide</div>
+    ${nbItems > 0 ? `<div class="cr-total-badge">${nbItems} art. · ${F(total)}</div>` : '<div style="font-size:12px;color:rgba(255,255,255,.4)">Panier vide</div>'}
+  </div>
+
+  <!-- BODY -->
+  <div class="cr-body">
+
+    <!-- GAUCHE : PRODUITS -->
+    <div class="cr-left">
+      <!-- Recherche -->
+      <div class="cr-search">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input id="cr-search-inp" type="text" placeholder="Rechercher un article..." value="${crSearch}"
+          oninput="crSearch=this.value;renderCaisseRapide()"
+          onkeydown="if(event.key==='Escape'){crSearch='';renderCaisseRapide()}">
+        ${crSearch ? `<button onclick="crSearch='';renderCaisseRapide()" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--text3)">✕</button>` : ''}
+      </div>
+      <!-- Filtres catégorie -->
+      <div class="cr-cats">
+        ${cats.map(cat => `<button class="cr-cat-btn${crCat===cat?' active':''}" onclick="crCat='${cat}';renderCaisseRapide()">${cat}</button>`).join('')}
+      </div>
+      <!-- Grille produits -->
+      <div class="cr-grid">
+        ${stockFiltre.length === 0
+          ? '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text3)">Aucun article trouvé</div>'
+          : stockFiltre.map(a => {
+            const dispo = sa(a);
+            const inPan = crPanier.find(l => l.aid === a.id);
+            const icon = a.cat==='Lingerie'?'👗':a.cat==='Audio-Vidéo'?'🎧':'📦';
+            return `<div class="cr-prod${inPan?' added':''}${dispo<=0?' rupture':''}" onclick="crAjouter(${a.id})">
+              ${inPan ? `<div class="cr-prod-qty">${inPan.qte}</div>` : ''}
+              <div class="cr-prod-stock">${dispo}</div>
+              <div class="cr-prod-icon">${a.photo?`<img src="${a.photo}" style="width:28px;height:28px;object-fit:cover;border-radius:4px" onerror="this.outerHTML='${icon}'">`:icon}</div>
+              <div class="cr-prod-nom" title="${a.nom}">${a.nom}</div>
+              <div class="cr-prod-prix">${F(a.pv)}</div>
+            </div>`;
+          }).join('')
+        }
+      </div>
+    </div>
+
+    <!-- DROITE : PANIER + VALIDATION -->
+    <div class="cr-right">
+      <div class="cr-panier-header">
+        🛒 Panier ${nbItems > 0 ? `(${nbItems} article${nbItems>1?'s':''})` : '— vide'}
+      </div>
+      <div class="cr-panier-list">
+        ${crPanier.length === 0
+          ? '<div style="text-align:center;padding:24px;color:var(--text3);font-size:12px">Tapez sur un article<br>pour l\'ajouter</div>'
+          : crPanier.map((l,i) => `
+          <div class="cr-panier-item">
+            <div class="cr-panier-nom" title="${l.nom}">${l.nom}</div>
+            <div class="cr-panier-ctrl">
+              <button class="cr-qty-btn" onclick="crRetirer(${i})">−</button>
+              <span style="font-size:12px;font-weight:700;min-width:16px;text-align:center">${l.qte}</span>
+              <button class="cr-qty-btn" onclick="crAjouter(${l.aid})">+</button>
+            </div>
+            <div class="cr-panier-mt">${F(l.mt)}</div>
+          </div>`).join('')
+        }
+      </div>
+      <!-- Footer validation -->
+      <div class="cr-footer">
+        <div class="cr-total-line">
+          <span class="cr-total-lbl">TOTAL</span>
+          <span class="cr-total-val">${F(total)}</span>
+        </div>
+        <!-- Modes de paiement -->
+        <div class="cr-mode-btns">
+          ${modes.map(m => `<button class="cr-mode-btn${crMode===m?' active':''}" onclick="crMode='${m}';renderCaisseRapide()">${m}</button>`).join('')}
+        </div>
+        <!-- Bouton valider -->
+        <button class="cr-valider-btn" onclick="crValider()" ${crPanier.length===0?'disabled':''}>
+          ✓ Encaisser ${total > 0 ? F(total) : ''}
+        </button>
+        ${crPanier.length > 0 ? `<button class="cr-vider-btn" onclick="crPanier=[];renderCaisseRapide()">🗑️ Vider le panier</button>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function crAjouter(aid){
+  const a = ga(aid); if(!a) return;
+  const pu = a.pv;
+  const idx = crPanier.findIndex(l => l.aid === aid);
+  if(idx >= 0){
+    crPanier[idx].qte++;
+    crPanier[idx].mt = crPanier[idx].qte * crPanier[idx].pu;
+  } else {
+    crPanier.push({aid:a.id, nom:a.nom, qte:1, pu, mt:pu, dispo:sa(a)});
+  }
+  renderCaisseRapide();
+  // Refocus search
+  setTimeout(()=>{ const inp=document.getElementById('cr-search-inp'); if(inp) inp.focus(); }, 50);
+}
+
+function crRetirer(i){
+  if(!crPanier[i]) return;
+  crPanier[i].qte--;
+  crPanier[i].mt = crPanier[i].qte * crPanier[i].pu;
+  if(crPanier[i].qte <= 0) crPanier.splice(i, 1);
+  renderCaisseRapide();
+}
+
+function crValider(){
+  if(!crPanier || crPanier.length === 0) return toast('⚠️ Panier vide');
+  const total = crPanier.reduce((s,l) => s+l.mt, 0);
+  // Vérifier stocks
+  for(const l of crPanier){
+    const a = ga(l.aid);
+    if(!a || sa(a) < l.qte){ toast(`❌ Stock insuffisant : ${l.nom}`); return; }
+  }
+  // Déduire stocks
+  for(const l of crPanier){
+    const a = ga(l.aid);
+    a.qv += l.qte;
+    addHistorique('Sortie', a, l.qte, 'Vente caisse rapide');
+  }
+  const vid = genId();
+  const cid = premierCompteId();
+  S.ventes.push({
+    id:vid, date:D(),
+    lignes: crPanier.map(l => ({aid:l.aid, qte:l.qte, pu:l.pu, mt:l.mt, typePrix:'detail'})),
+    aid:crPanier[0].aid, qte:crPanier[0].qte, pu:crPanier[0].pu,
+    mt:total, sousTotal:total, remise:0, typePrix:'detail',
+    statut:'Payé', client:'', mode:crMode, cid,
+    caissier_uid:S.session?.uid||null,
+    caissier_nom:S.session?.nom||null,
+    caissier_emoji:S.session?.emoji||'👤',
+    caissier_role:S.session?.role||null,
+    heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})
+  });
+  // Màj compte
+  const compte = S.comptes?.find(c => c.id == cid);
+  if(compte){ compte.solde = (compte.solde||0) + total; }
+  saveData();
+  toast(`✅ Vente encaissée — ${F(total)}`);
+  // Imprimer ticket thermique ?
+  if(confirm('Imprimer le reçu thermique ?')){
+    imprimerThermique(vid);
+  }
+  // Vider et rester en mode caisse
+  crPanier = [];
+  renderCaisseRapide();
 }
 
 // ─── SAUVEGARDE AUTOMATIQUE ───
