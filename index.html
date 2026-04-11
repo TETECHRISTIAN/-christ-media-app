@@ -665,11 +665,16 @@ body.dark th{background:var(--surface3)}
 .hist-qty{font-weight:600;font-size:13px}
 
 /* ─── SYNC STATUS ─── */
-.sync-bar{padding:6px 10px;display:flex;align-items:center;gap:8px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.5)}
+.sync-bar{padding:6px 10px;display:flex;flex-direction:column;gap:4px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.5)}
+.sync-bar-row{display:flex;align-items:center;gap:8px}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s}
 .sync-dot.online{background:#4caf50}
 .sync-dot.syncing{background:var(--amber-light);animation:pulse .8s infinite alternate}
 .sync-dot.offline{background:var(--red-light)}
+.presence-bar{display:flex;flex-wrap:wrap;gap:4px;padding:2px 0}
+.presence-user{display:flex;align-items:center;gap:3px;background:rgba(255,255,255,.08);border-radius:20px;padding:2px 7px;font-size:10px;color:rgba(255,255,255,.7);white-space:nowrap}
+.presence-dot{width:5px;height:5px;border-radius:50%;background:#4caf50;flex-shrink:0;animation:pulse .8s infinite alternate}
+.presence-dot.away{background:var(--amber-light);animation:none}
 @keyframes pulse{from{opacity:.4}to{opacity:1}}
 .sync-btn{margin-left:auto;background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:inherit;transition:all .15s}
 .sync-btn:hover{background:rgba(255,255,255,.1);color:#fff}
@@ -855,6 +860,10 @@ body.dark th{background:var(--surface3)}
       <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M1 7h14M5 1v4M11 1v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       Planification
     </div>
+    <div class="ni" data-page="caisse" onclick="nav(this,'caisse')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="14" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 4V3a2 2 0 014 0v1" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8.5" r="1.5" fill="currentColor" opacity=".6"/><path d="M1 7h14" stroke="currentColor" stroke-width="1" opacity=".4"/></svg>
+      Rapport de caisse
+    </div>
     <div class="ni" data-page="journal" onclick="nav(this,'journal')">
       <svg viewBox="0 0 16 16" fill="none"><path d="M3 1h10v14H3z" stroke="currentColor" stroke-width="1.5"/><path d="M5 4h6M5 7h6M5 10h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="12" cy="12" r="3" fill="var(--navy)" stroke="var(--navy)"/><path d="M11 12l.8.8L13.2 11" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Journal privé
@@ -879,9 +888,12 @@ body.dark th{background:var(--surface3)}
     </div>
   </div>
   <div class="sync-bar" id="sync-bar">
-    <div class="sync-dot" id="sync-dot"></div>
-    <span id="sync-label">Initialisation...</span>
-    <button class="sync-btn" onclick="manualSync()" title="Synchroniser maintenant">↻ Sync</button>
+    <div class="sync-bar-row">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-label">Initialisation...</span>
+      <button class="sync-btn" onclick="manualSync()" title="Synchroniser maintenant" style="margin-left:auto">↻ Sync</button>
+    </div>
+    <div class="presence-bar" id="presence-bar"></div>
   </div>
 </div>
 
@@ -1062,6 +1074,10 @@ body.dark th{background:var(--surface3)}
     <div class="mn-dd-item admin-only" onclick="nav(document.querySelector('[data-page=planning]'),'planning')">
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
       Planification
+    </div>
+    <div class="mn-dd-item" onclick="nav(document.querySelector('[data-page=caisse]'),'caisse')">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="14" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8.5" r="1.5" fill="currentColor" opacity=".6"/></svg>
+      Rapport de caisse
     </div>
     <div class="mn-dd-item" onclick="nav(document.querySelector('[data-page=journal]'),'journal')">
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 1h10v14H3z" stroke="currentColor" stroke-width="1.5"/><path d="M5 4h6M5 7h6M5 10h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
@@ -1273,6 +1289,64 @@ function setSyncStatus(state, label){
   lbl.textContent=label;
 }
 
+// ─── PRÉSENCE EN TEMPS RÉEL ───
+// Chaque appareil connecté écrit sa présence dans Firebase
+// Les autres voient qui est en ligne en direct
+let _presenceId=null;
+let _presenceTimer=null;
+const PRESENCE_TTL=30000; // 30s sans ping = considéré absent
+
+function initPresence(){
+  if(!fbReady||!db)return;
+  const user=S.session;
+  if(!user||!user.uid)return;
+  _presenceId='p_'+user.uid+'_'+Date.now();
+  const presenceRef=db.ref('christmedia/presence/'+_presenceId);
+  // Écrire la présence
+  function ping(){
+    if(!fbReady||!db||!navigator.onLine)return;
+    presenceRef.set({
+      nom: user.nom||'Utilisateur',
+      emoji: user.emoji||'👤',
+      role: user.role||'vendeur',
+      page: currentPage||'dashboard',
+      ts: Date.now()
+    }).catch(()=>{});
+  }
+  ping();
+  _presenceTimer=setInterval(ping, 20000); // ping toutes les 20s
+  // Supprimer la présence quand on part
+  window.addEventListener('beforeunload',()=>{presenceRef.remove().catch(()=>{});});
+  // Écouter toutes les présences
+  db.ref('christmedia/presence').on('value', snap=>{
+    const all=snap.val()||{};
+    const now=Date.now();
+    const users=Object.values(all).filter(u=>u&&(now-u.ts)<PRESENCE_TTL);
+    renderPresenceBar(users);
+  });
+}
+
+function renderPresenceBar(users){
+  const bar=document.getElementById('presence-bar');
+  if(!bar)return;
+  if(users.length===0){bar.innerHTML='';return;}
+  bar.innerHTML=users.map(u=>`
+    <div class="presence-user" title="${u.nom} · ${u.page||''}">
+      <div class="presence-dot${(Date.now()-u.ts)>15000?' away':''}"></div>
+      <span>${u.emoji||'👤'} ${u.nom?u.nom.split(' ')[0]:'—'}</span>
+    </div>`).join('');
+}
+
+function stopPresence(){
+  if(_presenceTimer)clearInterval(_presenceTimer);
+  if(_presenceId&&fbReady&&db){
+    db.ref('christmedia/presence/'+_presenceId).remove().catch(()=>{});
+    _presenceId=null;
+  }
+  const bar=document.getElementById('presence-bar');
+  if(bar)bar.innerHTML='';
+}
+
 // ─── LOCAL STORAGE (fallback) ───
 function loadLocal(){
   try{
@@ -1298,12 +1372,29 @@ async function loadFromFirebase(){
   });
 }
 
-// ─── FIREBASE WRITE ───
+// ─── FIREBASE WRITE (update partiel par collection) ───
+// Collections séparées : chaque tableau est écrit indépendamment
+// → deux vendeurs actifs en même temps ne s'écrasent plus
+const FB_COLLECTIONS=['ventes','achats','stock','clients','fournisseurs',
+  'depenses','revenus','charges','comptes','transferts','dettes',
+  'services','devis','planning','agenda','modeles','limites',
+  'historique','historique_prix','objectifs'];
+
 async function saveToFirebase(data){
   if(!fbReady||!db)return false;
   return new Promise(resolve=>{
     setSyncStatus('syncing','Synchronisation...');
-    db.ref('christmedia/data').set(data)
+    const update={};
+    update['version']=data.version||Date.now();
+    update['nid']=data.nid||200;
+    update['parametres']=data.parametres||{};
+    update['utilisateurs']=data.utilisateurs||[];
+    update['boutiques']=data.boutiques||[];
+    update['boutique_active']=data.boutique_active||null;
+    FB_COLLECTIONS.forEach(col=>{
+      if(data[col]!==undefined) update[col]=data[col];
+    });
+    db.ref('christmedia/data').update(update)
       .then(()=>{
         setSyncStatus('online','Synchronisé ✓');
         resolve(true);
@@ -1316,9 +1407,24 @@ async function saveToFirebase(data){
   });
 }
 
+// Sauvegarde rapide d'une seule collection (ventes, stock, etc.)
+async function saveCollectionFirebase(col, data){
+  if(!fbReady||!db)return false;
+  return new Promise(resolve=>{
+    const update={};
+    update[col]=data;
+    update['version']=Date.now();
+    update['nid']=S.nid||200;
+    db.ref('christmedia/data').update(update)
+      .then(()=>resolve(true))
+      .catch(e=>{console.warn('Firebase col error:',e);resolve(false);});
+  });
+}
+
 // ─── LISTENER TEMPS RÉEL ───
 let _realtimeListener=null;
-let _ignorerProchainUpdate=false; // éviter boucle : on écrit → on reçoit notre propre écriture
+let _ignorerProchainUpdate=false;
+let _ignorerTimer=null;
 
 function activerListenerTempsReel(){
   if(!fbReady||!db)return;
@@ -1326,17 +1432,29 @@ function activerListenerTempsReel(){
 
   _realtimeListener = db.ref('christmedia/data').on('value', snap=>{
     if(_ignorerProchainUpdate){
-      _ignorerProchainUpdate=false;
+      // Ne pas remettre à false ici — le timer dans saveData s'en charge
       return;
     }
     const remote=snap.val();
     if(!remote)return;
-    // Comparer par version (timestamp) — plus fiable que nid
     const remoteVer = remote.version||remote.nid||0;
     const localVer  = S.version||S.nid||0;
+    // FUSION : on accepte toujours les données distantes plus récentes
+    // ET on merge les collections pour ne pas perdre les opérations locales
     if(remoteVer > localVer){
       const savedSession=S.session;
-      S=remote;
+      // Fusionner collection par collection : garder le plus long tableau
+      // (évite qu'un rechargement efface des ventes faites par un autre)
+      const merged=Object.assign({},remote);
+      FB_COLLECTIONS.forEach(col=>{
+        const remoteArr=remote[col]||[];
+        const localArr=S[col]||[];
+        if(localArr.length > remoteArr.length){
+          // Local a plus d'entrées → garder local pour cette collection
+          merged[col]=localArr;
+        }
+      });
+      S=merged;
       if(savedSession&&savedSession.uid) S.session=savedSession;
       saveLocal(S);
       setSyncStatus('online','Synchronisé ✓');
@@ -1347,9 +1465,39 @@ function activerListenerTempsReel(){
           tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,
           inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,
           comptes:rComptes,devis:rDevis,planning:rPlanning,
-          calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal})[currentPage]();
+          calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,
+          limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse})[currentPage]();
       }catch(e){}
       toast('🔄 Données mises à jour',1500);
+    } else if(remoteVer === localVer && remoteVer > 0){
+      // Même version → probable conflit simultané : fusionner les tableaux
+      const savedSession=S.session;
+      const merged=Object.assign({},S); // base = local
+      FB_COLLECTIONS.forEach(col=>{
+        const remoteArr=remote[col]||[];
+        const localArr=S[col]||[];
+        if(remoteArr.length > localArr.length){
+          merged[col]=remoteArr; // remote a plus → prendre remote
+        }
+      });
+      const changed=FB_COLLECTIONS.some(col=>(merged[col]||[]).length!==(S[col]||[]).length);
+      if(changed){
+        S=merged;
+        if(savedSession&&savedSession.uid) S.session=savedSession;
+        saveLocal(S);
+        setSyncStatus('online','Fusionné ✓');
+        try{
+          ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,
+            vente:rVente,services:rServices,achats:rAchats,stock:rStock,
+            clients:rClients,fournisseurs:rFour,depenses:rDep,
+            tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,
+            inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,
+            comptes:rComptes,devis:rDevis,planning:rPlanning,
+            calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,
+            limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse})[currentPage]();
+        }catch(e){}
+        toast('🔀 Données fusionnées',1500);
+      }
     }
   }, e=>{
     console.warn('Realtime listener error:',e);
@@ -1373,7 +1521,10 @@ async function saveData(){
   saveLocal(S);
   if(typeof majNotifBadge==='function') majNotifBadge();
   if(fbReady&&navigator.onLine){
+    // Ignorer notre propre update pendant 2 secondes (évite boucle)
     _ignorerProchainUpdate=true;
+    clearTimeout(_ignorerTimer);
+    _ignorerTimer=setTimeout(()=>{_ignorerProchainUpdate=false;},2000);
     await saveToFirebase(S);
   }else{
     setSyncStatus('offline','Non synchronisé');
@@ -1395,7 +1546,7 @@ async function manualSync(){
       saveLocal(S);
       setSyncStatus('online','Synchronisé ✓');
       toast('✅ Données synchronisées depuis le cloud');
-      ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal})[currentPage]();
+      ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse})[currentPage]();
     }else{
       await saveToFirebase(S);
       toast('✅ Données locales envoyées au cloud');
@@ -1423,7 +1574,7 @@ async function startFirebaseSync(){
         if(savedSession&&savedSession.uid) S.session=savedSession;
         saveLocal(S);
         setSyncStatus('online','Synchronisé ✓');
-        ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal})[currentPage]();
+        ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse})[currentPage]();
       }else{
         await saveToFirebase(S);
       }
@@ -1474,7 +1625,7 @@ function toast(msg,dur=2200){
 }
 
 // ─── NAVIGATION ───
-const titles={dashboard:'Tableau de bord',objectifs:'Objectifs & KPIs',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres',dettes:'Gestion des dettes',flux:'Flux financier',limites:'Limites de dépenses',modeles:"Modèles d'opération",agenda:'Opérations suivantes',journal:'Journal privé'};
+const titles={dashboard:'Tableau de bord',objectifs:'Objectifs & KPIs',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres',dettes:'Gestion des dettes',flux:'Flux financier',limites:'Limites de dépenses',modeles:"Modèles d'opération",agenda:'Opérations suivantes',journal:'Journal privé',caisse:'Rapport de caisse'};
 const actionsMap={
   dashboard:()=>'<button class="btn btn-success" onclick="nav(document.querySelector(\'[data-page=vente]\'),\'vente\')">+ Vente</button>',
   objectifs:()=>'<button class="btn btn-primary" onclick="editObjectifs()">⚙️ Modifier objectifs</button>',
@@ -1493,7 +1644,8 @@ const actionsMap={
   limites:()=>'<button class="btn btn-primary" onclick="addLimite()">+ Limite</button>',
   modeles:()=>'<button class="btn btn-primary" onclick="addModele()">+ Modèle</button>',
   agenda:()=>'<button class="btn btn-primary" onclick="addAgenda()">+ Opération</button>',
-  journal:()=>'<button class="btn" onclick="journalVerrouiller()">🔒 Verrouiller</button> <button class="btn btn-primary" onclick="journalNouveau()">+ Note</button>'
+  journal:()=>'<button class="btn" onclick="journalVerrouiller()">🔒 Verrouiller</button> <button class="btn btn-primary" onclick="journalNouveau()">+ Note</button>',
+  caisse:()=>'<button class="btn" onclick="imprimerCaisse()">🖨️ Imprimer</button> <button class="btn btn-success" onclick="partagerCaisseWA()">📱 WhatsApp</button>'
 };
 
 let currentPage='dashboard';
@@ -1508,7 +1660,11 @@ function nav(el,page){
   document.getElementById('topbar-title').textContent=titles[page]||'';
   document.getElementById('topbar-actions').innerHTML=actionsMap[page]?actionsMap[page]():'';
   currentPage=page;
-  ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal})[page]();
+  // Mettre à jour la page dans la présence Firebase
+  if(_presenceId&&fbReady&&db){
+    db.ref('christmedia/presence/'+_presenceId+'/page').set(page).catch(()=>{});
+  }
+  ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse})[page]();
   closeMobileSidebar();
   document.getElementById('mn-dropdown').classList.remove('open');
 }
@@ -5145,6 +5301,8 @@ function connexionEmail(){
   majBadgeUtilisateur();
   appliquerAcces(u.role);
   toast(`✅ Bienvenue ${u.nom} !`);
+  // Démarrer la présence en temps réel
+  setTimeout(initPresence, 1000);
   if(!S.ventes)S.ventes=[];
   if(!S.stock)S.stock=[];
   if(!S.achats)S.achats=[];
@@ -5209,17 +5367,17 @@ const PERMISSIONS = {
     pages: ['dashboard','objectifs','transactions','vente','services','achats','stock','clients',
             'fournisseurs','depenses','tresorerie','revenus','rapports','inventaire','historique',
             'comptes','devis','planning','calculatrice','workspace','parametres',
-            'dettes','flux','limites','modeles','agenda','journal'],
+            'dettes','flux','limites','modeles','agenda','journal','caisse'],
     label: '👑 Administrateur',
     couleur: '#f5c060'
   },
   caissier: {
-    pages: ['dashboard','vente','services','stock','clients','calculatrice','transactions','agenda','dettes','journal'],
+    pages: ['dashboard','vente','services','stock','clients','calculatrice','transactions','agenda','dettes','journal','caisse'],
     label: '💰 Caissier',
     couleur: '#8ecba8'
   },
   vendeur: {
-    pages: ['dashboard','vente','services','clients','calculatrice','agenda','journal'],
+    pages: ['dashboard','vente','services','clients','calculatrice','agenda','journal','caisse'],
     label: '🛒 Vendeur',
     couleur: '#c5d0e8'
   }
@@ -5297,6 +5455,7 @@ function doLogout(){
   const empCss=document.getElementById('employe-css');
   if(empCss)empCss.remove();
   document.getElementById('current-user-badge').style.display='none';
+  stopPresence();
   toast('👋 Déconnecté');
   setTimeout(()=>afficherLoginScreen(), 400);
 }
@@ -5344,6 +5503,7 @@ function rWorkspace(){
     {id:'planning',label:'Planning',icon:'📅'},
     {id:'calculatrice',label:'Calculatrice',icon:'🧮'},
     {id:'journal',label:'Journal privé',icon:'📔'},
+    {id:'caisse',label:'Rapport de caisse',icon:'🏦'},
   ];
   const visible=p.menu_visible||allMenus.map(m=>m.id);
 
@@ -7155,6 +7315,287 @@ function journalChangerPin(){
 function journalVerrouiller(){
   journalUnlocked=false;
   rJournal();
+}
+
+
+// ─── RAPPORT DE CAISSE JOURNALIER ───
+function rCaisse(){
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0,10);
+  // Date sélectionnée (par défaut aujourd'hui)
+  const selDate = window._caisseDate || todayStr;
+  window._caisseDate = selDate;
+
+  const p = S.parametres || {};
+  const dev = p.devise || 'FCFA';
+
+  // Filtrer les données du jour sélectionné
+  const ventesJour = S.ventes.filter(v => v.date && v.date.startsWith(selDate));
+  const ventesPayees = ventesJour.filter(v => v.statut === 'Payé');
+  const ventesCredit = ventesJour.filter(v => v.statut === 'Non payé');
+  const depensesJour = S.depenses.filter(d => d.date && d.date.startsWith(selDate));
+  const achatsJour = S.achats ? S.achats.filter(a => a.date && a.date.startsWith(selDate)) : [];
+
+  // Totaux
+  const totalVentes = ventesPayees.reduce((s,v) => s+v.mt, 0);
+  const totalCredit = ventesCredit.reduce((s,v) => s+v.mt, 0);
+  const totalDepenses = depensesJour.reduce((s,d) => s+d.mt, 0);
+  const totalAchats = achatsJour.reduce((s,a) => s+(a.mt||a.total||0), 0);
+  const soldeNet = totalVentes - totalDepenses - totalAchats;
+
+  // Par mode de paiement
+  const modes = {};
+  ventesPayees.forEach(v => {
+    const m = v.mode || 'Espèces';
+    modes[m] = (modes[m]||0) + v.mt;
+  });
+
+  // Par vendeur
+  const parVendeur = {};
+  ventesPayees.forEach(v => {
+    const nom = v.caissier || v.vendeur || '—';
+    if(!parVendeur[nom]) parVendeur[nom] = {nb:0,mt:0};
+    parVendeur[nom].nb++;
+    parVendeur[nom].mt += v.mt;
+  });
+
+  // Marge brute (si prix achat disponible)
+  const margeBrute = ventesPayees.reduce((s,v) => {
+    const a = ga(v.aid);
+    if(!a) return s;
+    const lignes = v.lignes || [{aid:v.aid, qte:v.qte||1, pu:v.pu||v.mt}];
+    const cout = lignes.reduce((ls,l) => ls + (a.pa||0)*(l.qte||1), 0);
+    return s + (v.mt - cout);
+  }, 0);
+
+  // Label date
+  const dateLabel = new Date(selDate+'T12:00:00').toLocaleDateString('fr-FR',{
+    weekday:'long', day:'numeric', month:'long', year:'numeric'
+  });
+
+  // Score journée
+  const score = totalVentes >= (S.objectifs&&S.objectifs.ca_mensuel ? S.objectifs.ca_mensuel/30 : 20000)
+    ? '🟢 Bonne journée' : totalVentes > 0 ? '🟡 Journée moyenne' : '🔴 Aucune vente';
+
+  document.getElementById('content').innerHTML = `
+  <div class="page">
+    <!-- Sélecteur de date -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:6px 12px">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M1 7h14M5 1v4M11 1v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input type="date" value="${selDate}" onchange="window._caisseDate=this.value;rCaisse()"
+          style="border:none;background:none;outline:none;font-family:inherit;font-size:13px;color:var(--text);cursor:pointer">
+      </div>
+      <span style="font-size:13px;color:var(--text2)">${dateLabel}</span>
+      <span style="font-size:13px;font-weight:600">${score}</span>
+      ${selDate!==todayStr?`<button class="btn btn-sm" onclick="window._caisseDate='${todayStr}';rCaisse()">← Aujourd'hui</button>`:''}
+    </div>
+
+    <!-- KPIs principaux -->
+    <div class="g4" style="margin-bottom:20px">
+      <div class="kpi-card kpi-green">
+        <div class="ct">Encaissé</div>
+        <div class="kpi-val" style="color:var(--green)">${F(totalVentes)}</div>
+        <div class="ms">${ventesPayees.length} vente${ventesPayees.length>1?'s':''}</div>
+      </div>
+      <div class="kpi-card kpi-amber">
+        <div class="ct">Crédit (non payé)</div>
+        <div class="kpi-val" style="color:var(--amber)">${F(totalCredit)}</div>
+        <div class="ms">${ventesCredit.length} vente${ventesCredit.length>1?'s':''}</div>
+      </div>
+      <div class="kpi-card kpi-red">
+        <div class="ct">Dépenses</div>
+        <div class="kpi-val" style="color:var(--red)">${F(totalDepenses)}</div>
+        <div class="ms">${depensesJour.length} opération${depensesJour.length>1?'s':''}</div>
+      </div>
+      <div class="kpi-card ${soldeNet>=0?'kpi-blue':'kpi-red'}">
+        <div class="ct">Solde net</div>
+        <div class="kpi-val" style="color:${soldeNet>=0?'var(--navy)':'var(--red)'}">${F(soldeNet)}</div>
+        <div class="ms" style="color:${margeBrute>=0?'var(--green)':'var(--red)'}">Marge : ${F(margeBrute)}</div>
+      </div>
+    </div>
+
+    <div class="g2">
+      <!-- Modes de paiement -->
+      <div>
+        <p class="st">💳 Encaissements par mode</p>
+        <div class="card">
+          ${Object.keys(modes).length === 0
+            ? '<div class="empty"><p>Aucun encaissement</p></div>'
+            : Object.entries(modes).map(([m,mt])=>`
+            <div class="stat-row">
+              <span style="font-size:13px;font-weight:500">${m}</span>
+              <span style="font-weight:700;color:var(--green)">${F(mt)}</span>
+            </div>`).join('')
+          }
+          ${Object.keys(modes).length > 1 ? `
+          <div style="border-top:2px solid var(--border);padding-top:10px;margin-top:4px;display:flex;justify-content:space-between">
+            <span style="font-weight:700">Total encaissé</span>
+            <span style="font-weight:800;color:var(--green);font-size:15px">${F(totalVentes)}</span>
+          </div>` : ''}
+        </div>
+
+        <!-- Par vendeur -->
+        ${Object.keys(parVendeur).length > 0 ? `
+        <p class="st">👤 Performance par vendeur</p>
+        <div class="card">
+          ${Object.entries(parVendeur).sort((a,b)=>b[1].mt-a[1].mt).map(([nom,d])=>`
+          <div class="stat-row">
+            <div>
+              <div style="font-size:13px;font-weight:600">${nom}</div>
+              <div style="font-size:11px;color:var(--text3)">${d.nb} vente${d.nb>1?'s':''}</div>
+            </div>
+            <span style="font-weight:700;color:var(--navy)">${F(d.mt)}</span>
+          </div>`).join('')}
+        </div>` : ''}
+      </div>
+
+      <!-- Détail ventes -->
+      <div>
+        <p class="st">🛒 Ventes du jour (${ventesJour.length})</p>
+        ${ventesJour.length === 0
+          ? '<div class="empty"><p>Aucune vente ce jour</p></div>'
+          : `<div class="tbl-wrap" style="max-height:320px;overflow-y:auto">
+            <table>
+              <thead><tr><th>Heure</th><th>Article</th><th>Mt.</th><th>Mode</th><th>Statut</th></tr></thead>
+              <tbody>
+                ${ventesJour.slice().reverse().map(v=>{
+                  const a = ga(v.aid);
+                  const heure = v.heure || (v.date&&v.date.length>10 ? v.date.slice(11,16) : '—');
+                  return `<tr>
+                    <td style="font-family:'DM Mono',monospace;font-size:11px">${heure}</td>
+                    <td class="tdm">${a?a.nom:'Article'}</td>
+                    <td style="font-weight:600;color:${v.statut==='Payé'?'var(--green)':'var(--amber)'}">${F(v.mt)}</td>
+                    <td><span class="badge bb" style="font-size:10px">${v.mode||'—'}</span></td>
+                    <td>${sb(v.statut)}</td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>`
+        }
+
+        <!-- Dépenses du jour -->
+        ${depensesJour.length > 0 ? `
+        <p class="st" style="margin-top:16px">💸 Dépenses du jour</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Libellé</th><th>Catégorie</th><th>Montant</th></tr></thead>
+            <tbody>
+              ${depensesJour.map(d=>`<tr>
+                <td class="tdm">${d.lib||'—'}</td>
+                <td style="color:var(--text3)">${d.cat||'—'}</td>
+                <td style="color:var(--red);font-weight:600">${F(d.mt)}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>` : ''}
+      </div>
+    </div>
+
+    <!-- Résumé final clôture -->
+    <div style="background:var(--navy);border-radius:var(--r);padding:20px 24px;margin-top:20px;color:#fff">
+      <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px">
+        📋 Résumé de clôture — ${dateLabel}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
+        <div><div style="font-size:11px;color:rgba(255,255,255,.5)">Ventes encaissées</div><div style="font-size:18px;font-weight:800;color:#4caf50">${F(totalVentes)}</div></div>
+        <div><div style="font-size:11px;color:rgba(255,255,255,.5)">Crédit accordé</div><div style="font-size:18px;font-weight:800;color:#f5c060">${F(totalCredit)}</div></div>
+        <div><div style="font-size:11px;color:rgba(255,255,255,.5)">Dépenses</div><div style="font-size:18px;font-weight:800;color:#ef5350">${F(totalDepenses)}</div></div>
+        <div><div style="font-size:11px;color:rgba(255,255,255,.5)">Solde net</div><div style="font-size:18px;font-weight:800;color:${soldeNet>=0?'#4caf50':'#ef5350'}">${F(soldeNet)}</div></div>
+        <div><div style="font-size:11px;color:rgba(255,255,255,.5)">Marge brute</div><div style="font-size:18px;font-weight:800;color:${margeBrute>=0?'#80cbc4':'#ef5350'}">${F(margeBrute)}</div></div>
+        <div><div style="font-size:11px;color:rgba(255,255,255,.5)">Nb. transactions</div><div style="font-size:18px;font-weight:800">${ventesJour.length}</div></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ─── IMPRESSION RAPPORT DE CAISSE ───
+function imprimerCaisse(){
+  const selDate = window._caisseDate || new Date().toISOString().slice(0,10);
+  const p = S.parametres || {};
+  const dev = p.devise || 'FCFA';
+  const ventesJour = S.ventes.filter(v => v.date && v.date.startsWith(selDate));
+  const ventesPayees = ventesJour.filter(v => v.statut === 'Payé');
+  const ventesCredit = ventesJour.filter(v => v.statut === 'Non payé');
+  const depensesJour = S.depenses.filter(d => d.date && d.date.startsWith(selDate));
+  const totalVentes = ventesPayees.reduce((s,v) => s+v.mt, 0);
+  const totalCredit = ventesCredit.reduce((s,v) => s+v.mt, 0);
+  const totalDepenses = depensesJour.reduce((s,d) => s+d.mt, 0);
+  const soldeNet = totalVentes - totalDepenses;
+  const dateLabel = new Date(selDate+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const modes = {};
+  ventesPayees.forEach(v => { const m=v.mode||'Espèces'; modes[m]=(modes[m]||0)+v.mt; });
+
+  const w = window.open('','_caisse_print','width=420,height=700');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Courier New',monospace;font-size:12px;padding:12px;max-width:380px;margin:0 auto}
+    .center{text-align:center} .bold{font-weight:bold} .line{border-top:1px dashed #000;margin:6px 0}
+    .row{display:flex;justify-content:space-between;padding:2px 0}
+    .title{font-size:16px;font-weight:bold;text-align:center;margin:6px 0}
+    .section{font-weight:bold;margin:8px 0 4px;text-transform:uppercase;font-size:11px}
+    .total-row{display:flex;justify-content:space-between;font-weight:bold;font-size:14px;padding:4px 0}
+    .green{color:#1a6b3c} .red{color:#b02828} .amber{color:#8a5200}
+  </style></head><body>
+  <div class="title">${p.nom||'Christ Media'}</div>
+  <div class="center">${p.ville||'Lomé, Togo'}</div>
+  <div class="center" style="font-size:11px">${p.tel||''}</div>
+  <div class="line"></div>
+  <div class="bold center">RAPPORT DE CAISSE</div>
+  <div class="center">${dateLabel}</div>
+  <div class="center" style="font-size:11px">Imprimé le ${new Date().toLocaleString('fr-FR')}</div>
+  <div class="line"></div>
+  <div class="section">Encaissements</div>
+  ${Object.entries(modes).map(([m,mt])=>`<div class="row"><span>${m}</span><span>${Math.round(mt).toLocaleString('fr-FR')} ${dev}</span></div>`).join('')}
+  <div class="row bold"><span>Total encaissé (${ventesPayees.length} ventes)</span><span class="green">${Math.round(totalVentes).toLocaleString('fr-FR')} ${dev}</span></div>
+  ${totalCredit>0?`<div class="row"><span>Crédit accordé</span><span class="amber">${Math.round(totalCredit).toLocaleString('fr-FR')} ${dev}</span></div>`:''}
+  <div class="line"></div>
+  <div class="section">Dépenses (${depensesJour.length})</div>
+  ${depensesJour.map(d=>`<div class="row"><span>${d.lib||'—'}</span><span class="red">${Math.round(d.mt).toLocaleString('fr-FR')} ${dev}</span></div>`).join('') || '<div>Aucune dépense</div>'}
+  <div class="row bold"><span>Total dépenses</span><span class="red">${Math.round(totalDepenses).toLocaleString('fr-FR')} ${dev}</span></div>
+  <div class="line"></div>
+  <div class="total-row"><span>SOLDE NET</span><span class="${soldeNet>=0?'green':'red'}">${Math.round(soldeNet).toLocaleString('fr-FR')} ${dev}</span></div>
+  <div class="line"></div>
+  <div class="center" style="margin-top:8px;font-size:11px">Signature ____________________</div>
+  </body></html>`);
+  w.document.close();
+  setTimeout(()=>{w.print();w.close();},300);
+}
+
+// ─── PARTAGE WHATSAPP RAPPORT DE CAISSE ───
+function partagerCaisseWA(){
+  const selDate = window._caisseDate || new Date().toISOString().slice(0,10);
+  const p = S.parametres || {};
+  const dev = p.devise || 'FCFA';
+  const ventesJour = S.ventes.filter(v => v.date && v.date.startsWith(selDate));
+  const ventesPayees = ventesJour.filter(v => v.statut === 'Payé');
+  const ventesCredit = ventesJour.filter(v => v.statut === 'Non payé');
+  const depensesJour = S.depenses.filter(d => d.date && d.date.startsWith(selDate));
+  const totalVentes = ventesPayees.reduce((s,v) => s+v.mt, 0);
+  const totalCredit = ventesCredit.reduce((s,v) => s+v.mt, 0);
+  const totalDepenses = depensesJour.reduce((s,d) => s+d.mt, 0);
+  const soldeNet = totalVentes - totalDepenses;
+  const dateLabel = new Date(selDate+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  const modes = {};
+  ventesPayees.forEach(v => { const m=v.mode||'Espèces'; modes[m]=(modes[m]||0)+v.mt; });
+  const modesText = Object.entries(modes).map(([m,mt])=>`  • ${m} : ${Math.round(mt).toLocaleString('fr-FR')} ${dev}`).join('\n');
+  const msg = `🏪 *${p.nom||'Christ Media'} — Rapport de caisse*
+📅 ${dateLabel}
+
+💰 *ENCAISSEMENTS*
+${modesText||'  Aucune vente'}
+✅ Total : *${Math.round(totalVentes).toLocaleString('fr-FR')} ${dev}* (${ventesPayees.length} ventes)
+${totalCredit>0?`⏳ Crédit : ${Math.round(totalCredit).toLocaleString('fr-FR')} ${dev}`:''}
+
+💸 *DÉPENSES*
+${depensesJour.map(d=>`  • ${d.lib||'—'} : ${Math.round(d.mt).toLocaleString('fr-FR')} ${dev}`).join('\n')||'  Aucune dépense'}
+Total : ${Math.round(totalDepenses).toLocaleString('fr-FR')} ${dev}
+
+📊 *SOLDE NET : ${Math.round(soldeNet).toLocaleString('fr-FR')} ${dev}* ${soldeNet>=0?'✅':'⚠️'}`;
+
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
 }
 
 // ─── SAUVEGARDE AUTOMATIQUE ───
