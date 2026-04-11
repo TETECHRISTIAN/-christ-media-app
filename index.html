@@ -522,6 +522,26 @@ body.theme-teal{--navy:#1a5c5c;--navy2:#207070;--navy-bg:#e8f5f5;--navy-light:#a
   .cr-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px;padding:8px}
 }
 
+/* ─── MODE HORS LIGNE ─── */
+.offline-banner{position:fixed;top:0;left:0;right:0;z-index:800;background:var(--amber);color:var(--amber-bg);padding:6px 16px;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:space-between;gap:12px;transform:translateY(-100%);transition:transform .3s;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.offline-banner.visible{transform:translateY(0)}
+.offline-badge{background:var(--red);color:#fff;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;margin-left:6px}
+.sync-pending{background:var(--amber-bg);color:var(--amber);border-radius:20px;padding:1px 8px;font-size:10px;font-weight:700;display:none}
+.sync-pending.visible{display:inline-flex;align-items:center;gap:3px}
+
+/* ─── RACCOURCIS CLAVIER ─── */
+.kbd{display:inline-flex;align-items:center;justify-content:center;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;padding:1px 6px;font-size:11px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text2);min-width:20px}
+.shortcuts-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:700;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .2s}
+.shortcuts-overlay.visible{opacity:1;pointer-events:auto}
+.shortcuts-box{background:var(--surface);border-radius:var(--r);padding:24px 28px;width:520px;max-width:95vw;max-height:85dvh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.3);border:1px solid var(--border)}
+.shortcuts-title{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.shortcuts-section{margin-bottom:16px}
+.shortcuts-section-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.shortcut-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)}
+.shortcut-row:last-child{border-bottom:none}
+.shortcut-desc{font-size:13px;color:var(--text2)}
+.shortcut-keys{display:flex;gap:4px;align-items:center}
+
 /* ─── THÈME PICKER ─── */
 .theme-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}
 .theme-swatch{width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:3px solid transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;font-size:16px}
@@ -983,6 +1003,16 @@ body.dark th{background:var(--surface3)}
 
 <!-- ─── MAIN ─── -->
 <div class="main">
+  <!-- BANDEAU HORS LIGNE -->
+  <div id="offline-banner" class="offline-banner">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span>📵 Mode hors ligne</span>
+      <span id="pending-count" class="offline-badge" style="display:none">0</span>
+      <span style="font-size:11px;font-weight:400;opacity:.8">— Les données sont sauvegardées localement</span>
+    </div>
+    <button onclick="manualSync()" style="background:rgba(0,0,0,.15);border:none;color:inherit;border-radius:4px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">↻ Sync maintenant</button>
+  </div>
+
   <div id="install-banner" class="install-banner hidden">
     📱 Installez l'app sur votre téléphone pour un accès hors-ligne
     <button class="btn btn-sm" id="install-btn" onclick="installPWA()">Installer</button>
@@ -1032,6 +1062,7 @@ body.dark th{background:var(--surface3)}
       <button class="btn-icon" onclick="ouvrirRecherche()" title="Recherche globale (Ctrl+K)">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </button>
+      <button class="btn-icon" onclick="afficherRaccourcis()" title="Raccourcis clavier (?)" style="font-size:13px;font-weight:700;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center">?</button>
       <button class="btn-icon" onclick="toggleNotifs()" title="Notifications" id="notif-btn" style="position:relative">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1a5 5 0 015 5v3l1.5 2.5H1.5L3 9V6a5 5 0 015-5zM6.5 13.5a1.5 1.5 0 003 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         <span class="notif-badge" id="notif-count" style="display:none">0</span>
@@ -1179,6 +1210,38 @@ body.dark th{background:var(--surface3)}
 </div>
 
 <div id="modal-root"></div>
+
+<!-- OVERLAY RACCOURCIS CLAVIER -->
+<div id="shortcuts-overlay" class="shortcuts-overlay" onclick="if(event.target===this)fermerRaccourcis()">
+  <div class="shortcuts-box">
+    <div class="shortcuts-title">
+      <span>⌨️ Raccourcis clavier</span>
+      <button onclick="fermerRaccourcis()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text3)">✕</button>
+    </div>
+    <div class="shortcuts-section">
+      <div class="shortcuts-section-title">Navigation</div>
+      <div class="shortcut-row"><span class="shortcut-desc">Tableau de bord</span><div class="shortcut-keys"><span class="kbd">D</span></div></div>
+      <div class="shortcut-row"><span class="shortcut-desc">Nouvelle vente</span><div class="shortcut-keys"><span class="kbd">N</span></div></div>
+      <div class="shortcut-row"><span class="shortcut-desc">Caisse Rapide</span><div class="shortcut-keys"><span class="kbd">Q</span></div></div>
+      <div class="shortcut-row"><span class="shortcut-desc">Stock</span><div class="shortcut-keys"><span class="kbd">S</span></div></div>
+      <div class="shortcut-row"><span class="shortcut-desc">Clients</span><div class="shortcut-keys"><span class="kbd">C</span></div></div>
+      <div class="shortcut-row"><span class="shortcut-desc">Dépenses</span><div class="shortcut-keys"><span class="kbd">E</span></div></div>
+      <div class="shortcut-row"><span class="shortcut-desc">Rapport de caisse</span><div class="shortcut-keys"><span class="kbd">R</span></div></div>
+      <div class="shortcut-row"><span class="shortcut-desc">Planification</span><div class="shortcut-keys"><span class="kbd">P</span></div></div>
+      <div class="shortcut-row"><span class="shortcut-desc">Calculatrice</span><div class="shortcut-keys"><span class="kbd">X</span></div></div>
+    </div>
+    <div class="shortcuts-section">
+      <div class="shortcuts-section-title">Actions globales</div>
+      <div class="shortcut-row"><span class="shortcut-desc">Recherche globale</span><div class="shortcut-keys"><span class="kbd">Ctrl</span> + <span class="kbd">K</span></div></div>
+      <div class="shortcut-row"><span class="shortcut-desc">Synchroniser maintenant</span><div class="shortcut-keys"><span class="kbd">Ctrl</span> + <span class="kbd">S</span></div></div>
+      <div class="shortcut-row"><span class="shortcut-desc">Fermer modal / panneau</span><div class="shortcut-keys"><span class="kbd">Échap</span></div></div>
+      <div class="shortcut-row"><span class="shortcut-desc">Aide raccourcis (cette fenêtre)</span><div class="shortcut-keys"><span class="kbd">?</span></div></div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      💡 Les raccourcis lettres ne fonctionnent que quand vous n'êtes pas dans un champ de saisie.
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 <div class="recu" id="recu-print"></div>
 <div id="facture-print" class="facture-print" style="display:none"></div>
@@ -1614,8 +1677,12 @@ async function saveData(){
     clearTimeout(_ignorerTimer);
     _ignorerTimer=setTimeout(()=>{_ignorerProchainUpdate=false;},2000);
     await saveToFirebase(S);
+    // S'il y avait des ops en attente, elles sont maintenant sync
+    if(getOfflineQueue().length > 0) viderFileAttente();
   }else{
-    setSyncStatus('offline','Non synchronisé');
+    setSyncStatus('offline','Non synchronisé — ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}));
+    // Enregistrer dans la file d'attente hors ligne
+    ajouterFileAttente('save', {version: S.version, ts: Date.now()});
   }
 }
 
@@ -1682,19 +1749,78 @@ if(document.readyState==='loading'){
   setTimeout(startFirebaseSync, 100);
 }
 
+// ─── MODE HORS LIGNE AMÉLIORÉ ───
+const QUEUE_KEY = 'cm_offline_queue';
+let _pendingOps = 0;
+
+function getOfflineQueue(){
+  try { return JSON.parse(localStorage.getItem(QUEUE_KEY)) || []; }
+  catch { return []; }
+}
+function saveOfflineQueue(q){
+  try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); } catch {}
+}
+function ajouterFileAttente(type, data){
+  const q = getOfflineQueue();
+  q.push({type, data, ts: Date.now()});
+  saveOfflineQueue(q);
+  _pendingOps = q.length;
+  majBandeauOffline();
+}
+function viderFileAttente(){
+  saveOfflineQueue([]);
+  _pendingOps = 0;
+  majBandeauOffline();
+}
+function majBandeauOffline(){
+  const banner = document.getElementById('offline-banner');
+  const badge = document.getElementById('pending-count');
+  const syncBar = document.getElementById('sync-label');
+  const isOnline = navigator.onLine;
+  if(banner){
+    banner.classList.toggle('visible', !isOnline);
+  }
+  if(badge){
+    if(_pendingOps > 0){
+      badge.textContent = _pendingOps + ' en attente';
+      badge.style.display = 'inline';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+}
+
 // ─── ONLINE/OFFLINE LISTENERS ───
-window.addEventListener('online',async()=>{
+window.addEventListener('online', async()=>{
   setSyncStatus('syncing','Reconnexion...');
-  toast('🌐 Connexion rétablie — synchronisation...');
+  majBandeauOffline();
+  const q = getOfflineQueue();
+  const nbOps = q.length;
+  if(nbOps > 0){
+    toast(`🌐 Connexion rétablie — sync de ${nbOps} opération${nbOps>1?'s':''} en attente...`, 3000);
+  } else {
+    toast('🌐 Connexion rétablie — synchronisation...', 2500);
+  }
   if(!fbReady) await initFirebase();
   if(fbReady){
-    await saveToFirebase(S);
-    activerListenerTempsReel();
+    // Sync complète avec les données locales (qui incluent toutes les ops hors ligne)
+    _ignorerProchainUpdate = true;
+    clearTimeout(_ignorerTimer);
+    _ignorerTimer = setTimeout(()=>{_ignorerProchainUpdate=false;}, 3000);
+    const ok = await saveToFirebase(S);
+    if(ok){
+      viderFileAttente();
+      setSyncStatus('online', nbOps > 0 ? `${nbOps} op. synchronisées ✓` : 'Synchronisé ✓');
+      setTimeout(()=>setSyncStatus('online','Synchronisé ✓'), 3000);
+      activerListenerTempsReel();
+    }
   }
 });
-window.addEventListener('offline',()=>{
+
+window.addEventListener('offline', ()=>{
   setSyncStatus('offline','Hors ligne');
-  toast('📵 Mode hors ligne activé');
+  toast('📵 Mode hors ligne — vos données sont sauvegardées localement', 3500);
+  majBandeauOffline();
   desactiverListenerTempsReel();
 });
 
@@ -1722,7 +1848,7 @@ const actionsMap={
   services:()=>'<button class="btn btn-primary" onclick="addService()">+ Service</button>',
   achats:()=>'<button class="btn" onclick="modalExportExcel()">📊 Excel</button> <button class="btn btn-primary" onclick="addAchat()">+ Achat</button>',
   stock:()=>`<div class="search-bar"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><input type="text" placeholder="Rechercher..." oninput="filterStock(this.value)" id="stock-search"></div><button class="btn" onclick="openScanner('stock')" title="Scanner code-barres">📷 Scanner</button><button class="btn" onclick="modalExportExcel()">📊 Excel</button><button class="btn btn-primary" onclick="addArticle()">+ Article</button>`,
-  clients:()=>'<button class="btn btn-primary" onclick="addClient()">+ Client</button>',
+  clients:()=>'<button class="btn" onclick="ouvrirRelanceClients()">📱 Relances</button> <button class="btn btn-primary" onclick="addClient()">+ Client</button>',
   fournisseurs:()=>'<button class="btn btn-primary" onclick="addFour()">+ Fournisseur</button>',
   depenses:()=>'<button class="btn btn-danger" onclick="addDep()">+ Dépense</button>',
   tresorerie:()=>'',revenus:()=>'<button class="btn btn-success" onclick="addRevenu()">+ Revenu</button> <button class="btn" onclick="addCharge()">+ Charge</button>',rapports:()=>'<button class="btn" onclick="printRapport()">🖨️ Imprimer</button>',
@@ -2077,7 +2203,7 @@ function rDash(){
       <div class="card"><div class="ct">Clients débiteurs</div><div class="mv">${N(S.clients.filter(c=>c.solde>0).length)}</div><span class="badge ba">${F(S.clients.reduce((s,c)=>s+c.solde,0))}</span></div>
     </div>
     <p class="st" style="color:var(--text3);font-size:11px;font-weight:400;margin-top:24px">
-      Raccourcis : <span class="kbd">N</span> Nouvelle vente &nbsp; <span class="kbd">S</span> Stock &nbsp; <span class="kbd">Ctrl+K</span> Recherche &nbsp; <span class="kbd">Échap</span> Fermer modal
+      Raccourcis : <span class="kbd">N</span> Vente &nbsp; <span class="kbd">Q</span> Caisse rapide &nbsp; <span class="kbd">S</span> Stock &nbsp; <span class="kbd">C</span> Clients &nbsp; <span class="kbd">R</span> Caisse &nbsp; <span class="kbd">Ctrl+K</span> Recherche &nbsp; <span class="kbd">?</span> Aide
     </p>`;
 }
 
@@ -2449,24 +2575,27 @@ function validerPanier(){
     a.qv+=l.qte;
     addHistorique('Sortie',a,l.qte,`Vente à ${client||'client anonyme'}`);
   }
-  const vid=genId();
-  S.ventes.push({
-    id:vid,date:D(),
-    lignes:window.panier.map(l=>({aid:l.aid,qte:l.qte,pu:l.pu,mt:l.mt,typePrix:l.typePrix})),
-    aid:window.panier[0].aid,qte:window.panier[0].qte,pu:window.panier[0].pu,
-    mt,sousTotal,remise:remiseMt,typePrix:window.typePrix||'detail',
-    statut,client,mode,cid,
-    caissier_uid:S.session?.uid||null,
-    caissier_nom:S.session?.nom||null,
-    caissier_emoji:S.session?.emoji||'👤',
-    caissier_role:S.session?.role||null
+  // Vérifier alerte vente inhabituelle avant de finaliser
+  verifierAlerteVente(mt, function(ok){
+    if(!ok) return;
+    const vid=genId();
+    S.ventes.push({
+      id:vid,date:D(),
+      lignes:window.panier.map(l=>({aid:l.aid,qte:l.qte,pu:l.pu,mt:l.mt,typePrix:l.typePrix})),
+      aid:window.panier[0].aid,qte:window.panier[0].qte,pu:window.panier[0].pu,
+      mt,sousTotal,remise:remiseMt,typePrix:window.typePrix||'detail',
+      statut,client,mode,cid,
+      caissier_uid:S.session?.uid||null,
+      caissier_nom:S.session?.nom||null,
+      caissier_emoji:S.session?.emoji||'👤',
+      caissier_role:S.session?.role||null
+    });
+    window.panier=[];
+    window.remise={type:'%',val:0};
+    if(statut==='Payé') crediterCompte(cid,mt);
+    saveData();toast(`✅ Vente de ${F(mt)} enregistrée !`);closeModal();rVente();
+    setTimeout(()=>{if(confirm('Imprimer le reçu ?'))demanderMontantRecu(vid);},300);
   });
-  window.panier=[];
-  window.remise={type:'%',val:0};
-  if(statut==='Payé') crediterCompte(cid,mt);
-  saveData();toast(`✅ Vente de ${F(mt)} enregistrée !`);rVente();
-  // Proposer impression avec montant reçu
-  setTimeout(()=>{if(confirm('Imprimer le reçu ?'))demanderMontantRecu(vid);},300);
 }
 function payerVente(id){
   const v=S.ventes.find(v=>v.id==id);if(!v)return;
@@ -3015,7 +3144,9 @@ function ouvrirFicheClient(id){
         }).join('')}
       ${vc2.length>8?`<div style="font-size:11px;color:var(--text3);padding:6px 0">+ ${vc2.length-8} autres</div>`:''}
     </div>
-    <div style="padding:16px 20px">
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:8px">
+      ${c.tel?'<button class="btn btn-success" style="width:100%" onclick="relancerClientWA('+c.id+')">📱 Relancer sur WhatsApp</button>':''}
+      ${c.solde>0?'<button class="btn" style="width:100%;color:var(--green);border-color:var(--green)" onclick="encaisserSoldeClient('+c.id+')">✓ Encaisser le solde</button>':''}
       <button class="btn btn-primary" style="width:100%" onclick="editClient(${c.id});fermerFicheClient()">✏️ Modifier</button>
     </div>`;
   panel.classList.add('open');
@@ -4031,6 +4162,23 @@ function rParametres(){
     </div>
 
     <div class="param-section">
+      <div class="param-section-title">🚨 Alertes ventes inhabituelles</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Une alerte s'affiche si une vente dépasse le montant configuré. Utile pour détecter les erreurs de saisie.</div>
+      <div class="fg"><label class="fl">Seuil d'alerte (0 = désactivé)</label>
+        <input class="fi" type="number" id="p-alerteVente" value="${p.alerteVente||0}" min="0" step="1000"
+          oninput="majParam('alerteVente',+this.value)" placeholder="Ex: 500000">
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">Ex : 500 000 FCFA → toute vente au-dessus déclenche une confirmation obligatoire.</div>
+      <div class="fg" style="margin-top:10px"><label class="fl">Bloquer ou juste avertir ?</label>
+        <select class="fs" id="p-alerteMode" onchange="majParam('alerteVenteMode',this.value)">
+          <option value="confirm"${(p.alerteVenteMode||'confirm')==='confirm'?' selected':''}>🛑 Confirmation obligatoire</option>
+          <option value="warn"${p.alerteVenteMode==='warn'?' selected':''}>⚠️ Avertissement simple</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="sauvegarderParams()" style="margin-top:8px">💾 Sauvegarder</button>
+    </div>
+
+    <div class="param-section">
       <div class="param-section-title">⏰ Sauvegarde automatique</div>
       <div class="fg"><label class="fl">Fréquence de sync Firebase automatique</label>
         <select class="fs" id="p-autoBackup" onchange="majParam('autoBackupFreq',+this.value);initAutoBackup()">
@@ -4085,6 +4233,30 @@ function rParametres(){
         </div>
       </div>
       <button class="btn btn-primary" onclick="sauvegarderPlanTravail()" style="margin-top:12px">💾 Appliquer</button>
+    </div>
+
+    <div class="param-section admin-only">
+      <div class="param-section-title">🕒 Historique des connexions</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Les 30 dernières connexions et déconnexions enregistrées sur cet appareil.</div>
+      ${(()=>{
+        const hist = getHistoriqueConnexions();
+        if(hist.length===0) return '<div style="font-size:13px;color:var(--text3);padding:8px 0">Aucune connexion enregistrée</div>';
+        return '<div style="max-height:240px;overflow-y:auto">' +
+          hist.slice().reverse().map(h => {
+            const isConn = h.type === 'connexion';
+            const roleLabel = h.role==='admin'?'👑':h.role==='caissier'?'💰':'🛒';
+            return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">' +
+              '<span style="font-size:16px">' + (isConn ? '🔓' : '🔒') + '</span>' +
+              '<div style="flex:1">' +
+                '<div style="font-size:13px;font-weight:600">' + (h.emoji||'👤') + ' ' + (h.nom||'—') + ' ' + roleLabel + '</div>' +
+                '<div style="font-size:11px;color:var(--text3)">' + h.date + ' à ' + h.heure + ' · ' + (h.email||'—') + '</div>' +
+              '</div>' +
+              '<span style="font-size:11px;font-weight:600;color:' + (isConn?'var(--green)':'var(--red)') + '">' + (isConn?'Connexion':'Déconnexion') + '</span>' +
+            '</div>';
+          }).join('') +
+        '</div>';
+      })()}
+      <button class="btn btn-sm" onclick="effacerHistoriqueConnexions();rParametres()" style="margin-top:10px;color:var(--red)">🗑️ Effacer l'historique</button>
     </div>
 
     <div class="param-section" style="border:1px solid var(--red-light)">
@@ -4883,17 +5055,72 @@ function ouvrirRecherche(){
 function fermerRecherche(){
   document.getElementById('search-global').style.display='none';
 }
-document.addEventListener('keydown',e=>{
-  if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();ouvrirRecherche();return;}
-  if(e.key==='Escape'){fermerRecherche();fermerFicheClient();closeModal();return;}
-  // Raccourcis clavier simples — uniquement hors saisie
-  const tag=document.activeElement?.tagName;
-  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT') return;
-  if(e.key==='n'||e.key==='N'){nav(document.querySelector('[data-page=vente]'),'vente');}
-  if(e.key==='s'||e.key==='S'){nav(document.querySelector('[data-page=stock]'),'stock');}
-  if(e.key==='d'||e.key==='D'){nav(document.querySelector('[data-page=dashboard]'),'dashboard');}
-  if(e.key==='c'||e.key==='C'){nav(document.querySelector('[data-page=clients]'),'clients');}
+document.addEventListener('keydown', e => {
+  // ── Ctrl/Cmd combos (toujours actifs) ──
+  if((e.ctrlKey||e.metaKey) && e.key==='k'){ e.preventDefault(); ouvrirRecherche(); return; }
+  if((e.ctrlKey||e.metaKey) && e.key==='s'){ e.preventDefault(); manualSync(); toast('🔄 Synchronisation...'); return; }
+
+  // ── Escape ──
+  if(e.key==='Escape'){
+    // Fermer overlay raccourcis en priorité
+    const so = document.getElementById('shortcuts-overlay');
+    if(so && so.classList.contains('visible')){ fermerRaccourcis(); return; }
+    fermerRecherche(); fermerFicheClient(); closeModal();
+    // Fermer caisse rapide si ouverte
+    const cr = document.getElementById('cr-overlay');
+    if(cr && cr.style.display !== 'none') fermerCaisseRapide();
+    return;
+  }
+
+  // ── Raccourcis lettre — uniquement hors saisie ──
+  const tag = document.activeElement?.tagName;
+  if(tag==='INPUT' || tag==='TEXTAREA' || tag==='SELECT') return;
+  // Ignorer si un modal est ouvert (sauf ? et Escape)
+  const modalOpen = document.getElementById('modal-root')?.children?.length > 0;
+
+  switch(e.key){
+    case '?':
+      e.preventDefault();
+      afficherRaccourcis();
+      break;
+    case 'd': case 'D':
+      if(!modalOpen) nav(document.querySelector('[data-page=dashboard]'), 'dashboard');
+      break;
+    case 'n': case 'N':
+      if(!modalOpen) nav(document.querySelector('[data-page=vente]'), 'vente');
+      break;
+    case 'q': case 'Q':
+      if(!modalOpen) ouvrirCaisseRapide();
+      break;
+    case 's': case 'S':
+      if(!modalOpen) nav(document.querySelector('[data-page=stock]'), 'stock');
+      break;
+    case 'c': case 'C':
+      if(!modalOpen) nav(document.querySelector('[data-page=clients]'), 'clients');
+      break;
+    case 'e': case 'E':
+      if(!modalOpen) nav(document.querySelector('[data-page=depenses]'), 'depenses');
+      break;
+    case 'r': case 'R':
+      if(!modalOpen) nav(document.querySelector('[data-page=caisse]'), 'caisse');
+      break;
+    case 'p': case 'P':
+      if(!modalOpen) nav(document.querySelector('[data-page=planning]'), 'planning');
+      break;
+    case 'x': case 'X':
+      if(!modalOpen) nav(document.querySelector('[data-page=calculatrice]'), 'calculatrice');
+      break;
+  }
 });
+
+function afficherRaccourcis(){
+  const o = document.getElementById('shortcuts-overlay');
+  if(o) o.classList.add('visible');
+}
+function fermerRaccourcis(){
+  const o = document.getElementById('shortcuts-overlay');
+  if(o) o.classList.remove('visible');
+}
 
 
 function rechercheGlobale(q){
@@ -5588,6 +5815,8 @@ function connexionEmail(){
   localStorage.setItem('cm_last_email',email);
   if(errEl)errEl.style.display='none';
   S.session={uid:u.id,role:u.role,nom:u.nom,emoji:u.emoji||'👤',email:u.email};
+  // Enregistrer dans l'historique des connexions
+  enregistrerConnexion(u, 'connexion');
   document.getElementById('login-screen').style.display='none';
   majBadgeUtilisateur();
   appliquerAcces(u.role);
@@ -5739,6 +5968,8 @@ function peutAcceder(page){
 function doLogout(){
   const nom = S.session?.nom || 'utilisateur';
   if(!confirm('Déconnecter ' + nom + ' ?'))return;
+  // Enregistrer la déconnexion
+  if(S.session?.uid) enregistrerConnexion(S.session, 'deconnexion');
   S.session={uid:null,role:null,nom:null};
   saveLocal(S);
   // Réafficher tous les menus et nettoyer
@@ -8063,32 +8294,280 @@ function crValider(){
     a.qv += l.qte;
     addHistorique('Sortie', a, l.qte, 'Vente caisse rapide');
   }
-  const vid = genId();
-  const cid = premierCompteId();
-  S.ventes.push({
-    id:vid, date:D(),
-    lignes: crPanier.map(l => ({aid:l.aid, qte:l.qte, pu:l.pu, mt:l.mt, typePrix:'detail'})),
-    aid:crPanier[0].aid, qte:crPanier[0].qte, pu:crPanier[0].pu,
-    mt:total, sousTotal:total, remise:0, typePrix:'detail',
-    statut:'Payé', client:'', mode:crMode, cid,
-    caissier_uid:S.session?.uid||null,
-    caissier_nom:S.session?.nom||null,
-    caissier_emoji:S.session?.emoji||'👤',
-    caissier_role:S.session?.role||null,
-    heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})
+  verifierAlerteVente(total, function(ok){
+    if(!ok) return;
+    const vid = genId();
+    const cid = premierCompteId();
+    S.ventes.push({
+      id:vid, date:D(),
+      lignes: crPanier.map(l => ({aid:l.aid, qte:l.qte, pu:l.pu, mt:l.mt, typePrix:'detail'})),
+      aid:crPanier[0].aid, qte:crPanier[0].qte, pu:crPanier[0].pu,
+      mt:total, sousTotal:total, remise:0, typePrix:'detail',
+      statut:'Payé', client:'', mode:crMode, cid,
+      caissier_uid:S.session?.uid||null,
+      caissier_nom:S.session?.nom||null,
+      caissier_emoji:S.session?.emoji||'👤',
+      caissier_role:S.session?.role||null,
+      heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})
+    });
+    const compte = S.comptes?.find(c => c.id == cid);
+    if(compte){ compte.solde = (compte.solde||0) + total; }
+    saveData();
+    toast(`✅ Vente encaissée — ${F(total)}`);
+    if(confirm('Imprimer le reçu thermique ?')){
+      imprimerThermique(vid);
+    }
+    crPanier = [];
+    renderCaisseRapide();
   });
-  // Màj compte
-  const compte = S.comptes?.find(c => c.id == cid);
-  if(compte){ compte.solde = (compte.solde||0) + total; }
-  saveData();
-  toast(`✅ Vente encaissée — ${F(total)}`);
-  // Imprimer ticket thermique ?
-  if(confirm('Imprimer le reçu thermique ?')){
-    imprimerThermique(vid);
+}
+
+
+// ─── RELANCE CLIENTS WHATSAPP ───
+function relancerClientWA(id){
+  const c=S.clients.find(c=>c.id==id);
+  if(!c)return;
+  const p=S.parametres||{};
+  const nomShop=p.nom||'Christ Media';
+  let msg='';
+  if(c.solde>0){
+    const vImpayees=S.ventes.filter(v=>v.client===c.nom&&v.statut==='Non payé');
+    const details=vImpayees.slice(0,3).map(v=>{
+      const lignes=v.lignes||[{aid:v.aid,qte:v.qte||1,pu:v.pu||v.mt}];
+      const noms=lignes.map(l=>{const a=ga(l.aid);return a?a.nom:'Article';}).join(', ');
+      return '  - '+noms+' : '+F(v.mt)+' ('+v.date+')';
+    }).join('\n');
+    msg=`Bonjour ${c.nom},\n\nNous vous contactons de la part de ${nomShop} concernant votre solde impayé.\n\nMontant dû : ${F(c.solde)}${details?'\n\nDétail :\n'+details:''}\n\nMerci de régulariser dans les meilleurs délais.\n\n-- ${nomShop}`;
+  }else{
+    const vc=S.ventes.filter(v=>v.client===c.nom&&v.statut==='Payé');
+    const derniere=vc.sort((a,b)=>b.date.localeCompare(a.date))[0];
+    const jours=derniere?Math.floor((new Date()-new Date(derniere.date))/86400000):null;
+    msg=`Bonjour ${c.nom} !\n\n${jours>30?`Vous nous manquez ! Cela fait ${jours} jours que nous ne vous avons pas vu(e).\n\n`:''}Nous avons de nouveaux articles qui pourraient vous intéresser chez ${nomShop}.\n\nN'hésitez pas à passer nous voir !\n\nA bientôt !\n-- ${nomShop}`;
   }
-  // Vider et rester en mode caisse
-  crPanier = [];
-  renderCaisseRapide();
+  const tel=(c.tel||'').replace(/[\s\-\(\)]/g,'');
+  const url=tel
+    ?'https://wa.me/228'+tel.replace(/^228/,'')+'?text='+encodeURIComponent(msg)
+    :'https://wa.me/?text='+encodeURIComponent(msg);
+  window.open(url,'_blank');
+  c.derniereRelance=new Date().toISOString().slice(0,10);
+  saveData();
+  toast('📱 WhatsApp ouvert pour '+c.nom);
+  fermerFicheClient();
+}
+function ouvrirRelanceClients(){
+  const debiteurs = S.clients.filter(c => c.solde > 0).sort((a,b) => b.solde - a.solde);
+  const p = S.parametres || {};
+  const dev = p.devise || 'FCFA';
+  
+  // Clients inactifs (pas de vente depuis > 30 jours)
+  const today = new Date();
+  const inactifs = S.clients.filter(c => {
+    if(c.solde > 0) return false; // déjà dans débiteurs
+    const ventes = S.ventes.filter(v => v.client === c.nom && v.statut === 'Payé');
+    if(ventes.length === 0) return false;
+    const derniere = new Date(ventes.sort((a,b) => b.date.localeCompare(a.date))[0].date);
+    return Math.floor((today - derniere) / 86400000) > 30;
+  }).sort((a,b) => {
+    const va = S.ventes.filter(v => v.client === a.nom && v.statut === 'Payé');
+    const vb = S.ventes.filter(v => v.client === b.nom && v.statut === 'Payé');
+    const da = va.length ? new Date(va.sort((x,y)=>y.date.localeCompare(x.date))[0].date) : new Date(0);
+    const db = vb.length ? new Date(vb.sort((x,y)=>y.date.localeCompare(x.date))[0].date) : new Date(0);
+    return da - db; // plus ancien en premier
+  }).slice(0,10);
+
+  modal('<div class="mft">📱 Relances clients</div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:16px">' +
+      '<div style="background:var(--red-bg);border:1px solid var(--red-light);border-radius:8px;padding:10px 14px;flex:1;text-align:center">' +
+        '<div style="font-size:20px;font-weight:800;color:var(--red)">' + debiteurs.length + '</div>' +
+        '<div style="font-size:11px;color:var(--text3)">Débiteurs</div>' +
+      '</div>' +
+      '<div style="background:var(--amber-bg);border:1px solid var(--amber-light);border-radius:8px;padding:10px 14px;flex:1;text-align:center">' +
+        '<div style="font-size:20px;font-weight:800;color:var(--amber)">' + F(debiteurs.reduce((s,c)=>s+c.solde,0)) + '</div>' +
+        '<div style="font-size:11px;color:var(--text3)">Total créances</div>' +
+      '</div>' +
+      '<div style="background:var(--navy-bg);border:1px solid var(--navy-light);border-radius:8px;padding:10px 14px;flex:1;text-align:center">' +
+        '<div style="font-size:20px;font-weight:800;color:var(--navy)">' + inactifs.length + '</div>' +
+        '<div style="font-size:11px;color:var(--text3)">Inactifs 30j+</div>' +
+      '</div>' +
+    '</div>' +
+    
+    (debiteurs.length > 0 ? 
+      '<div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:8px">⚠️ Clients débiteurs</div>' +
+      '<div style="max-height:200px;overflow-y:auto;margin-bottom:16px">' +
+        debiteurs.map(c => 
+          '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">' +
+            '<div style="flex:1">' +
+              '<div style="font-size:13px;font-weight:600">' + c.nom + '</div>' +
+              '<div style="font-size:11px;color:var(--text3)">' + (c.tel||'Pas de numéro') + 
+                (c.derniereRelance ? ' · Relancé le ' + c.derniereRelance : '') + '</div>' +
+            '</div>' +
+            '<div style="font-weight:700;color:var(--red);margin-right:8px">' + F(c.solde) + '</div>' +
+            (c.tel ? 
+              '<button class="btn btn-sm btn-success" onclick="relancerClientWA(' + c.id + ');closeModal()">📱</button>' : 
+              '<span style="font-size:11px;color:var(--text3)">Pas de tel</span>') +
+          '</div>'
+        ).join('') +
+      '</div>'
+    : '') +
+    
+    (inactifs.length > 0 ?
+      '<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:8px">😴 Clients inactifs (30 jours+)</div>' +
+      '<div style="max-height:160px;overflow-y:auto;margin-bottom:16px">' +
+        inactifs.map(c => {
+          const ventes = S.ventes.filter(v => v.client === c.nom && v.statut === 'Payé');
+          const derniere = ventes.length ? ventes.sort((a,b)=>b.date.localeCompare(a.date))[0].date : '—';
+          const jours = derniere !== '—' ? Math.floor((today - new Date(derniere)) / 86400000) : '?';
+          return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">' +
+            '<div style="flex:1">' +
+              '<div style="font-size:13px;font-weight:600">' + c.nom + '</div>' +
+              '<div style="font-size:11px;color:var(--text3)">Absent depuis ' + jours + ' jours · ' + (c.tel||'—') + '</div>' +
+            '</div>' +
+            (c.tel ?
+              '<button class="btn btn-sm btn-primary" onclick="relancerClientWA(' + c.id + ');closeModal()">📱</button>' :
+              '<span style="font-size:11px;color:var(--text3)">Pas de tel</span>') +
+          '</div>';
+        }).join('') +
+      '</div>'
+    : '') +
+
+    (debiteurs.length === 0 && inactifs.length === 0 ?
+      '<div style="text-align:center;padding:20px;color:var(--text3)">🎉 Aucune relance nécessaire !</div>'
+    : '') +
+
+    '<div class="mff">' +
+      (debiteurs.filter(c=>c.tel).length > 1 ?
+        '<button class="btn btn-danger" onclick="relancerTousDebiteurs()">📱 Relancer tous les débiteurs (' + debiteurs.filter(c=>c.tel).length + ')</button>' : '') +
+      '<button class="btn" onclick="closeModal()">Fermer</button>' +
+    '</div>'
+  );
+}
+
+function relancerTousDebiteurs(){
+  const debiteurs = S.clients.filter(c => c.solde > 0 && c.tel);
+  if(debiteurs.length === 0) return toast('Aucun débiteur avec numéro');
+  if(!confirm('Ouvrir WhatsApp pour ' + debiteurs.length + ' clients débiteurs ?')) return;
+  debiteurs.forEach((c, i) => {
+    setTimeout(() => relancerClientWA(c.id), i * 800);
+  });
+  closeModal();
+}
+
+function encaisserSoldeClient(id){
+  const c = S.clients.find(c => c.id == id);
+  if(!c || c.solde <= 0) return;
+  fermerFicheClient();
+  modal('<div class="mft">✓ Encaisser le solde — ' + c.nom + '</div>' +
+    '<div style="background:var(--red-bg);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;text-align:center">' +
+      '<div style="font-size:11px;color:var(--text3)">Solde à encaisser</div>' +
+      '<div style="font-size:24px;font-weight:800;color:var(--red)">' + F(c.solde) + '</div>' +
+    '</div>' +
+    '<div class="fg"><label class="fl">Montant encaissé</label>' +
+      '<input class="fi" type="number" id="enc-mt" value="' + c.solde + '"></div>' +
+    '<div class="fg"><label class="fl">Mode de paiement</label>' +
+      '<select class="fs" id="enc-mode"><option>Espèces</option><option>Flooz</option><option>Mixx</option></select></div>' +
+    '<div class="mff">' +
+      '<button class="btn" onclick="closeModal()">Annuler</button>' +
+      '<button class="btn btn-success" onclick="confirmerEncaissementClient(' + id + ')">✓ Confirmer</button>' +
+    '</div>'
+  );
+}
+
+function confirmerEncaissementClient(id){
+  const c = S.clients.find(c => c.id == id);
+  if(!c) return;
+  const mt = parseFloat(document.getElementById('enc-mt').value) || 0;
+  const mode = document.getElementById('enc-mode').value;
+  if(mt <= 0) return toast('❌ Montant invalide');
+  const ancien = c.solde;
+  c.solde = Math.max(0, c.solde - mt);
+  if(c.solde === 0) c.statut = 'Régulier';
+  // Marquer les ventes impayées comme payées
+  let reste = mt;
+  S.ventes.filter(v => v.client === c.nom && v.statut === 'Non payé').forEach(v => {
+    if(reste >= v.mt){ v.statut = 'Payé'; v.mode = mode; reste -= v.mt; }
+  });
+  saveData();
+  closeModal();
+  toast('✅ ' + F(mt) + ' encaissé pour ' + c.nom);
+  rClients();
+}
+
+
+// ─── ALERTE VENTE INHABITUELLE ───
+function verifierAlerteVente(mt, callback){
+  const p = S.parametres || {};
+  const seuil = p.alerteVente || 0;
+  if(!seuil || mt <= seuil){ callback(true); return; }
+
+  const mode = p.alerteVenteMode || 'confirm';
+  const dev = p.devise || 'FCFA';
+
+  // Calculer la moyenne des 10 dernières ventes pour contexte
+  const dernieres = S.ventes.filter(v => v.statut === 'Payé').slice(-10);
+  const moy = dernieres.length > 0
+    ? Math.round(dernieres.reduce((s,v) => s+v.mt, 0) / dernieres.length)
+    : 0;
+  const ratio = moy > 0 ? Math.round(mt / moy * 10) / 10 : '—';
+
+  if(mode === 'warn'){
+    toast(`⚠️ Vente élevée : ${F(mt)} (moyenne : ${F(moy)})`, 4000);
+    callback(true);
+    return;
+  }
+
+  // Mode confirmation obligatoire
+  modal(
+    '<div class="mft" style="color:var(--red)">🚨 Vente inhabituelle</div>' +
+    '<div style="background:var(--red-bg);border:1px solid var(--red-light);border-radius:var(--rs);padding:14px;margin-bottom:16px;text-align:center">' +
+      '<div style="font-size:11px;color:var(--text3);margin-bottom:4px">Montant de la vente</div>' +
+      '<div style="font-size:28px;font-weight:900;color:var(--red)">' + F(mt) + '</div>' +
+      '<div style="font-size:12px;color:var(--text3);margin-top:6px">Seuil configuré : ' + F(seuil) + '</div>' +
+      (moy > 0 ? '<div style="font-size:12px;color:var(--text3)">Moyenne habituelle : ' + F(moy) + ' (×' + ratio + ')</div>' : '') +
+    '</div>' +
+    '<div style="font-size:13px;color:var(--text2);margin-bottom:16px;text-align:center">Ce montant est inhabituel. Êtes-vous sûr de vouloir valider cette vente ?</div>' +
+    '<div class="mff">' +
+      '<button class="btn btn-danger" onclick="closeModal()">✕ Annuler</button>' +
+      '<button class="btn btn-success" onclick="closeModal();window._alerteCallback(true)">✓ Confirmer quand même</button>' +
+    '</div>'
+  );
+  window._alerteCallback = callback;
+}
+
+
+// ─── HISTORIQUE DES CONNEXIONS ───
+const CONNEXIONS_KEY = 'cm_connexions_v1';
+const MAX_CONNEXIONS = 30;
+
+function getHistoriqueConnexions(){
+  try { return JSON.parse(localStorage.getItem(CONNEXIONS_KEY)) || []; }
+  catch { return []; }
+}
+
+function enregistrerConnexion(user, type){
+  try {
+    const hist = getHistoriqueConnexions();
+    const now = new Date();
+    hist.push({
+      type,
+      uid: user.uid || user.id,
+      nom: user.nom || 'Inconnu',
+      email: user.email || '',
+      role: user.role || 'vendeur',
+      emoji: user.emoji || '👤',
+      date: now.toLocaleDateString('fr-FR'),
+      heure: now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}),
+      ts: now.getTime()
+    });
+    // Garder seulement les 30 dernières
+    if(hist.length > MAX_CONNEXIONS) hist.splice(0, hist.length - MAX_CONNEXIONS);
+    localStorage.setItem(CONNEXIONS_KEY, JSON.stringify(hist));
+  } catch(e) { console.warn('Historique connexion error:', e); }
+}
+
+function effacerHistoriqueConnexions(){
+  if(!confirm('Effacer tout l\'historique des connexions ?')) return;
+  localStorage.removeItem(CONNEXIONS_KEY);
+  toast('🗑️ Historique effacé');
 }
 
 // ─── SAUVEGARDE AUTOMATIQUE ───
@@ -8208,6 +8687,11 @@ function initAméliorations(){
 if(!window.dfState)window.dfState={};
 majLogo();
 initV9();
+// Init mode hors ligne
+setTimeout(()=>{
+  _pendingOps = getOfflineQueue().length;
+  majBandeauOffline();
+}, 500);
 // Init améliorations (alertes stock, sauvegarde auto)
 initAméliorations();
 // Toujours afficher le login au démarrage
