@@ -964,6 +964,10 @@ body.dark th{background:var(--surface3)}
       <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M1 7h14M5 1v4M11 1v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       Planification
     </div>
+    <div class="ni" data-page="commandes" onclick="nav(this,'commandes')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="10" height="13" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M4 5h6M4 8h6M4 11h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="13" cy="13" r="3" fill="var(--green)"/><path d="M11.5 13l1 1 1.5-1.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Commandes
+    </div>
     <div class="ni" data-page="promos" onclick="nav(this,'promos')">
       <svg viewBox="0 0 16 16" fill="none"><circle cx="5" cy="5" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="11" cy="11" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M2 14L14 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       Promotions
@@ -1370,6 +1374,7 @@ const defaultData={
   vf:{aid:'',qte:1,client:'',statut:'Payé',mode:'Espèces'},
   historique:[],
   promotions:[],
+  commandes:[],
   revenus:[],
   charges:[],
   employes:[],
@@ -1630,7 +1635,7 @@ function activerListenerTempsReel(){
           inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,
           comptes:rComptes,devis:rDevis,planning:rPlanning,
           calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,
-          limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos})[currentPage]();
+          limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes})[currentPage]();
       }catch(e){}
       toast('🔄 Données mises à jour',1500);
     } else if(remoteVer === localVer && remoteVer > 0){
@@ -1658,7 +1663,7 @@ function activerListenerTempsReel(){
             inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,
             comptes:rComptes,devis:rDevis,planning:rPlanning,
             calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,
-            limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos})[currentPage]();
+            limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes})[currentPage]();
         }catch(e){}
         toast('🔀 Données fusionnées',1500);
       }
@@ -1714,7 +1719,7 @@ async function manualSync(){
       saveLocal(S);
       setSyncStatus('online','Synchronisé ✓');
       toast('✅ Données synchronisées depuis le cloud');
-      ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos})[currentPage]();
+      ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes})[currentPage]();
     }else{
       await saveToFirebase(S);
       toast('✅ Données locales envoyées au cloud');
@@ -1742,7 +1747,7 @@ async function startFirebaseSync(){
         if(savedSession&&savedSession.uid) S.session=savedSession;
         saveLocal(S);
         setSyncStatus('online','Synchronisé ✓');
-        ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos})[currentPage]();
+        ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes})[currentPage]();
       }else{
         await saveToFirebase(S);
       }
@@ -1852,7 +1857,7 @@ function toast(msg,dur=2200){
 }
 
 // ─── NAVIGATION ───
-const titles={dashboard:'Tableau de bord',objectifs:'Objectifs & KPIs',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres',dettes:'Gestion des dettes',flux:'Flux financier',limites:'Limites de dépenses',modeles:"Modèles d'opération",agenda:'Opérations suivantes',journal:'Journal privé',caisse:'Rapport de caisse',stats:'Statistiques vendeurs',promos:'Promotions & Réductions'};
+const titles={dashboard:'Tableau de bord',objectifs:'Objectifs & KPIs',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres',dettes:'Gestion des dettes',flux:'Flux financier',limites:'Limites de dépenses',modeles:"Modèles d'opération",agenda:'Opérations suivantes',journal:'Journal privé',caisse:'Rapport de caisse',stats:'Statistiques vendeurs',promos:'Promotions & Réductions',commandes:'Commandes fournisseurs'};
 const actionsMap={
   dashboard:()=>'<button class="btn btn-success" onclick="nav(document.querySelector(\'[data-page=vente]\'),\'vente\')">+ Vente</button>',
   objectifs:()=>'<button class="btn btn-primary" onclick="editObjectifs()">⚙️ Modifier objectifs</button>',
@@ -1874,7 +1879,8 @@ const actionsMap={
   journal:()=>'<button class="btn" onclick="journalVerrouiller()">🔒 Verrouiller</button> <button class="btn btn-primary" onclick="journalNouveau()">+ Note</button>',
   caisse:()=>'<button class="btn" onclick="imprimerCaisse()">🖨️ Imprimer</button> <button class="btn btn-success" onclick="partagerCaisseWA()">📱 WhatsApp</button>',
   stats:()=>'',
-  promos:()=>'<button class="btn btn-primary" onclick="addPromo()">+ Nouvelle promo</button>'
+  promos:()=>'<button class="btn btn-primary" onclick="addPromo()">+ Nouvelle promo</button>',
+  commandes:()=>'<button class="btn" onclick="genCommandesAuto()">⚡ Générer auto</button> <button class="btn btn-primary" onclick="addCommande()">+ Commande</button>'
 };
 
 let currentPage='dashboard';
@@ -1893,7 +1899,7 @@ function nav(el,page){
   if(_presenceId&&fbReady&&db){
     db.ref('christmedia/presence/'+_presenceId+'/page').set(page).catch(()=>{});
   }
-  ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos})[page]();
+  ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes})[page]();
   closeMobileSidebar();
   document.getElementById('mn-dropdown').classList.remove('open');
 }
@@ -5980,17 +5986,17 @@ const PERMISSIONS = {
     pages: ['dashboard','objectifs','transactions','vente','services','achats','stock','clients',
             'fournisseurs','depenses','tresorerie','revenus','rapports','inventaire','historique',
             'comptes','devis','planning','calculatrice','workspace','parametres',
-            'dettes','flux','limites','modeles','agenda','journal','caisse','stats','promos'],
+            'dettes','flux','limites','modeles','agenda','journal','caisse','stats','promos','commandes'],
     label: '👑 Administrateur',
     couleur: '#f5c060'
   },
   caissier: {
-    pages: ['dashboard','vente','services','stock','clients','calculatrice','transactions','agenda','dettes','journal','caisse','stats','promos'],
+    pages: ['dashboard','vente','services','stock','clients','calculatrice','transactions','agenda','dettes','journal','caisse','stats','promos','commandes'],
     label: '💰 Caissier',
     couleur: '#8ecba8'
   },
   vendeur: {
-    pages: ['dashboard','vente','services','clients','calculatrice','agenda','journal','caisse','stats','promos'],
+    pages: ['dashboard','vente','services','clients','calculatrice','agenda','journal','caisse','stats','promos','commandes'],
     label: '🛒 Vendeur',
     couleur: '#c5d0e8'
   }
@@ -6121,6 +6127,7 @@ function rWorkspace(){
     {id:'caisse',label:'Rapport de caisse',icon:'🏦'},
     {id:'stats',label:'Stats vendeurs',icon:'📊'},
     {id:'promos',label:'Promotions',icon:'🏷️'},
+    {id:'commandes',label:'Commandes fournisseurs',icon:'📋'},
   ];
   const visible=p.menu_visible||allMenus.map(m=>m.id);
 
@@ -9306,6 +9313,389 @@ function delPromo(id){
   if(!confirm('Supprimer cette promotion ?')) return;
   S.promotions = (S.promotions||[]).filter(p=>p.id!=id);
   saveData(); toast('🗑️ Promotion supprimée'); rPromos();
+}
+
+
+// ─── COMMANDES FOURNISSEURS ───
+
+function rCommandes(){
+  if(!S.commandes) S.commandes = [];
+  const cmds = S.commandes;
+  const enAttente = cmds.filter(c => c.statut === 'En attente');
+  const envoyees = cmds.filter(c => c.statut === 'Envoyée');
+  const recues = cmds.filter(c => c.statut === 'Reçue');
+
+  // Articles sous seuil sans commande en cours
+  const articlesBasSansCmd = S.stock.filter(a => {
+    if(sa(a) > a.seuil) return false;
+    const enCours = cmds.some(c =>
+      c.statut !== 'Reçue' &&
+      c.lignes && c.lignes.some(l => l.aid === a.id)
+    );
+    return !enCours;
+  });
+
+  document.getElementById('content').innerHTML = `
+  <div class="page">
+    <!-- KPIs -->
+    <div class="g4" style="margin-bottom:20px">
+      <div class="kpi-card kpi-amber">
+        <div class="ct">En attente</div>
+        <div class="kpi-val" style="color:var(--amber)">${enAttente.length}</div>
+        <div class="ms">à envoyer</div>
+      </div>
+      <div class="kpi-card kpi-blue">
+        <div class="ct">Envoyées</div>
+        <div class="kpi-val" style="color:var(--navy)">${envoyees.length}</div>
+        <div class="ms">en transit</div>
+      </div>
+      <div class="kpi-card kpi-green">
+        <div class="ct">Reçues</div>
+        <div class="kpi-val" style="color:var(--green)">${recues.length}</div>
+        <div class="ms">ce mois</div>
+      </div>
+      <div class="kpi-card kpi-red">
+        <div class="ct">Stock bas sans commande</div>
+        <div class="kpi-val" style="color:var(--red)">${articlesBasSansCmd.length}</div>
+        <div class="ms">${articlesBasSansCmd.length > 0 ? '<span onclick="genCommandesAuto()" style="cursor:pointer;text-decoration:underline">Générer auto →</span>' : 'Tout est commandé'}</div>
+      </div>
+    </div>
+
+    <!-- Alerte articles à commander -->
+    ${articlesBasSansCmd.length > 0 ? `
+    <div class="alert alert-r" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+      <span>⚠️ ${articlesBasSansCmd.length} article${articlesBasSansCmd.length>1?'s':''} sous le seuil sans commande en cours : ${articlesBasSansCmd.slice(0,3).map(a=>a.nom).join(', ')}${articlesBasSansCmd.length>3?' +'+( articlesBasSansCmd.length-3)+' autres':''}</span>
+      <button class="btn btn-danger btn-sm" onclick="genCommandesAuto()">⚡ Générer commandes auto</button>
+    </div>` : ''}
+
+    <!-- Liste commandes -->
+    ${cmds.length === 0 ? `
+    <div class="empty" style="padding:60px 20px">
+      <svg viewBox="0 0 40 40" fill="none"><rect x="4" y="2" width="26" height="36" rx="2" stroke="currentColor" stroke-width="1.5" opacity=".3"/><path d="M10 12h16M10 19h16M10 26h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".4"/></svg>
+      <p>Aucune commande</p>
+      <small>Créez une commande ou générez-la automatiquement depuis le stock bas</small>
+    </div>` : `
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>N°</th><th>Fournisseur</th><th>Articles</th><th>Total estimé</th><th>Date</th><th>Statut</th><th></th></tr></thead>
+        <tbody>
+          ${cmds.slice().reverse().map(c => {
+            const f = S.fournisseurs.find(f => f.id == c.fid);
+            const nbLignes = (c.lignes||[]).length;
+            const total = (c.lignes||[]).reduce((s,l) => s+(l.qte*(l.pu||0)),0);
+            const statusColor = c.statut==='Reçue'?'bg':c.statut==='Envoyée'?'bb':'ba';
+            return `<tr>
+              <td style="font-family:'DM Mono',monospace;font-size:11px">CMD-${String(c.id).slice(-4).padStart(4,'0')}</td>
+              <td class="tdm">${f?f.nom:'—'}</td>
+              <td style="font-size:12px">${nbLignes} article${nbLignes>1?'s':''}</td>
+              <td style="font-weight:600;color:var(--purple)">${total>0?F(total):'—'}</td>
+              <td style="font-size:11px;font-family:'DM Mono',monospace">${c.date||'—'}</td>
+              <td><span class="badge ${statusColor}">${c.statut}</span></td>
+              <td><div class="td-actions">
+                <button class="btn-icon btn-sm" onclick="voirCommande(${c.id})" title="Voir détail">👁️</button>
+                ${c.statut==='En attente'?`<button class="btn-icon btn-sm" onclick="envoyerCommandeWA(${c.id})" title="Envoyer WhatsApp" style="color:var(--green)">📱</button>`:''}
+                ${c.statut==='Envoyée'?`<button class="btn-icon btn-sm" onclick="marquerReçue(${c.id})" title="Marquer reçue" style="color:var(--teal)">✓</button>`:''}
+                ${c.statut!=='Reçue'?`<button class="btn-icon btn-sm" onclick="editCommande(${c.id})">✏️</button>`:''}
+                <button class="btn-icon btn-sm" onclick="delCommande(${c.id})" style="color:var(--red)">✕</button>
+              </div></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`}
+  </div>`;
+}
+
+// ── Génération automatique depuis stock bas ──
+function genCommandesAuto(){
+  const articlesBasSansCmd = S.stock.filter(a => {
+    if(sa(a) > a.seuil) return false;
+    const enCours = (S.commandes||[]).some(c =>
+      c.statut !== 'Reçue' && c.lignes && c.lignes.some(l => l.aid === a.id)
+    );
+    return !enCours;
+  });
+
+  if(articlesBasSansCmd.length === 0){
+    toast('✅ Aucun article à commander — tout est à jour !');
+    return;
+  }
+
+  // Regrouper par fournisseur (basé sur le secteur → fournisseur actif du même secteur)
+  const parFour = {};
+  articlesBasSansCmd.forEach(a => {
+    const four = S.fournisseurs.find(f => f.statut === 'Actif' && f.secteur === a.cat)
+                 || S.fournisseurs.find(f => f.statut === 'Actif')
+                 || S.fournisseurs[0];
+    if(!four) return;
+    if(!parFour[four.id]) parFour[four.id] = {four, articles: []};
+    // Quantité suggérée = seuil * 2 - stock actuel (pour remonter à 2× le seuil)
+    const qteSuggérée = Math.max(1, (a.seuil * 2) - sa(a));
+    parFour[four.id].articles.push({aid: a.id, nom: a.nom, qte: qteSuggérée, pu: a.pa || 0, dispo: sa(a), seuil: a.seuil});
+  });
+
+  const groupes = Object.values(parFour);
+  if(groupes.length === 0){
+    toast('⚠️ Aucun fournisseur associé aux articles bas');
+    return;
+  }
+
+  // Afficher modal de confirmation
+  modal('<div class="mft">⚡ Générer commandes automatiques</div>' +
+    '<div style="font-size:13px;color:var(--text2);margin-bottom:14px">' +
+      groupes.length + ' commande${groupes.length>1?"s":""} seront créées pour ' +
+      articlesBasSansCmd.length + ' articles en stock bas.' +
+    '</div>' +
+    groupes.map(g =>
+      '<div style="background:var(--surface2);border-radius:var(--rs);padding:10px 12px;margin-bottom:10px">' +
+        '<div style="font-size:13px;font-weight:700;margin-bottom:6px">📦 ' + g.four.nom + '</div>' +
+        g.articles.map(a =>
+          '<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0">' +
+            '<span>' + a.nom + '</span>' +
+            '<span style="color:var(--text3)">Stock: ' + a.dispo + ' → Cmd: <strong>' + a.qte + '</strong></span>' +
+          '</div>'
+        ).join('') +
+      '</div>'
+    ).join('') +
+    '<div class="mff">' +
+      '<button class="btn" onclick="closeModal()">Annuler</button>' +
+      '<button class="btn btn-primary" onclick="confirmerGenCommandesAuto()">✅ Créer ' + groupes.length + ' commande${groupes.length>1?"s":""}</button>' +
+    '</div>'
+  );
+  window._cmdAutoGroupes = groupes;
+}
+
+function confirmerGenCommandesAuto(){
+  const groupes = window._cmdAutoGroupes || [];
+  if(!S.commandes) S.commandes = [];
+  groupes.forEach(g => {
+    S.commandes.push({
+      id: genId(),
+      fid: g.four.id,
+      date: D(),
+      statut: 'En attente',
+      lignes: g.articles.map(a => ({aid:a.aid, nom:a.nom, qte:a.qte, pu:a.pu})),
+      notes: 'Générée automatiquement — stock bas',
+      auto: true
+    });
+  });
+  saveData();
+  closeModal();
+  toast('✅ ' + groupes.length + ' commande${groupes.length>1?"s":""} créée${groupes.length>1?"s":""}');
+  rCommandes();
+}
+
+// ── Créer commande manuelle ──
+function addCommande(){
+  _modalCommande(null);
+}
+function editCommande(id){
+  const c = (S.commandes||[]).find(c=>c.id==id);
+  _modalCommande(c);
+}
+
+function _modalCommande(c){
+  const isEdit = !!c;
+  const fourOptions = S.fournisseurs.map(f =>
+    '<option value="' + f.id + '"' + (c?.fid==f.id?' selected':'') + '>' + f.nom + '</option>'
+  ).join('');
+  const lignesHtml = (c?.lignes||[{aid:'',qte:1,pu:0}]).map((l,i) => {
+    const artOptions = S.stock.map(a =>
+      '<option value="' + a.id + '"' + (l.aid==a.id?' selected':'') + '>' + a.nom + ' (stock:' + sa(a) + ')</option>'
+    ).join('');
+    return `<div class="cmd-ligne" id="cmdl-${i}" style="display:grid;grid-template-columns:1fr 70px 90px 28px;gap:6px;align-items:center;margin-bottom:6px">
+      <select class="fs" style="font-size:12px" onchange="majCmdLigne(${i},'aid',+this.value)"><option value="">— Article —</option>${artOptions}</select>
+      <input class="fi" type="number" min="1" value="${l.qte||1}" style="font-size:12px;padding:5px 6px" oninput="majCmdLigne(${i},'qte',+this.value)" placeholder="Qté">
+      <input class="fi" type="number" min="0" value="${l.pu||0}" style="font-size:12px;padding:5px 6px" oninput="majCmdLigne(${i},'pu',+this.value)" placeholder="Prix unit.">
+      <button onclick="supprimerCmdLigne(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px">✕</button>
+    </div>`;
+  }).join('');
+
+  modal(`<div class="mft">${isEdit?'✏️ Modifier':'📋 Nouvelle'} commande</div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Fournisseur</label>
+        <select class="fs" id="cmd-fid">${fourOptions}</select></div>
+      <div class="fg"><label class="fl">Date</label>
+        <input class="fi" type="date" id="cmd-date" value="${c?.date||D()}"></div>
+    </div>
+    <div class="fg"><label class="fl">Articles à commander</label>
+      <div id="cmd-lignes">${lignesHtml}</div>
+      <button class="btn btn-sm" onclick="ajouterCmdLigne()" style="margin-top:6px">+ Article</button>
+    </div>
+    <div class="fg"><label class="fl">Notes</label>
+      <input class="fi" id="cmd-notes" value="${c?.notes||''}" placeholder="Remarques..."></div>
+    <div id="cmd-total" style="background:var(--navy-bg);border-radius:var(--rs);padding:8px 12px;font-size:13px;font-weight:700;color:var(--navy);margin-top:8px">Total estimé : —</div>
+    <div class="mff">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveCommande(${c?.id||'null'})">💾 ${isEdit?'Modifier':'Créer'}</button>
+    </div>`);
+  window._cmdLignes = JSON.parse(JSON.stringify(c?.lignes||[{aid:'',qte:1,pu:0}]));
+  majTotalCmd();
+}
+
+function majCmdLigne(i, champ, val){
+  if(!window._cmdLignes[i]) window._cmdLignes[i] = {aid:'',qte:1,pu:0};
+  window._cmdLignes[i][champ] = val;
+  if(champ === 'aid' && val){
+    const a = S.stock.find(a=>a.id==val);
+    if(a && !window._cmdLignes[i].pu) window._cmdLignes[i].pu = a.pa || 0;
+  }
+  majTotalCmd();
+}
+function ajouterCmdLigne(){
+  if(!window._cmdLignes) window._cmdLignes = [];
+  window._cmdLignes.push({aid:'',qte:1,pu:0});
+  const i = window._cmdLignes.length - 1;
+  const artOptions = S.stock.map(a=>'<option value="'+a.id+'">'+a.nom+' (stock:'+sa(a)+')</option>').join('');
+  const div = document.createElement('div');
+  div.className = 'cmd-ligne';
+  div.id = 'cmdl-' + i;
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 70px 90px 28px;gap:6px;align-items:center;margin-bottom:6px';
+  div.innerHTML = `<select class="fs" style="font-size:12px" onchange="majCmdLigne(${i},'aid',+this.value)"><option value="">— Article —</option>${artOptions}</select><input class="fi" type="number" min="1" value="1" style="font-size:12px;padding:5px 6px" oninput="majCmdLigne(${i},'qte',+this.value)" placeholder="Qté"><input class="fi" type="number" min="0" value="0" style="font-size:12px;padding:5px 6px" oninput="majCmdLigne(${i},'pu',+this.value)" placeholder="Prix unit."><button onclick="supprimerCmdLigne(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px">✕</button>`;
+  document.getElementById('cmd-lignes')?.appendChild(div);
+}
+function supprimerCmdLigne(i){
+  window._cmdLignes.splice(i,1);
+  const el = document.getElementById('cmdl-'+i);
+  if(el) el.remove();
+  majTotalCmd();
+}
+function majTotalCmd(){
+  const total = (window._cmdLignes||[]).reduce((s,l)=>s+(l.qte||0)*(l.pu||0),0);
+  const el = document.getElementById('cmd-total');
+  if(el) el.textContent = 'Total estimé : ' + (total>0?F(total):'—');
+}
+
+function saveCommande(id){
+  const fid = +document.getElementById('cmd-fid')?.value;
+  const date = document.getElementById('cmd-date')?.value || D();
+  const notes = document.getElementById('cmd-notes')?.value || '';
+  const lignes = (window._cmdLignes||[]).filter(l=>l.aid);
+  if(!fid) return toast('❌ Sélectionnez un fournisseur');
+  if(lignes.length === 0) return toast('❌ Ajoutez au moins un article');
+  // Récupérer les noms d'articles
+  lignes.forEach(l => { const a = S.stock.find(a=>a.id==l.aid); if(a) l.nom = a.nom; });
+  if(!S.commandes) S.commandes = [];
+  if(id && id !== 'null'){
+    const c = S.commandes.find(c=>c.id==id);
+    if(c) Object.assign(c, {fid,date,notes,lignes});
+  } else {
+    S.commandes.push({id:genId(),fid,date,statut:'En attente',lignes,notes});
+  }
+  saveData(); closeModal(); toast('✅ Commande enregistrée'); rCommandes();
+}
+
+// ── Voir détail commande ──
+function voirCommande(id){
+  const c = (S.commandes||[]).find(c=>c.id==id); if(!c) return;
+  const f = S.fournisseurs.find(f=>f.id==c.fid);
+  const total = (c.lignes||[]).reduce((s,l)=>s+(l.qte||0)*(l.pu||0),0);
+  const numCmd = 'CMD-' + String(c.id).slice(-4).padStart(4,'0');
+  modal('<div class="mft">📋 ' + numCmd + '</div>' +
+    '<div style="background:var(--surface2);border-radius:var(--rs);padding:10px 12px;margin-bottom:14px;display:flex;justify-content:space-between">' +
+      '<div><div style="font-size:13px;font-weight:700">' + (f?f.nom:'—') + '</div>' +
+      '<div style="font-size:11px;color:var(--text3)">' + c.date + ' · ' + (f?.tel||'—') + '</div>' +
+      (c.notes?'<div style="font-size:11px;color:var(--text2);margin-top:3px">'+c.notes+'</div>':'') + '</div>' +
+      '<span class="badge ' + (c.statut==='Reçue'?'bg':c.statut==='Envoyée'?'bb':'ba') + '">' + c.statut + '</span>' +
+    '</div>' +
+    '<div class="tbl-wrap" style="margin-bottom:14px"><table>' +
+      '<thead><tr><th>Article</th><th>Stock actuel</th><th>Qté commandée</th><th>Prix unit.</th><th>Total</th></tr></thead>' +
+      '<tbody>' +
+        (c.lignes||[]).map(l => {
+          const a = S.stock.find(a=>a.id==l.aid);
+          return '<tr><td class="tdm">' + (l.nom||a?.nom||'—') + '</td>' +
+            '<td style="color:' + (a&&sa(a)<=a.seuil?'var(--red)':'var(--text2)') + '">' + (a?N(sa(a)):'—') + '</td>' +
+            '<td style="font-weight:700">' + N(l.qte||1) + '</td>' +
+            '<td>' + (l.pu>0?F(l.pu):'—') + '</td>' +
+            '<td style="font-weight:700;color:var(--purple)">' + (l.pu>0?F((l.qte||1)*l.pu):'—') + '</td></tr>';
+        }).join('') +
+      '</tbody></table></div>' +
+    (total>0?'<div style="text-align:right;font-size:15px;font-weight:700;color:var(--navy);margin-bottom:14px">Total estimé : ' + F(total) + '</div>':'') +
+    '<div class="mff">' +
+      (c.statut==='En attente'?'<button class="btn btn-success" onclick="envoyerCommandeWA('+c.id+');closeModal()">📱 Envoyer WhatsApp</button>':'') +
+      (c.statut==='Envoyée'?'<button class="btn btn-success" onclick="marquerReçue('+c.id+');closeModal()">✓ Marquer reçue</button>':'') +
+      '<button class="btn" onclick="closeModal()">Fermer</button>' +
+    '</div>'
+  );
+}
+
+// ── Envoyer commande par WhatsApp ──
+function envoyerCommandeWA(id){
+  const c = (S.commandes||[]).find(c=>c.id==id); if(!c) return;
+  const f = S.fournisseurs.find(f=>f.id==c.fid); if(!f) return toast('❌ Fournisseur introuvable');
+  const p = S.parametres || {};
+  const nomShop = p.nom || 'Christ Media';
+  const numCmd = 'CMD-' + String(c.id).slice(-4).padStart(4,'0');
+  const total = (c.lignes||[]).reduce((s,l)=>s+(l.qte||0)*(l.pu||0),0);
+  const lignesTexte = (c.lignes||[]).map(l =>
+    '  - ' + (l.nom||'Article') + ' : ' + (l.qte||1) + ' unité' + ((l.qte||1)>1?'s':'') +
+    (l.pu>0?' à ' + F(l.pu) + ' = ' + F((l.qte||1)*l.pu) : '')
+  ).join('\n');
+  const msg = 'Bonjour ' + f.nom + ',\n\n' +
+    'Nous passons commande pour les articles suivants (' + numCmd + ') :\n\n' +
+    lignesTexte + '\n\n' +
+    (total>0 ? 'Total estimé : ' + F(total) + '\n\n' : '') +
+    'Merci de confirmer la disponibilité et le délai de livraison.\n\n' +
+    'Cordialement,\n' + nomShop;
+  const tel = (f.tel||'').replace(/[\s\-\(\)]/g,'');
+  const url = tel
+    ? 'https://wa.me/228' + tel.replace(/^228/,'') + '?text=' + encodeURIComponent(msg)
+    : 'https://wa.me/?text=' + encodeURIComponent(msg);
+  window.open(url, '_blank');
+  // Marquer comme envoyée
+  c.statut = 'Envoyée';
+  c.dateEnvoi = D();
+  saveData();
+  toast('📱 Commande envoyée sur WhatsApp — statut mis à jour');
+  rCommandes();
+}
+
+// ── Marquer commande reçue → mettre à jour le stock ──
+function marquerReçue(id){
+  const c = (S.commandes||[]).find(c=>c.id==id); if(!c) return;
+  modal('<div class="mft">✅ Réception commande CMD-' + String(c.id).slice(-4).padStart(4,'0') + '</div>' +
+    '<div style="font-size:13px;color:var(--text2);margin-bottom:14px">Confirmer la réception va mettre à jour le stock automatiquement.</div>' +
+    '<div style="background:var(--surface2);border-radius:var(--rs);padding:10px 12px;margin-bottom:14px">' +
+      (c.lignes||[]).map(l => {
+        const a = S.stock.find(a=>a.id==l.aid);
+        return '<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0">' +
+          '<span>' + (l.nom||a?.nom||'—') + '</span>' +
+          '<span style="color:var(--green);font-weight:700">+' + (l.qte||1) + ' unités</span>' +
+        '</div>';
+      }).join('') +
+    '</div>' +
+    '<div class="fg"><label class="fl">Date de réception</label>' +
+      '<input class="fi" type="date" id="cmd-reception" value="' + D() + '"></div>' +
+    '<div class="mff">' +
+      '<button class="btn" onclick="closeModal()">Annuler</button>' +
+      '<button class="btn btn-success" onclick="confirmerReception(' + id + ')">✅ Confirmer réception</button>' +
+    '</div>'
+  );
+}
+
+function confirmerReception(id){
+  const c = (S.commandes||[]).find(c=>c.id==id); if(!c) return;
+  const dateReception = document.getElementById('cmd-reception')?.value || D();
+  // Mettre à jour le stock
+  (c.lignes||[]).forEach(l => {
+    const a = S.stock.find(a=>a.id==l.aid);
+    if(a){
+      a.ea = (a.ea||0) + (l.qte||1);
+      addHistorique('Entrée', a, l.qte||1, 'Réception commande CMD-' + String(c.id).slice(-4).padStart(4,'0'));
+    }
+  });
+  c.statut = 'Reçue';
+  c.dateReception = dateReception;
+  saveData();
+  closeModal();
+  toast('✅ Stock mis à jour — commande marquée reçue !');
+  rCommandes();
+}
+
+function delCommande(id){
+  if(!confirm('Supprimer cette commande ?')) return;
+  S.commandes = (S.commandes||[]).filter(c=>c.id!=id);
+  saveData(); toast('🗑️ Commande supprimée'); rCommandes();
 }
 
 // ─── SAUVEGARDE AUTOMATIQUE ───
