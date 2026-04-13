@@ -965,6 +965,10 @@ body.dark th{background:var(--surface3)}
       <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M1 7h14M5 1v4M11 1v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       Planification
     </div>
+    <div class="ni admin-only" data-page="audit" onclick="nav(this,'audit')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M2 2h12v12H2z" stroke="currentColor" stroke-width="1.5" rx="1.5"/><path d="M5 6h6M5 9h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="12" cy="12" r="3.5" fill="var(--navy)" stroke="none"/><path d="M11 12l.8.8 1.5-1.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Audit
+    </div>
     <div class="ni" data-page="fidelite" onclick="nav(this,'fidelite')">
       <svg viewBox="0 0 16 16" fill="none"><path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
       Fidélité
@@ -1383,6 +1387,7 @@ const defaultData={
   vf:{aid:'',qte:1,client:'',statut:'Payé',mode:'Espèces'},
   historique:[],
   promotions:[],
+  audit:[],
   commandes:[],
   revenus:[],
   charges:[],
@@ -1647,7 +1652,7 @@ function activerListenerTempsReel(){
           inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,
           comptes:rComptes,devis:rDevis,planning:rPlanning,
           calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,
-          limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite})[currentPage]();
+          limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit})[currentPage]();
       }catch(e){}
       toast('🔄 Données mises à jour',1500);
     } else if(remoteVer === localVer && remoteVer > 0){
@@ -1675,7 +1680,7 @@ function activerListenerTempsReel(){
             inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,
             comptes:rComptes,devis:rDevis,planning:rPlanning,
             calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,
-            limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite})[currentPage]();
+            limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit})[currentPage]();
         }catch(e){}
         toast('🔀 Données fusionnées',1500);
       }
@@ -1731,7 +1736,7 @@ async function manualSync(){
       saveLocal(S);
       setSyncStatus('online','Synchronisé ✓');
       toast('✅ Données synchronisées depuis le cloud');
-      ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite})[currentPage]();
+      ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit})[currentPage]();
     }else{
       await saveToFirebase(S);
       toast('✅ Données locales envoyées au cloud');
@@ -1759,7 +1764,7 @@ async function startFirebaseSync(){
         if(savedSession&&savedSession.uid) S.session=savedSession;
         saveLocal(S);
         setSyncStatus('online','Synchronisé ✓');
-        ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite})[currentPage]();
+        ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit})[currentPage]();
       }else{
         await saveToFirebase(S);
       }
@@ -1869,7 +1874,7 @@ function toast(msg,dur=2200){
 }
 
 // ─── NAVIGATION ───
-const titles={dashboard:'Tableau de bord',objectifs:'Objectifs & KPIs',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres',dettes:'Gestion des dettes',flux:'Flux financier',limites:'Limites de dépenses',modeles:"Modèles d'opération",agenda:'Opérations suivantes',journal:'Journal privé',caisse:'Rapport de caisse',stats:'Statistiques vendeurs',promos:'Promotions & Réductions',commandes:'Commandes fournisseurs',depots:'Stock multi-dépôt',fidelite:'Programme de fidélité'};
+const titles={dashboard:'Tableau de bord',objectifs:'Objectifs & KPIs',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres',dettes:'Gestion des dettes',flux:'Flux financier',limites:'Limites de dépenses',modeles:"Modèles d'opération",agenda:'Opérations suivantes',journal:'Journal privé',caisse:'Rapport de caisse',stats:'Statistiques vendeurs',promos:'Promotions & Réductions',commandes:'Commandes fournisseurs',depots:'Stock multi-dépôt',fidelite:'Programme de fidélité',audit:'Journal d\'audit'};
 const actionsMap={
   dashboard:()=>'<button class="btn btn-success" onclick="nav(document.querySelector(\'[data-page=vente]\'),\'vente\')">+ Vente</button>',
   objectifs:()=>'<button class="btn btn-primary" onclick="editObjectifs()">⚙️ Modifier objectifs</button>',
@@ -1894,7 +1899,8 @@ const actionsMap={
   promos:()=>'<button class="btn btn-primary" onclick="addPromo()">+ Nouvelle promo</button>',
   commandes:()=>'<button class="btn" onclick="genCommandesAuto()">⚡ Générer auto</button> <button class="btn btn-primary" onclick="addCommande()">+ Commande</button>',
   depots:()=>'<button class="btn" onclick="addDepot()">+ Dépôt</button> <button class="btn btn-primary" onclick="nouveauTransfert()">⇄ Transfert</button>',
-  fidelite:()=>'<button class="btn" onclick="nav(document.querySelector(\"[data-page=parametres]\"),\"parametres\")">⚙️ Configurer</button>'
+  fidelite:()=>'<button class="btn" onclick="nav(document.querySelector(\"[data-page=parametres]\"),\"parametres\")">⚙️ Configurer</button>',
+  audit:()=>'<button class="btn btn-danger btn-sm" onclick="effacerAudit()">🗑️ Effacer</button>'
 };
 
 let currentPage='dashboard';
@@ -1913,7 +1919,7 @@ function nav(el,page){
   if(_presenceId&&fbReady&&db){
     db.ref('christmedia/presence/'+_presenceId+'/page').set(page).catch(()=>{});
   }
-  ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite})[page]();
+  ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit})[page]();
   closeMobileSidebar();
   document.getElementById('mn-dropdown').classList.remove('open');
 }
@@ -2637,6 +2643,7 @@ function validerPanier(){
     if(statut==='Payé') crediterCompte(cid,mt);
     // Ajouter points de fidélité
     if(client) ajouterPointsFidelite(client, mt);
+    addAudit('CREATE','Vente','Vente '+F(mt)+' — '+client+(window.panier.length>0?' ('+window.panier.length+' articles)':''), null, {mt, client, statut});
     saveData();toast(`✅ Vente de ${F(mt)} enregistrée !`);closeModal();rVente();
     setTimeout(()=>{if(confirm('Imprimer le reçu ?'))demanderMontantRecu(vid);},300);
   });
@@ -2663,6 +2670,8 @@ function confirmerPaiementVente(id){
 }
 function delVente(id){
   if(!confirm('Supprimer cette vente ?'))return;
+  const vDel = S.ventes.find(v=>v.id==id);
+  if(vDel) addAudit('DELETE','Vente','Suppression vente '+F(vDel.mt)+' — '+(vDel.client||'—')+' du '+vDel.date, {id:vDel.id,mt:vDel.mt,client:vDel.client}, null);
   const v=S.ventes.find(v=>v.id==id);
   if(v){
     // 1. Remettre le stock
@@ -3363,6 +3372,7 @@ function addClient(){
 function saveCli(){
   const n=document.getElementById('mn').value;if(!n)return toast('❌ Nom requis');
   S.clients.push({id:genId(),nom:n,tel:document.getElementById('mt').value,secteur:document.getElementById('ms').value,solde:+document.getElementById('mso').value||0,statut:document.getElementById('mst').value,notes:document.getElementById('mno').value});
+  addAudit('CREATE','Client','Nouveau client : '+n, null, {nom:n});
   saveData();closeModal();toast('✅ Client ajouté');rClients();
 }
 function editClient(id){
@@ -3384,7 +3394,9 @@ function updateCli(id){
   saveData();closeModal();toast('✅ Client modifié');rClients();
 }
 function delClient(id){
+  const _cDel = S.clients.find(c=>c.id==id);
   if(!confirm('Supprimer ce client ?'))return;
+  if(_cDel) addAudit('DELETE','Client','Suppression client : '+_cDel.nom, {nom:_cDel.nom}, null);
   S.clients=S.clients.filter(c=>c.id!=id);
   saveData();toast('🗑️ Client supprimé');rClients();
 }
@@ -4542,6 +4554,7 @@ function rParametres(){
 
 function majParam(k,v){if(!S.parametres)S.parametres={};S.parametres[k]=v;}
 function sauvegarderParams(){
+  addAudit('UPDATE','Paramètres','Modification des paramètres généraux', null, {nom:S.parametres?.nom});
   saveData();
   majLogo();
   toast('✅ Paramètres sauvegardés');
@@ -6217,6 +6230,7 @@ function connexionEmail(){
   majBadgeUtilisateur();
   appliquerAcces(u.role);
   toast(`✅ Bienvenue ${u.nom} !`);
+  addAudit('LOGIN','Connexion','Connexion de '+u.nom+' ('+u.role+') depuis '+navigator.userAgent.substring(0,50), null, null);
   // Démarrer la présence en temps réel
   setTimeout(initPresence, 1000);
   // Vérifier sauvegarde Drive auto
@@ -6285,7 +6299,7 @@ const PERMISSIONS = {
     pages: ['dashboard','objectifs','transactions','vente','services','achats','stock','clients',
             'fournisseurs','depenses','tresorerie','revenus','rapports','inventaire','historique',
             'comptes','devis','planning','calculatrice','workspace','parametres',
-            'dettes','flux','limites','modeles','agenda','journal','caisse','stats','promos','commandes','depots','fidelite'],
+            'dettes','flux','limites','modeles','agenda','journal','caisse','stats','promos','commandes','depots','fidelite','audit'],
     label: '👑 Administrateur',
     couleur: '#f5c060'
   },
@@ -6375,6 +6389,7 @@ function doLogout(){
   const empCss=document.getElementById('employe-css');
   if(empCss)empCss.remove();
   document.getElementById('current-user-badge').style.display='none';
+  addAudit('LOGIN','Déconnexion','Déconnexion de '+(S.session?.nom||'utilisateur'), null, null);
   stopPresence();
   toast('👋 Déconnecté');
   setTimeout(()=>afficherLoginScreen(), 400);
@@ -6429,6 +6444,7 @@ function rWorkspace(){
     {id:'commandes',label:'Commandes fournisseurs',icon:'📋'},
     {id:'depots',label:'Stock multi-dépôt',icon:'🏭'},
     {id:'fidelite',label:'Programme fidélité',icon:'⭐'},
+    {id:'audit',label:'Journal d\'audit',icon:'🔍'},
   ];
   const visible=p.menu_visible||allMenus.map(m=>m.id);
 
@@ -10819,6 +10835,127 @@ function confirmerAjustPoints(id){
   closeModal();
   toast('✅ Points ajustés : ' + avant.toLocaleString('fr-FR') + ' → ' + (c.points||0).toLocaleString('fr-FR'));
   rFidelite();
+}
+
+
+// ─── JOURNAL D'AUDIT ───
+const MAX_AUDIT = 500;
+
+function addAudit(action, categorie, details, avant, apres){
+  if(!S.audit) S.audit = [];
+  const entry = {
+    id: genId(),
+    ts: Date.now(),
+    date: D(),
+    heure: new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),
+    user: S.session?.nom || 'Système',
+    userEmoji: S.session?.emoji || '🤖',
+    userRole: S.session?.role || 'system',
+    action,    // 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'SYNC' | 'PRINT'
+    categorie, // 'Vente' | 'Stock' | 'Client' | 'Prix' | 'Paramètres' | ...
+    details,   // texte libre
+    avant: avant ? JSON.stringify(avant).slice(0,200) : null,
+    apres: apres ? JSON.stringify(apres).slice(0,200) : null
+  };
+  S.audit.unshift(entry);
+  if(S.audit.length > MAX_AUDIT) S.audit = S.audit.slice(0, MAX_AUDIT);
+}
+
+let _auditFiltreAction = 'Tous';
+let _auditFiltreCategorie = 'Tous';
+let _auditPage = 0;
+const AUDIT_PAR_PAGE = 30;
+
+function rAudit(){
+  if(!S.audit) S.audit = [];
+  const actions = ['Tous','CREATE','UPDATE','DELETE','LOGIN','PRINT'];
+  const categories = ['Tous',...new Set(S.audit.map(a=>a.categorie).filter(Boolean))];
+
+  let filtered = S.audit;
+  if(_auditFiltreAction !== 'Tous') filtered = filtered.filter(a=>a.action===_auditFiltreAction);
+  if(_auditFiltreCategorie !== 'Tous') filtered = filtered.filter(a=>a.categorie===_auditFiltreCategorie);
+
+  const total = filtered.length;
+  const pages = Math.ceil(total/AUDIT_PAR_PAGE);
+  _auditPage = Math.min(_auditPage, Math.max(0, pages-1));
+  const slice = filtered.slice(_auditPage*AUDIT_PAR_PAGE, (_auditPage+1)*AUDIT_PAR_PAGE);
+
+  const actionColor = {CREATE:'var(--green)',UPDATE:'var(--navy)',DELETE:'var(--red)',LOGIN:'var(--teal)',PRINT:'var(--purple)',SYNC:'var(--amber)'};
+  const actionLabel = {CREATE:'Création',UPDATE:'Modification',DELETE:'Suppression',LOGIN:'Connexion',PRINT:'Impression',SYNC:'Sync'};
+
+  document.getElementById('content').innerHTML = `
+  <div class="page">
+    <!-- Stats audit -->
+    <div class="g4" style="margin-bottom:16px">
+      <div class="kpi-card kpi-green">
+        <div class="ct">Créations</div>
+        <div class="kpi-val" style="color:var(--green)">${S.audit.filter(a=>a.action==='CREATE').length}</div>
+      </div>
+      <div class="kpi-card kpi-blue">
+        <div class="ct">Modifications</div>
+        <div class="kpi-val" style="color:var(--navy)">${S.audit.filter(a=>a.action==='UPDATE').length}</div>
+      </div>
+      <div class="kpi-card kpi-red">
+        <div class="ct">Suppressions</div>
+        <div class="kpi-val" style="color:var(--red)">${S.audit.filter(a=>a.action==='DELETE').length}</div>
+      </div>
+      <div class="kpi-card kpi-teal">
+        <div class="ct">Total entrées</div>
+        <div class="kpi-val">${S.audit.length}</div>
+        <div class="ms">/ ${MAX_AUDIT} max</div>
+      </div>
+    </div>
+
+    <!-- Filtres -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        ${actions.map(a=>`<button onclick="_auditFiltreAction='${a}';_auditPage=0;rAudit()" class="btn btn-sm" style="${_auditFiltreAction===a?'background:var(--navy);color:#fff;border-color:var(--navy)':''}">${a==='Tous'?'Tous':actionLabel[a]||a}</button>`).join('')}
+      </div>
+      <select class="fs" style="width:auto;min-width:140px" onchange="_auditFiltreCategorie=this.value;_auditPage=0;rAudit()">
+        ${categories.map(c=>`<option value="${c}"${_auditFiltreCategorie===c?' selected':''}>${c}</option>`).join('')}
+      </select>
+      <span style="font-size:12px;color:var(--text3);margin-left:4px">${total} entrée${total>1?'s':''}</span>
+    </div>
+
+    <!-- Journal -->
+    ${slice.length === 0
+      ? '<div class="empty"><p>Aucune entrée dans ce filtre</p></div>'
+      : `<div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Date/Heure</th><th>Utilisateur</th><th>Action</th><th>Catégorie</th><th>Détails</th><th>Avant/Après</th></tr></thead>
+          <tbody>
+            ${slice.map(e => `<tr>
+              <td style="font-family:'DM Mono',monospace;font-size:11px;white-space:nowrap">${e.date}<br>${e.heure}</td>
+              <td style="white-space:nowrap">${e.userEmoji||'👤'} <span style="font-size:12px;font-weight:600">${e.user||'—'}</span><br><span style="font-size:10px;color:var(--text3)">${e.userRole||''}</span></td>
+              <td><span class="badge" style="background:${actionColor[e.action]||'var(--surface2)'}20;color:${actionColor[e.action]||'var(--text2)'};border:1px solid ${actionColor[e.action]||'var(--border)'}40;font-size:10px">${actionLabel[e.action]||e.action}</span></td>
+              <td><span class="badge bb" style="font-size:10px">${e.categorie||'—'}</span></td>
+              <td style="font-size:12px;max-width:200px">${e.details||'—'}</td>
+              <td style="font-size:10px;color:var(--text3);max-width:150px">
+                ${e.avant?'<div style="color:var(--red);margin-bottom:2px">Avant: '+e.avant.substring(0,60)+'...</div>':''}
+                ${e.apres?'<div style="color:var(--green)">Après: '+e.apres.substring(0,60)+'...</div>':''}
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`}
+
+    <!-- Pagination -->
+    ${pages > 1 ? `<div style="display:flex;gap:6px;justify-content:center;margin-top:12px;flex-wrap:wrap">
+      <button class="btn btn-sm" onclick="_auditPage=0;rAudit()" ${_auditPage===0?'disabled':''}>«</button>
+      <button class="btn btn-sm" onclick="_auditPage=Math.max(0,_auditPage-1);rAudit()" ${_auditPage===0?'disabled':''}>‹</button>
+      <span style="font-size:12px;align-self:center;color:var(--text3)">Page ${_auditPage+1} / ${pages}</span>
+      <button class="btn btn-sm" onclick="_auditPage=Math.min(${pages-1},_auditPage+1);rAudit()" ${_auditPage>=pages-1?'disabled':''}>›</button>
+      <button class="btn btn-sm" onclick="_auditPage=${pages-1};rAudit()" ${_auditPage>=pages-1?'disabled':''}>»</button>
+    </div>` : ''}
+  </div>`;
+}
+
+function effacerAudit(){
+  if(!confirm('Effacer tout le journal d\'audit ? Cette action est irréversible.')) return;
+  S.audit = [];
+  saveData();
+  toast('🗑️ Journal d\'audit effacé');
+  rAudit();
 }
 
 // ─── SAUVEGARDE AUTOMATIQUE ───
