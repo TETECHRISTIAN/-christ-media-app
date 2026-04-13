@@ -3148,62 +3148,195 @@ function ouvrirFicheClient(id){
   const vp2=vc2.filter(v=>v.statut==='Payé');
   const tot=vp2.reduce((s,v)=>s+v.mt,0);
   const dv=vc2.slice().sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const now=new Date();
+  const joursDepuis=dv?Math.floor((now-new Date(dv.date))/86400000):null;
+  const panierMoy=vp2.length>0?Math.round(tot/vp2.length):0;
+
+  // ── Top articles achetés ──
+  const artMap={};
+  vp2.forEach(v=>{
+    const lignes=v.lignes||[{aid:v.aid,qte:v.qte||1,pu:v.pu||v.mt}];
+    lignes.forEach(l=>{
+      const a=S.stock.find(a=>a.id==l.aid);
+      const nom=a?a.nom:'Article';
+      if(!artMap[nom])artMap[nom]={nom,qte:0,mt:0,cat:a?.cat||''};
+      artMap[nom].qte+=(l.qte||1);
+      artMap[nom].mt+=(l.qte||1)*(l.pu||0);
+    });
+  });
+  const topArts=Object.values(artMap).sort((a,b)=>b.mt-a.mt).slice(0,5);
+
+  // ── Fréquence d'achat ──
+  let freqLabel='Nouveau client';
+  if(vp2.length>=12) freqLabel='🔥 Très fidèle';
+  else if(vp2.length>=6) freqLabel='👍 Fidèle';
+  else if(vp2.length>=3) freqLabel='🙂 Régulier';
+  else if(vp2.length>=1) freqLabel='👋 Occasionnel';
+
+  // ── Activité 6 derniers mois ──
+  const mois6=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const m=d.toISOString().slice(0,7);
+    const lbl=d.toLocaleDateString('fr-FR',{month:'short'});
+    const mt=vp2.filter(v=>v.date&&v.date.startsWith(m)).reduce((s,v)=>s+v.mt,0);
+    mois6.push({m,lbl,mt});
+  }
+  const maxMois=Math.max(...mois6.map(m=>m.mt),1);
+
+  // ── Suggestions produits ──
+  // Articles dans la même catégorie que ses achats, pas encore achetés
+  const catsAchetees=[...new Set(Object.values(artMap).map(a=>a.cat).filter(Boolean))];
+  const artAchetesIds=new Set(vp2.flatMap(v=>(v.lignes||[{aid:v.aid}]).map(l=>l.aid)));
+  const suggestions=S.stock.filter(a=>
+    catsAchetees.includes(a.cat) && !artAchetesIds.has(a.id) && sa(a)>0
+  ).sort((a,b)=>b.pv-a.pv).slice(0,4);
+
+  // ── Score client ──
+  let score=0;
+  if(vp2.length>0) score+=20;
+  if(vp2.length>=3) score+=20;
+  if(vp2.length>=6) score+=15;
+  if(tot>50000) score+=15;
+  if(tot>200000) score+=10;
+  if(joursDepuis!==null&&joursDepuis<30) score+=10;
+  if(joursDepuis!==null&&joursDepuis<7) score+=10;
+  if(c.solde===0) score+=10; else score-=10;
+  score=Math.max(0,Math.min(100,score));
+  const scoreColor=score>=70?'var(--green)':score>=40?'var(--amber)':'var(--red)';
+
   let panel=document.getElementById('client-panel');
   if(!panel){panel=document.createElement('div');panel.id='client-panel';panel.className='client-panel';document.body.appendChild(panel);}
   panel.innerHTML=`
-    <div class="cp-header">
-      <div>
-        <div style="font-size:22px;margin-bottom:4px">${c.statut==='VIP'?'👑':c.statut==='Débiteur'?'⚠️':'👤'}</div>
-        <div class="cp-name">${c.nom}</div>
-        <div style="margin-top:4px">${sb(c.statut)}</div>
+    <div class="cp-header" style="padding-bottom:12px">
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <div style="font-size:28px">${c.statut==='VIP'?'👑':c.statut==='Débiteur'?'⚠️':'👤'}</div>
+          <div>
+            <div class="cp-name">${c.nom}</div>
+            <div style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap">${sb(c.statut)}<span class="badge bb" style="font-size:10px">${freqLabel}</span></div>
+          </div>
+        </div>
+        <!-- Score client -->
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:5px;background:rgba(255,255,255,.2);border-radius:3px;overflow:hidden">
+            <div style="width:${score}%;height:100%;background:${score>=70?'#4caf50':score>=40?'#f5c060':'#ef5350'};border-radius:3px"></div>
+          </div>
+          <span style="font-size:11px;color:rgba(255,255,255,.7);white-space:nowrap">Score ${score}/100</span>
+        </div>
       </div>
       <button class="cp-close" onclick="fermerFicheClient()">✕</button>
     </div>
+
+    <!-- Fidélité -->
     ${(()=>{
-      const pts = c.points||0;
-      const cfg = getFideliteConfig();
-      if(!cfg.actif && pts===0) return '';
-      const niveau = getNiveauClient(pts);
-      const valeur = valeurPointsEnFCFA(pts);
+      const pts=c.points||0;
+      const cfg=getFideliteConfig();
+      if(!cfg.actif&&pts===0) return '';
+      const niveau=getNiveauClient(pts);
+      const valeur=valeurPointsEnFCFA(pts);
       return '<div class="cp-section" style="background:linear-gradient(135deg,var(--amber-bg),var(--surface));border:1px solid var(--amber-light)">' +
-        '<div class="cp-sec-title">⭐ Fidélité</div>' +
-        '<div class="cp-stat"><span class="cp-stat-label">Niveau</span><span class="cp-stat-val">' + niveau.emoji + ' ' + niveau.nom + '</span></div>' +
-        '<div class="cp-stat"><span class="cp-stat-label">Points</span><span class="cp-stat-val" style="color:var(--amber);font-weight:700">' + pts.toLocaleString('fr-FR') + ' pts</span></div>' +
-        '<div class="cp-stat"><span class="cp-stat-label">Valeur</span><span class="cp-stat-val" style="color:var(--green)">' + F(valeur) + '</span></div>' +
-        (pts > 0 ? '<button class="btn btn-sm btn-success" style="width:100%;margin-top:8px" onclick="fermerFicheClient();utilisierPoints(' + c.id + ')">🎁 Utiliser les points</button>' : '') +
+        '<div class="cp-sec-title">⭐ Fidélité — ' + niveau.emoji + ' ' + niveau.nom + '</div>' +
+        '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
+          '<div><div style="font-size:18px;font-weight:800;color:var(--amber)">' + pts.toLocaleString('fr-FR') + ' pts</div><div style="font-size:10px;color:var(--text3)">Points cumulés</div></div>' +
+          '<div><div style="font-size:18px;font-weight:800;color:var(--green)">' + F(valeur) + '</div><div style="font-size:10px;color:var(--text3)">Valeur réduction</div></div>' +
+        '</div>' +
+        (pts>0?'<button class="btn btn-sm btn-success" style="width:100%;margin-top:8px" onclick="fermerFicheClient();utilisierPoints('+c.id+')">🎁 Utiliser les points</button>':'') +
         '</div>';
     })()}
+
+    <!-- Stats rapides -->
     <div class="cp-section">
-      <div class="cp-sec-title">Coordonnées</div>
-      <div class="cp-stat"><span class="cp-stat-label">Téléphone</span><span class="cp-stat-val">${c.tel||'—'}</span></div>
-      <div class="cp-stat"><span class="cp-stat-label">Secteur</span><span class="cp-stat-val">${c.secteur}</span></div>
-      ${c.notes?`<div class="cp-stat"><span class="cp-stat-label">Notes</span><span class="cp-stat-val" style="font-size:12px">${c.notes}</span></div>`:''}
+      <div class="cp-sec-title">📊 Vue d'ensemble</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:var(--green-bg);border-radius:var(--rs);padding:8px 10px;text-align:center">
+          <div style="font-size:16px;font-weight:800;color:var(--green)">${F(tot)}</div>
+          <div style="font-size:10px;color:var(--text3)">Total dépensé</div>
+        </div>
+        <div style="background:var(--navy-bg);border-radius:var(--rs);padding:8px 10px;text-align:center">
+          <div style="font-size:16px;font-weight:800;color:var(--navy)">${vp2.length}</div>
+          <div style="font-size:10px;color:var(--text3)">Achats payés</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:var(--rs);padding:8px 10px;text-align:center">
+          <div style="font-size:16px;font-weight:800">${F(panierMoy)}</div>
+          <div style="font-size:10px;color:var(--text3)">Panier moyen</div>
+        </div>
+        <div style="background:${joursDepuis!==null&&joursDepuis>60?'var(--red-bg)':'var(--surface2)'};border-radius:var(--rs);padding:8px 10px;text-align:center">
+          <div style="font-size:16px;font-weight:800;color:${joursDepuis!==null&&joursDepuis>60?'var(--red)':'var(--text)'}">${joursDepuis!==null?joursDepuis+'j':'—'}</div>
+          <div style="font-size:10px;color:var(--text3)">Depuis dernière visite</div>
+        </div>
+      </div>
+      ${c.solde>0?`<div style="margin-top:8px;background:var(--red-bg);border-radius:var(--rs);padding:8px 10px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--red);font-weight:600">Solde dû</span><span style="font-size:14px;font-weight:800;color:var(--red)">${F(c.solde)}</span></div>`:''}
     </div>
+
+    <!-- Activité mensuelle -->
+    ${mois6.some(m=>m.mt>0)?`
     <div class="cp-section">
-      <div class="cp-sec-title">Activité commerciale</div>
-      <div class="cp-stat"><span class="cp-stat-label">Total dépensé</span><span class="cp-stat-val" style="color:var(--green)">${F(tot)}</span></div>
-      <div class="cp-stat"><span class="cp-stat-label">Nb. commandes</span><span class="cp-stat-val">${vc2.length}</span></div>
-      <div class="cp-stat"><span class="cp-stat-label">Panier moyen</span><span class="cp-stat-val">${vp2.length>0?F(Math.round(tot/vp2.length)):'—'}</span></div>
-      <div class="cp-stat"><span class="cp-stat-label">Dernière visite</span><span class="cp-stat-val">${dv?dv.date:'—'}</span></div>
-      ${c.solde>0?`<div class="cp-stat"><span class="cp-stat-label" style="color:var(--red)">Solde dû</span><span class="cp-stat-val" style="color:var(--red);font-weight:700">${F(c.solde)}</span></div>`:''}
-    </div>
+      <div class="cp-sec-title">📈 Activité (6 mois)</div>
+      <div style="display:flex;align-items:flex-end;gap:4px;height:60px">
+        ${mois6.map(m=>{
+          const h=Math.round(m.mt/maxMois*100);
+          const isCur=m.m===now.toISOString().slice(0,7);
+          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+            <div style="width:100%;height:${Math.max(h,4)}px;background:${isCur?'var(--navy)':'var(--navy-light)'};border-radius:2px 2px 0 0" title="${m.lbl}: ${F(m.mt)}"></div>
+            <div style="font-size:9px;color:var(--text3)">${m.lbl}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+
+    <!-- Top articles -->
+    ${topArts.length>0?`
     <div class="cp-section">
-      <div class="cp-sec-title">Historique (${vc2.length})</div>
+      <div class="cp-sec-title">🏷️ Articles favoris</div>
+      ${topArts.map((a,i)=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;${i<topArts.length-1?'border-bottom:1px solid var(--border)':''}">
+          <span style="font-size:10px;color:var(--text3);min-width:16px;font-weight:700">#${i+1}</span>
+          <div style="flex:1;font-size:12px;font-weight:600">${a.nom}</div>
+          <span style="font-size:11px;color:var(--text3)">${a.qte}×</span>
+          <span style="font-size:12px;font-weight:700;color:var(--green)">${F(a.mt)}</span>
+        </div>`).join('')}
+    </div>`:''}
+
+    <!-- Suggestions -->
+    ${suggestions.length>0?`
+    <div class="cp-section" style="background:var(--navy-bg);border:1px solid var(--navy-light)">
+      <div class="cp-sec-title" style="color:var(--navy)">💡 Suggestions pour ${c.nom.split(' ')[0]}</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Basées sur ses achats habituels</div>
+      ${suggestions.map(a=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--navy-light)">
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:600">${a.nom}</div>
+            <div style="font-size:10px;color:var(--text3)">${a.cat} · Stock: ${sa(a)}</div>
+          </div>
+          <span style="font-size:12px;font-weight:700;color:var(--navy)">${F(a.pv)}</span>
+          <button class="btn btn-sm btn-primary" style="padding:3px 8px;font-size:11px" onclick="fermerFicheClient();nav(document.querySelector('[data-page=vente]'),'vente')">Vendre</button>
+        </div>`).join('')}
+    </div>`:''}
+
+    <!-- Historique complet -->
+    <div class="cp-section">
+      <div class="cp-sec-title">🕒 Historique complet (${vc2.length})</div>
       ${vc2.length===0?'<div style="font-size:13px;color:var(--text3);padding:8px 0">Aucun achat enregistré</div>':
-        vc2.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8).map(v=>{
+        vc2.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(v=>{
           const lignes=v.lignes||[{aid:v.aid,qte:v.qte,pu:v.pu}];
           const noms=lignes.map(l=>{const a=S.stock.find(a=>a.id==l.aid);return a?a.nom:'?'}).join(', ');
           return`<div style="padding:8px 0;border-bottom:1px solid var(--border)">
-            <div style="display:flex;justify-content:space-between">
-              <span style="font-size:12px;color:var(--text3)">${v.date}</span>
-              <span style="font-weight:600;font-size:13px;color:${v.statut==='Payé'?'var(--green)':'var(--red)'}">${F(v.mt)}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace">${v.date}</span>
+              <span style="font-weight:700;font-size:13px;color:${v.statut==='Payé'?'var(--green)':'var(--amber)'}">${F(v.mt)}</span>
             </div>
-            <div style="font-size:12px;color:var(--text2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${noms}</div>
-            <div style="margin-top:3px">${sb(v.statut)}</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${noms}">${noms}</div>
+            <div style="display:flex;gap:6px;margin-top:3px;align-items:center">
+              ${sb(v.statut)}
+              ${v.mode?`<span class="badge bb" style="font-size:10px">${v.mode}</span>`:''}
+              ${v.caissier_nom?`<span style="font-size:10px;color:var(--text3)">${v.caissier_emoji||''} ${v.caissier_nom}</span>`:''}
+            </div>
           </div>`;
         }).join('')}
-      ${vc2.length>8?`<div style="font-size:11px;color:var(--text3);padding:6px 0">+ ${vc2.length-8} autres</div>`:''}
     </div>
+
+    <!-- Actions -->
     <div style="padding:16px 20px;display:flex;flex-direction:column;gap:8px">
       ${c.tel?'<button class="btn btn-success" style="width:100%" onclick="relancerClientWA('+c.id+')">📱 Relancer sur WhatsApp</button>':''}
       ${c.solde>0?'<button class="btn" style="width:100%;color:var(--green);border-color:var(--green)" onclick="encaisserSoldeClient('+c.id+')">✓ Encaisser le solde</button>':''}
