@@ -4447,16 +4447,23 @@ function rParametres(){
     <div class="param-section">
       <div class="param-section-title">🔧 Données & Système</div>
       <div class="param-row">
-        <div><div class="param-label">Exporter toutes les données</div><div class="param-desc">Sauvegarde JSON complète</div></div>
-        <button class="btn" onclick="exportData()">⬇️ Exporter JSON</button>
+        <div><div class="param-label">Exporter (JSON standard)</div><div class="param-desc">Sauvegarde JSON lisible</div></div>
+        <button class="btn" onclick="exportData()">⬇️ JSON</button>
+      </div>
+      <div class="param-row">
+        <div><div class="param-label">Exporter chiffré (🔒 AES-256)</div><div class="param-desc">Fichier .enc protégé par mot de passe</div></div>
+        <button class="btn btn-primary" onclick="exportDataChiffre()">🔒 Export chiffré</button>
       </div>
       <div class="param-row">
         <div><div class="param-label">Exporter vers Excel</div><div class="param-desc">Ventes, achats, stock en CSV</div></div>
-        <button class="btn" onclick="modalExportExcel()">📊 Export Excel</button>
+        <button class="btn" onclick="modalExportExcel()">📊 Excel</button>
       </div>
       <div class="param-row">
-        <div><div class="param-label">Importer des données</div><div class="param-desc">Restaurer depuis une sauvegarde</div></div>
-        <button class="btn" onclick="importData()">⬆️ Importer</button>
+        <div><div class="param-label">Importer des données</div><div class="param-desc">Restaurer depuis JSON ou fichier chiffré</div></div>
+        <div style="display:flex;gap:6px">
+          <button class="btn" onclick="importData()">⬆️ JSON</button>
+          <button class="btn" onclick="importDataChiffre()">🔓 Déchiffrer</button>
+        </div>
       </div>
       <div class="param-row">
         <div><div class="param-label">Recalculer le stock</div><div class="param-desc">Recalcule qv depuis les ventes réelles si le stock est incohérent</div></div>
@@ -10956,6 +10963,204 @@ function effacerAudit(){
   saveData();
   toast('🗑️ Journal d\'audit effacé');
   rAudit();
+}
+
+
+// ─── SAUVEGARDE CHIFFRÉE AES-256-GCM ───
+// Utilise l'API Web Crypto native — pas de dépendance externe
+// Format du fichier .enc : JSON { version, salt, iv, data }
+// La clé est dérivée du mot de passe via PBKDF2 (310000 itérations)
+
+const CRYPTO_VERSION = 1;
+
+async function deriverCle(motDePasse, salt){
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', enc.encode(motDePasse),
+    {name:'PBKDF2'}, false, ['deriveKey']
+  );
+  return crypto.subtle.deriveKey(
+    {name:'PBKDF2', salt, iterations:310000, hash:'SHA-256'},
+    keyMaterial,
+    {name:'AES-GCM', length:256},
+    false, ['encrypt','decrypt']
+  );
+}
+
+async function chiffrerTexte(texte, motDePasse){
+  const enc = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const cle = await deriverCle(motDePasse, salt);
+  const data = await crypto.subtle.encrypt({name:'AES-GCM', iv}, cle, enc.encode(texte));
+  return {
+    version: CRYPTO_VERSION,
+    salt: Array.from(salt),
+    iv: Array.from(iv),
+    data: Array.from(new Uint8Array(data))
+  };
+}
+
+async function dechiffrerTexte(enveloppe, motDePasse){
+  const salt = new Uint8Array(enveloppe.salt);
+  const iv = new Uint8Array(enveloppe.iv);
+  const data = new Uint8Array(enveloppe.data);
+  const cle = await deriverCle(motDePasse, salt);
+  const decrypted = await crypto.subtle.decrypt({name:'AES-GCM', iv}, cle, data);
+  return new TextDecoder().decode(decrypted);
+}
+
+function exportDataChiffre(){
+  modal(`<div class="mft">🔒 Export chiffré</div>
+    <div style="background:var(--navy-bg);border:1px solid var(--navy-light);border-radius:var(--rs);padding:12px 14px;margin-bottom:16px;font-size:12px;color:var(--navy)">
+      🔐 Vos données seront chiffrées avec AES-256-GCM.<br>
+      <strong>Notez bien votre mot de passe</strong> — il sera impossible de récupérer les données sans lui.
+    </div>
+    <div class="fg">
+      <label class="fl">Mot de passe de chiffrement</label>
+      <div style="position:relative">
+        <input class="fi" type="password" id="enc-pwd" placeholder="Minimum 8 caractères" autocomplete="new-password"
+          oninput="majForceMotDePasse(this.value)">
+        <button onclick="togglePwdVisibility('enc-pwd','btn-eye-enc')" id="btn-eye-enc"
+          style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px">👁️</button>
+      </div>
+      <div id="force-pwd" style="height:4px;border-radius:2px;margin-top:6px;background:var(--surface2);overflow:hidden">
+        <div id="force-fill" style="height:100%;width:0%;transition:width .3s,background .3s;border-radius:2px"></div>
+      </div>
+      <div id="force-label" style="font-size:11px;color:var(--text3);margin-top:3px"></div>
+    </div>
+    <div class="fg">
+      <label class="fl">Confirmer le mot de passe</label>
+      <input class="fi" type="password" id="enc-pwd2" placeholder="Répétez le mot de passe" autocomplete="new-password">
+    </div>
+    <div class="mff">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="confirmerExportChiffre()">🔒 Chiffrer et télécharger</button>
+    </div>`);
+}
+
+function majForceMotDePasse(pwd){
+  let score = 0;
+  if(pwd.length >= 8) score++;
+  if(pwd.length >= 12) score++;
+  if(/[A-Z]/.test(pwd)) score++;
+  if(/[0-9]/.test(pwd)) score++;
+  if(/[^A-Za-z0-9]/.test(pwd)) score++;
+  const colors = ['var(--red)','var(--red)','var(--amber)','var(--amber)','var(--green)'];
+  const labels = ['','Très faible','Faible','Moyen','Fort','Très fort'];
+  const fill = document.getElementById('force-fill');
+  const lbl = document.getElementById('force-label');
+  if(fill){ fill.style.width=(score*20)+'%'; fill.style.background=colors[score]||'var(--green)'; }
+  if(lbl){ lbl.textContent=labels[score]||''; lbl.style.color=colors[score]||'var(--green)'; }
+}
+
+function togglePwdVisibility(inputId, btnId){
+  const inp = document.getElementById(inputId);
+  const btn = document.getElementById(btnId);
+  if(!inp) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  if(btn) btn.textContent = inp.type === 'password' ? '👁️' : '🙈';
+}
+
+async function confirmerExportChiffre(){
+  const pwd = document.getElementById('enc-pwd')?.value;
+  const pwd2 = document.getElementById('enc-pwd2')?.value;
+  if(!pwd || pwd.length < 8) return toast('❌ Mot de passe trop court (min 8 caractères)');
+  if(pwd !== pwd2) return toast('❌ Les mots de passe ne correspondent pas');
+  
+  const btn = document.querySelector('#modal-root .btn-primary');
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Chiffrement...'; }
+  
+  try {
+    const json = JSON.stringify(S, null, 2);
+    const enveloppe = await chiffrerTexte(json, pwd);
+    const contenu = JSON.stringify(enveloppe);
+    const blob = new Blob([contenu], {type:'application/octet-stream'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'ChristMedia_backup_' + D() + '.enc';
+    a.click();
+    closeModal();
+    addAudit('PRINT','Données','Export chiffré téléchargé', null, null);
+    toast('✅ Sauvegarde chiffrée téléchargée !');
+  } catch(e) {
+    console.error(e);
+    toast('❌ Erreur lors du chiffrement : ' + e.message);
+    if(btn){ btn.disabled = false; btn.textContent = '🔒 Chiffrer et télécharger'; }
+  }
+}
+
+function importDataChiffre(){
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.enc,.json';
+  input.onchange = e => {
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        // Vérifier si c'est un fichier chiffré
+        if(parsed.version && parsed.salt && parsed.iv && parsed.data){
+          // Demander le mot de passe
+          modal(`<div class="mft">🔓 Déchiffrer la sauvegarde</div>
+            <div style="background:var(--surface2);border-radius:var(--rs);padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text2)">
+              Fichier : <strong>${file.name}</strong>
+            </div>
+            <div class="fg">
+              <label class="fl">Mot de passe</label>
+              <div style="position:relative">
+                <input class="fi" type="password" id="dec-pwd" placeholder="Mot de passe de déchiffrement" autofocus
+                  onkeydown="if(event.key===\\'Enter\\')confirmerImportChiffre()">
+                <button onclick="togglePwdVisibility(\\'dec-pwd\\',\\'btn-eye-dec\\')" id="btn-eye-dec"
+                  style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px">👁️</button>
+              </div>
+            </div>
+            <div class="mff">
+              <button class="btn" onclick="closeModal()">Annuler</button>
+              <button class="btn btn-primary" onclick="confirmerImportChiffre()">🔓 Déchiffrer</button>
+            </div>`);
+          window._encData = parsed;
+        } else {
+          toast('❌ Fichier non chiffré. Utilisez le bouton JSON pour importer ce fichier.');
+        }
+      } catch(err) {
+        toast('❌ Fichier illisible : ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+async function confirmerImportChiffre(){
+  const pwd = document.getElementById('dec-pwd')?.value;
+  if(!pwd) return toast('❌ Mot de passe requis');
+  const btn = document.querySelector('#modal-root .btn-primary');
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Déchiffrement...'; }
+  try {
+    const json = await dechiffrerTexte(window._encData, pwd);
+    const data = JSON.parse(json);
+    if(!data.stock || !data.ventes){
+      throw new Error('Fichier invalide après déchiffrement');
+    }
+    const savedSession = S.session;
+    S = data;
+    if(savedSession?.uid) S.session = savedSession;
+    saveData();
+    closeModal();
+    addAudit('UPDATE','Données','Import depuis sauvegarde chiffrée', null, null);
+    toast('✅ Données restaurées avec succès !');
+    nav(document.querySelector('[data-page=dashboard]'), 'dashboard');
+  } catch(e) {
+    console.error(e);
+    closeModal();
+    if(e.message.includes('decryption') || e.message.includes('decrypt')){
+      toast('❌ Mot de passe incorrect');
+    } else {
+      toast('❌ Erreur : ' + e.message);
+    }
+  }
 }
 
 // ─── SAUVEGARDE AUTOMATIQUE ───
