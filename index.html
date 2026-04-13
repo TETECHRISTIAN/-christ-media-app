@@ -1882,7 +1882,7 @@ const actionsMap={
   fournisseurs:()=>'<button class="btn btn-primary" onclick="addFour()">+ Fournisseur</button>',
   depenses:()=>'<button class="btn btn-danger" onclick="addDep()">+ Dépense</button>',
   tresorerie:()=>'',revenus:()=>'<button class="btn btn-success" onclick="addRevenu()">+ Revenu</button> <button class="btn" onclick="addCharge()">+ Charge</button>',rapports:()=>'<button class="btn" onclick="printRapport()">🖨️ Imprimer</button>',
-  historique:()=>'<button class="btn" onclick="clearHistorique()">🗑️ Vider</button>',inventaire:()=>'<button class="btn" onclick="printRapport()">🖨️ Imprimer</button>',workspace:()=>'',comptes:()=>'<button class="btn btn-primary" onclick="addCompte()">+ Compte</button>',devis:()=>'<button class="btn btn-primary" onclick="addDevis()">+ Devis</button>',planning:()=>'<button class="btn btn-primary" onclick="addPlanning()">+ Tâche</button>',calculatrice:()=>'',parametres:()=>'',
+  historique:()=>'<button class="btn" onclick="clearHistorique()">🗑️ Vider</button>',inventaire:()=>'<button class="btn" onclick="printRapport()">🖨️ Imprimer</button>',workspace:()=>'',comptes:()=>'<button class="btn btn-primary" onclick="addCompte()">+ Compte</button>',devis:()=>'<button class="btn" onclick="_devisFiltreStatut=\'Envoyé\';rDevis()">📤 En attente</button> <button class="btn btn-primary" onclick="addDevis()">+ Devis</button>',planning:()=>'<button class="btn btn-primary" onclick="addPlanning()">+ Tâche</button>',calculatrice:()=>'',parametres:()=>'',
   dettes:()=>'',
   flux:()=>'',
   limites:()=>'<button class="btn btn-primary" onclick="addLimite()">+ Limite</button>',
@@ -5639,34 +5639,63 @@ function delTransfert(id){
 }
 
 // ─── DEVIS CLIENTS ───
+let _devisFiltreStatut = 'Tous';
 function rDevis(){
   if(!S.devis)S.devis=[];
   const totDevis=S.devis.reduce((s,d)=>s+d.mt,0);
   const acceptes=S.devis.filter(d=>d.statut==='Accepté').reduce((s,d)=>s+d.mt,0);
+  const enAttente=S.devis.filter(d=>d.statut==='Envoyé');
+  const filtres=['Tous','Brouillon','Envoyé','Accepté','Refusé'];
+  const devisAff = _devisFiltreStatut==='Tous' ? S.devis : S.devis.filter(d=>d.statut===_devisFiltreStatut);
+  const today = D();
+
   document.getElementById('content').innerHTML=`
+    <!-- KPIs -->
     <div class="g4" style="margin-bottom:16px">
       <div class="card"><div class="ct">Total devis</div><div class="mv">${N(S.devis.length)}</div></div>
       <div class="card"><div class="ct">Valeur totale</div><div class="mv">${F(totDevis)}</div></div>
       <div class="card"><div class="ct">Devis acceptés</div><div class="mv" style="color:var(--green)">${F(acceptes)}</div></div>
       <div class="card"><div class="ct">Taux acceptation</div><div class="mv">${S.devis.length?Math.round(S.devis.filter(d=>d.statut==='Accepté').length/S.devis.length*100):0}%</div></div>
     </div>
+
+    <!-- Alerte devis en attente à convertir -->
+    ${enAttente.length>0?`<div class="alert alert-a" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+      <span>📄 ${enAttente.length} devis envoyé${enAttente.length>1?'s':''} en attente de réponse (${F(enAttente.reduce((s,d)=>s+d.mt,0))})</span>
+    </div>`:''}
+
+    <!-- Alerte devis expirés non convertis -->
+    ${(()=>{
+      const expires = S.devis.filter(d=>d.validite&&d.validite<today&&d.statut!=='Accepté'&&d.statut!=='Refusé');
+      return expires.length>0?'<div class="alert alert-r" style="margin-bottom:12px">⚠️ '+expires.length+' devis expiré'+( expires.length>1?'s':'')+'</div>':'';
+    })()}
+
+    <!-- Filtres statut -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      ${filtres.map(f=>`<button onclick="_devisFiltreStatut='${f}';rDevis()" class="btn btn-sm" style="${_devisFiltreStatut===f?'background:var(--navy);color:#fff;border-color:var(--navy)':''}">${f} ${f!=='Tous'?'('+S.devis.filter(d=>d.statut===f).length+')':''}</button>`).join('')}
+    </div>
+
     <div class="tbl-wrap"><table>
-      <thead><tr><th>N° Devis</th><th>Date</th><th>Client</th><th>Articles</th><th>Montant</th><th>Statut</th><th></th></tr></thead>
-      <tbody>${S.devis.length===0?'<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text3)">Aucun devis créé</td></tr>':
-        S.devis.slice().reverse().map(d=>`<tr>
-          <td style="font-family:'DM Mono',monospace;font-size:12px">DEV-${String(d.id).padStart(4,'0')}</td>
-          <td>${d.date}</td><td class="tdm">${d.client}</td>
-          <td style="font-size:12px;color:var(--text3)">${(d.lignes||[]).map(l=>{const a=ga(l.aid);return a?a.nom:'?'}).join(', ').slice(0,40)}</td>
-          <td style="font-weight:600">${F(d.mt)}</td>
-          <td><span class="devis-status dv-${d.statut==='Brouillon'?'brouillon':d.statut==='Envoyé'?'envoye':d.statut==='Accepté'?'accepte':'refuse'}">${d.statut}</span></td>
-          <td><div class="td-actions">
-            <button class="btn-icon btn-sm" onclick="majStatutDevis(${d.id})" title="Changer statut">🔄</button>
-            <button class="btn-icon btn-sm" onclick="imprimerDevis(${d.id})" title="Imprimer">🖨️</button>
-            <button class="btn-icon btn-sm" onclick="partagerWhatsApp(${d.id},'devis')" title="WhatsApp">📱</button>
-            <button class="btn-icon btn-sm" onclick="convertirDevisVente(${d.id})" title="Convertir en vente" style="color:var(--green)">✓</button>
-            <button class="btn-icon btn-sm" onclick="delDevis(${d.id})" style="color:var(--red)">✕</button>
-          </div></td>
-        </tr>`).join('')}
+      <thead><tr><th>N° Devis</th><th>Date</th><th>Client</th><th>Articles</th><th>Montant</th><th>Validité</th><th>Statut</th><th></th></tr></thead>
+      <tbody>${devisAff.length===0?'<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text3)">Aucun devis</td></tr>':
+        devisAff.slice().reverse().map(d=>{
+          const isExpire=d.validite&&d.validite<today&&d.statut!=='Accepté'&&d.statut!=='Refusé';
+          const peutConvertir=d.statut!=='Accepté'&&d.statut!=='Refusé';
+          return`<tr style="${peutConvertir?'cursor:pointer':''}" ${peutConvertir?'onclick="aperçuDevisConversion('+d.id+')"':''}>
+            <td style="font-family:'DM Mono',monospace;font-size:12px">DEV-${String(d.id).padStart(4,'0')}</td>
+            <td>${d.date}</td><td class="tdm">${d.client}</td>
+            <td style="font-size:12px;color:var(--text3)">${(d.lignes||[]).length} article${(d.lignes||[]).length>1?'s':''}</td>
+            <td style="font-weight:600">${F(d.mt)}</td>
+            <td style="font-size:11px;color:${isExpire?'var(--red)':'var(--text3)'};font-weight:${isExpire?'700':'400'}">${d.validite||'—'}${isExpire?' ⚠️':''}</td>
+            <td><span class="devis-status dv-${d.statut==='Brouillon'?'brouillon':d.statut==='Envoyé'?'envoye':d.statut==='Accepté'?'accepte':'refuse'}">${d.statut}</span></td>
+            <td onclick="event.stopPropagation()"><div class="td-actions">
+              ${peutConvertir?`<button class="btn btn-sm btn-success" onclick="event.stopPropagation();aperçuDevisConversion(${d.id})" style="font-size:11px;padding:3px 8px">✓ Convertir</button>`:''}
+              <button class="btn-icon btn-sm" onclick="event.stopPropagation();majStatutDevis(${d.id})" title="Changer statut">🔄</button>
+              <button class="btn-icon btn-sm" onclick="event.stopPropagation();imprimerDevis(${d.id})" title="Imprimer">🖨️</button>
+              <button class="btn-icon btn-sm" onclick="event.stopPropagation();partagerWhatsApp(${d.id},'devis')" title="WhatsApp">📱</button>
+              <button class="btn-icon btn-sm" onclick="event.stopPropagation();delDevis(${d.id})" style="color:var(--red)">✕</button>
+            </div></td>
+          </tr>`;
+        }).join('')}
       </tbody></table></div>`;
 }
 
@@ -5732,19 +5761,124 @@ function majStatutDevis(id){
   d.statut=statuts[(idx+1)%statuts.length];
   saveData();toast(`📄 Statut : ${d.statut}`);rDevis();
 }
-function convertirDevisVente(id){
-  const d=S.devis.find(d=>d.id==id);if(!d)return;
-  if(!confirm(`Convertir le devis de ${d.client} en vente ?`))return;
-  // Vérifier les stocks
+function aperçuDevisConversion(id){
+  const d = S.devis.find(d=>d.id==id); if(!d) return;
+  const p = S.parametres || {};
+  const dev = p.devise || 'FCFA';
+  // Vérifier disponibilité stock
+  const problemes = (d.lignes||[]).filter(l => { const a=ga(l.aid); return a && sa(a)<l.qte; });
+
+  modal(`<div class="mft">🔄 Convertir en vente — DEV-${String(d.id).padStart(4,'0')}</div>
+    <!-- Résumé devis -->
+    <div style="background:var(--surface2);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div>
+          <div style="font-size:14px;font-weight:700">${d.client}</div>
+          <div style="font-size:11px;color:var(--text3)">Devis du ${d.date}</div>
+        </div>
+        <div style="font-size:20px;font-weight:900;color:var(--navy)">${F(d.mt)}</div>
+      </div>
+      <!-- Lignes articles -->
+      <div style="border-top:1px solid var(--border);padding-top:8px">
+        ${(d.lignes||[]).map(l=>{
+          const a=ga(l.aid);
+          const stockOk=a&&sa(a)>=l.qte;
+          return '<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0">' +
+            '<span style="color:'+(!stockOk?'var(--red)':'var(--text2)')+'">' + (a?a.nom:(l.nom||'?')) + ' × ' + l.qte + (stockOk?'':' ⚠️ stock insuffisant') + '</span>' +
+            '<span style="font-weight:600">' + F(l.mt) + '</span>' +
+          '</div>';
+        }).join('')}
+      </div>
+    </div>
+
+    ${problemes.length>0?'<div class="alert alert-r" style="margin-bottom:12px">❌ Stock insuffisant pour : '+problemes.map(l=>l.nom).join(', ')+'</div>':''}
+
+    <!-- Options de conversion -->
+    <div class="fr">
+      <div class="fg"><label class="fl">Mode de paiement</label>
+        ${selectComptes('conv-cid', premierCompteId())}
+      </div>
+      <div class="fg"><label class="fl">Statut</label>
+        <select class="fs" id="conv-statut">
+          <option value="Payé">✅ Payé immédiatement</option>
+          <option value="Non payé">⏳ À percevoir (crédit)</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Date de vente</label>
+      <input class="fi" type="date" id="conv-date" value="${D()}">
+    </div>
+    <div class="fg" style="display:flex;align-items:center;gap:10px">
+      <input type="checkbox" id="conv-print" checked>
+      <label for="conv-print" style="font-size:13px;cursor:pointer">Imprimer le reçu après conversion</label>
+    </div>
+    <div class="mff">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-success" onclick="confirmerConversionDevis(${id})" ${problemes.length>0?'disabled':''}>
+        ✓ Convertir en vente
+      </button>
+    </div>`);
+}
+
+function confirmerConversionDevis(id){
+  const d = S.devis.find(d=>d.id==id); if(!d) return;
+  const cid = document.getElementById('conv-cid')?.value || premierCompteId();
+  const statut = document.getElementById('conv-statut')?.value || 'Payé';
+  const date = document.getElementById('conv-date')?.value || D();
+  const imprimer = document.getElementById('conv-print')?.checked;
+
+  // Vérif stocks
   for(const l of d.lignes){
     const a=ga(l.aid);
-    if(!a||sa(a)<l.qte){toast(`❌ Stock insuffisant pour ${l.nom}`);return;}
+    if(!a||sa(a)<l.qte){ toast('❌ Stock insuffisant pour ' + l.nom); return; }
   }
-  for(const l of d.lignes){const a=ga(l.aid);if(a)a.qv+=l.qte;addHistorique('Sortie',ga(l.aid),l.qte,`Devis converti - ${d.client}`);}
-  S.ventes.push({id:genId(),date:D(),lignes:d.lignes,aid:d.lignes[0].aid,qte:d.lignes[0].qte,pu:d.lignes[0].pu,mt:d.mt,statut:'Payé',client:d.client,mode:'Espèces'});
-  d.statut='Accepté';
-  saveData();toast(`✅ Devis converti en vente : ${F(d.mt)}`);rDevis();
+
+  // Déduire stock + historique
+  for(const l of d.lignes){
+    const a=ga(l.aid); if(!a) continue;
+    a.qv += l.qte;
+    addHistorique('Sortie', a, l.qte, 'Conversion devis DEV-' + String(d.id).padStart(4,'0') + ' — ' + d.client);
+  }
+
+  // Créer la vente
+  const vid = genId();
+  S.ventes.push({
+    id:vid, date,
+    lignes: d.lignes,
+    aid: d.lignes[0].aid, qte: d.lignes[0].qte, pu: d.lignes[0].pu,
+    mt: d.mt, sousTotal: d.mt, remise: 0,
+    statut, client: d.client,
+    mode: nomCompte(cid), cid,
+    caissier_uid: S.session?.uid||null,
+    caissier_nom: S.session?.nom||null,
+    caissier_emoji: S.session?.emoji||'👤',
+    caissier_role: S.session?.role||null,
+    devis_id: d.id
+  });
+
+  // Mettre à jour compte si payé
+  if(statut === 'Payé') crediterCompte(cid, d.mt);
+
+  // Points fidélité
+  if(statut === 'Payé') ajouterPointsFidelite(d.client, d.mt);
+
+  // Marquer devis accepté
+  d.statut = 'Accepté';
+  d.dateConversion = date;
+  d.venteId = vid;
+
+  saveData();
+  closeModal();
+  toast('✅ Devis DEV-' + String(d.id).padStart(4,'0') + ' converti en vente — ' + F(d.mt));
+
+  if(imprimer){
+    setTimeout(()=>demanderMontantRecu(vid), 400);
+  }
+  rDevis();
 }
+
+// Garder l'ancienne fonction pour compatibilité
+function convertirDevisVente(id){ aperçuDevisConversion(id); }
 function imprimerDevis(id){
   const d=S.devis.find(d=>d.id==id);if(!d)return;
   const p=S.parametres;
