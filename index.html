@@ -965,6 +965,10 @@ body.dark th{background:var(--surface3)}
       <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M1 7h14M5 1v4M11 1v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       Planification
     </div>
+    <div class="ni" data-page="fidelite" onclick="nav(this,'fidelite')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      Fidélité
+    </div>
     <div class="ni" data-page="depots" onclick="nav(this,'depots')">
       <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="7" width="6" height="8" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="4" width="6" height="11" rx="1" stroke="currentColor" stroke-width="1.5"/><path d="M1 7l3-5h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 4l-2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       Multi-dépôt
@@ -1402,6 +1406,7 @@ const defaultData={
   historique_prix:[],
   objectifs:{ca_mensuel:500000,ventes_nb:50,depenses_max:200000,actif:true},
   boutiques:[{id:1,nom:'Christ Media — Lomé',actif:true}],
+  fidelite:{actif:false,pointsParFCFA:1,valeurPoint:10,niveaux:[{nom:'Bronze',seuil:0,emoji:'🥉'},{nom:'Argent',seuil:500,emoji:'🥈'},{nom:'Or',seuil:2000,emoji:'🥇'},{nom:'VIP',seuil:5000,emoji:'💎'}]},
   boutique_active:1,
   depots:[{id:1,nom:'Boutique principale',emoji:'🏪',actif:true},{id:2,nom:'Entrepôt',emoji:'📦',actif:true}],
   transferts_stock:[],
@@ -1642,7 +1647,7 @@ function activerListenerTempsReel(){
           inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,
           comptes:rComptes,devis:rDevis,planning:rPlanning,
           calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,
-          limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots})[currentPage]();
+          limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite})[currentPage]();
       }catch(e){}
       toast('🔄 Données mises à jour',1500);
     } else if(remoteVer === localVer && remoteVer > 0){
@@ -1670,7 +1675,7 @@ function activerListenerTempsReel(){
             inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,
             comptes:rComptes,devis:rDevis,planning:rPlanning,
             calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,
-            limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots})[currentPage]();
+            limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite})[currentPage]();
         }catch(e){}
         toast('🔀 Données fusionnées',1500);
       }
@@ -1726,7 +1731,7 @@ async function manualSync(){
       saveLocal(S);
       setSyncStatus('online','Synchronisé ✓');
       toast('✅ Données synchronisées depuis le cloud');
-      ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots})[currentPage]();
+      ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite})[currentPage]();
     }else{
       await saveToFirebase(S);
       toast('✅ Données locales envoyées au cloud');
@@ -1754,7 +1759,7 @@ async function startFirebaseSync(){
         if(savedSession&&savedSession.uid) S.session=savedSession;
         saveLocal(S);
         setSyncStatus('online','Synchronisé ✓');
-        ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots})[currentPage]();
+        ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite})[currentPage]();
       }else{
         await saveToFirebase(S);
       }
@@ -1864,7 +1869,7 @@ function toast(msg,dur=2200){
 }
 
 // ─── NAVIGATION ───
-const titles={dashboard:'Tableau de bord',objectifs:'Objectifs & KPIs',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres',dettes:'Gestion des dettes',flux:'Flux financier',limites:'Limites de dépenses',modeles:"Modèles d'opération",agenda:'Opérations suivantes',journal:'Journal privé',caisse:'Rapport de caisse',stats:'Statistiques vendeurs',promos:'Promotions & Réductions',commandes:'Commandes fournisseurs',depots:'Stock multi-dépôt'};
+const titles={dashboard:'Tableau de bord',objectifs:'Objectifs & KPIs',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres',dettes:'Gestion des dettes',flux:'Flux financier',limites:'Limites de dépenses',modeles:"Modèles d'opération",agenda:'Opérations suivantes',journal:'Journal privé',caisse:'Rapport de caisse',stats:'Statistiques vendeurs',promos:'Promotions & Réductions',commandes:'Commandes fournisseurs',depots:'Stock multi-dépôt',fidelite:'Programme de fidélité'};
 const actionsMap={
   dashboard:()=>'<button class="btn btn-success" onclick="nav(document.querySelector(\'[data-page=vente]\'),\'vente\')">+ Vente</button>',
   objectifs:()=>'<button class="btn btn-primary" onclick="editObjectifs()">⚙️ Modifier objectifs</button>',
@@ -1888,7 +1893,8 @@ const actionsMap={
   stats:()=>'',
   promos:()=>'<button class="btn btn-primary" onclick="addPromo()">+ Nouvelle promo</button>',
   commandes:()=>'<button class="btn" onclick="genCommandesAuto()">⚡ Générer auto</button> <button class="btn btn-primary" onclick="addCommande()">+ Commande</button>',
-  depots:()=>'<button class="btn" onclick="addDepot()">+ Dépôt</button> <button class="btn btn-primary" onclick="nouveauTransfert()">⇄ Transfert</button>'
+  depots:()=>'<button class="btn" onclick="addDepot()">+ Dépôt</button> <button class="btn btn-primary" onclick="nouveauTransfert()">⇄ Transfert</button>',
+  fidelite:()=>'<button class="btn" onclick="nav(document.querySelector(\"[data-page=parametres]\"),\"parametres\")">⚙️ Configurer</button>'
 };
 
 let currentPage='dashboard';
@@ -1907,7 +1913,7 @@ function nav(el,page){
   if(_presenceId&&fbReady&&db){
     db.ref('christmedia/presence/'+_presenceId+'/page').set(page).catch(()=>{});
   }
-  ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots})[page]();
+  ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite})[page]();
   closeMobileSidebar();
   document.getElementById('mn-dropdown').classList.remove('open');
 }
@@ -2629,6 +2635,8 @@ function validerPanier(){
     window.panier=[];
     window.remise={type:'%',val:0};
     if(statut==='Payé') crediterCompte(cid,mt);
+    // Ajouter points de fidélité
+    if(client) ajouterPointsFidelite(client, mt);
     saveData();toast(`✅ Vente de ${F(mt)} enregistrée !`);closeModal();rVente();
     setTimeout(()=>{if(confirm('Imprimer le reçu ?'))demanderMontantRecu(vid);},300);
   });
@@ -3106,7 +3114,7 @@ function delArticle(id){
 function rClients(){
   document.getElementById('content').innerHTML=`
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Nom</th><th>Téléphone</th><th>Secteur</th><th>Total achats</th><th>Solde dû</th><th>Statut</th><th></th></tr></thead>
+      <thead><tr><th>Nom</th><th>Téléphone</th><th>Secteur</th><th>Total achats</th><th>Solde dû</th><th>Points</th><th>Statut</th><th></th></tr></thead>
       <tbody>${S.clients.length===0?'<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text3)">Aucun client</td></tr>':
         S.clients.map(c=>{
           const vc2=S.ventes.filter(v=>v.client===c.nom&&v.statut==='Payé');
@@ -3115,6 +3123,7 @@ function rClients(){
             <td class="tdm" style="color:var(--navy)">${c.nom}</td><td>${c.tel}</td><td>${cb(c.secteur)}</td>
             <td style="font-weight:600;color:var(--green)">${tot>0?F(tot):'—'}</td>
             <td style="color:${c.solde>0?'var(--red)':'var(--text2)'};font-weight:${c.solde>0?'600':'400'}">${c.solde>0?F(c.solde):'—'}</td>
+            <td style="font-weight:600;color:var(--amber)">${(c.points||0)>0?getNiveauClient(c.points||0).emoji+' '+(c.points||0).toLocaleString('fr-FR')+' pts':'—'}</td>
             <td>${sb(c.statut)}</td>
             <td><div class="td-actions">
               <button class="btn-icon btn-sm" onclick="event.stopPropagation();ouvrirFicheClient(${c.id})" title="Fiche">👤</button>
@@ -3150,6 +3159,20 @@ function ouvrirFicheClient(id){
       </div>
       <button class="cp-close" onclick="fermerFicheClient()">✕</button>
     </div>
+    ${(()=>{
+      const pts = c.points||0;
+      const cfg = getFideliteConfig();
+      if(!cfg.actif && pts===0) return '';
+      const niveau = getNiveauClient(pts);
+      const valeur = valeurPointsEnFCFA(pts);
+      return '<div class="cp-section" style="background:linear-gradient(135deg,var(--amber-bg),var(--surface));border:1px solid var(--amber-light)">' +
+        '<div class="cp-sec-title">⭐ Fidélité</div>' +
+        '<div class="cp-stat"><span class="cp-stat-label">Niveau</span><span class="cp-stat-val">' + niveau.emoji + ' ' + niveau.nom + '</span></div>' +
+        '<div class="cp-stat"><span class="cp-stat-label">Points</span><span class="cp-stat-val" style="color:var(--amber);font-weight:700">' + pts.toLocaleString('fr-FR') + ' pts</span></div>' +
+        '<div class="cp-stat"><span class="cp-stat-label">Valeur</span><span class="cp-stat-val" style="color:var(--green)">' + F(valeur) + '</span></div>' +
+        (pts > 0 ? '<button class="btn btn-sm btn-success" style="width:100%;margin-top:8px" onclick="fermerFicheClient();utilisierPoints(' + c.id + ')">🎁 Utiliser les points</button>' : '') +
+        '</div>';
+    })()}
     <div class="cp-section">
       <div class="cp-sec-title">Coordonnées</div>
       <div class="cp-stat"><span class="cp-stat-label">Téléphone</span><span class="cp-stat-val">${c.tel||'—'}</span></div>
@@ -5995,17 +6018,17 @@ const PERMISSIONS = {
     pages: ['dashboard','objectifs','transactions','vente','services','achats','stock','clients',
             'fournisseurs','depenses','tresorerie','revenus','rapports','inventaire','historique',
             'comptes','devis','planning','calculatrice','workspace','parametres',
-            'dettes','flux','limites','modeles','agenda','journal','caisse','stats','promos','commandes','depots'],
+            'dettes','flux','limites','modeles','agenda','journal','caisse','stats','promos','commandes','depots','fidelite'],
     label: '👑 Administrateur',
     couleur: '#f5c060'
   },
   caissier: {
-    pages: ['dashboard','vente','services','stock','clients','calculatrice','transactions','agenda','dettes','journal','caisse','stats','promos','commandes','depots'],
+    pages: ['dashboard','vente','services','stock','clients','calculatrice','transactions','agenda','dettes','journal','caisse','stats','promos','commandes','depots','fidelite'],
     label: '💰 Caissier',
     couleur: '#8ecba8'
   },
   vendeur: {
-    pages: ['dashboard','vente','services','clients','calculatrice','agenda','journal','caisse','stats','promos','commandes','depots'],
+    pages: ['dashboard','vente','services','clients','calculatrice','agenda','journal','caisse','stats','promos','commandes','depots','fidelite'],
     label: '🛒 Vendeur',
     couleur: '#c5d0e8'
   }
@@ -6138,6 +6161,7 @@ function rWorkspace(){
     {id:'promos',label:'Promotions',icon:'🏷️'},
     {id:'commandes',label:'Commandes fournisseurs',icon:'📋'},
     {id:'depots',label:'Stock multi-dépôt',icon:'🏭'},
+    {id:'fidelite',label:'Programme fidélité',icon:'⭐'},
   ];
   const visible=p.menu_visible||allMenus.map(m=>m.id);
 
@@ -8425,6 +8449,7 @@ function crValider(){
     });
     const compte = S.comptes?.find(c => c.id == cid);
     if(compte){ compte.solde = (compte.solde||0) + total; }
+    // Points fidélité (caisse rapide - client anonyme par défaut)
     saveData();
     toast(`✅ Vente encaissée — ${F(total)}`);
     if(confirm('Imprimer le reçu thermique ?')){
@@ -10223,6 +10248,310 @@ function delDepot(id){
   // Nettoyer les dépôts dans les articles
   S.stock.forEach(a => { if(a.depots) delete a.depots[id]; });
   saveData(); closeModal(); toast('🗑️ Dépôt supprimé'); rDepots();
+}
+
+
+// ─── PROGRAMME DE FIDÉLITÉ ───
+
+function getFideliteConfig(){
+  return S.fidelite || {actif:false, pointsParFCFA:1, valeurPoint:10,
+    niveaux:[{nom:'Bronze',seuil:0,emoji:'🥉'},{nom:'Argent',seuil:500,emoji:'🥈'},{nom:'Or',seuil:2000,emoji:'🥇'},{nom:'VIP',seuil:5000,emoji:'💎'}]};
+}
+
+function getNiveauClient(points){
+  const cfg = getFideliteConfig();
+  const niveaux = (cfg.niveaux||[]).slice().sort((a,b)=>b.seuil-a.seuil);
+  return niveaux.find(n => points >= n.seuil) || {nom:'Bronze',emoji:'🥉',seuil:0};
+}
+
+function getNiveauSuivant(points){
+  const cfg = getFideliteConfig();
+  const niveaux = (cfg.niveaux||[]).slice().sort((a,b)=>a.seuil-b.seuil);
+  return niveaux.find(n => n.seuil > points) || null;
+}
+
+function calculerPoints(montant){
+  const cfg = getFideliteConfig();
+  return Math.floor(montant / 1000 * (cfg.pointsParFCFA||1));
+}
+
+function valeurPointsEnFCFA(points){
+  const cfg = getFideliteConfig();
+  return points * (cfg.valeurPoint||10);
+}
+
+// Ajouter points à un client après vente
+function ajouterPointsFidelite(clientNom, montant){
+  const cfg = getFideliteConfig();
+  if(!cfg.actif) return;
+  const c = S.clients.find(c => c.nom === clientNom);
+  if(!c) return;
+  const pts = calculerPoints(montant);
+  if(pts <= 0) return;
+  c.points = (c.points||0) + pts;
+  c.pointsHistorique = c.pointsHistorique || [];
+  c.pointsHistorique.push({date:D(), pts, type:'gain', detail:'Vente '+F(montant)});
+  // Vérifier si montée de niveau
+  const niveauAvant = getNiveauClient(c.points - pts);
+  const niveauApres = getNiveauClient(c.points);
+  if(niveauApres.nom !== niveauAvant.nom){
+    setTimeout(()=>{
+      toast('🎉 ' + c.nom + ' passe au niveau ' + niveauApres.emoji + ' ' + niveauApres.nom + ' !', 4000);
+    }, 500);
+  }
+}
+
+function rFidelite(){
+  const cfg = getFideliteConfig();
+  const dev = (S.parametres||{}).devise || 'FCFA';
+  const clientsAvecPoints = S.clients.filter(c => (c.points||0) > 0)
+    .sort((a,b) => (b.points||0) - (a.points||0));
+  const totalPoints = clientsAvecPoints.reduce((s,c)=>s+(c.points||0),0);
+
+  document.getElementById('content').innerHTML = `
+  <div class="page">
+    <!-- Statut programme -->
+    <div style="background:${cfg.actif?'var(--green)':'var(--surface2)'};border-radius:var(--r);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;${cfg.actif?'color:#fff':''}">
+      <div>
+        <div style="font-size:15px;font-weight:700">${cfg.actif?'⭐ Programme de fidélité ACTIF':'⭐ Programme de fidélité INACTIF'}</div>
+        <div style="font-size:12px;opacity:${cfg.actif?'.8':'.6'};margin-top:2px">
+          ${cfg.actif?`1 point par ${Math.round(1000/(cfg.pointsParFCFA||1)).toLocaleString('fr-FR')} ${dev} dépensés · 1 point = ${cfg.valeurPoint||10} ${dev} de réduction`:'Activez le programme pour récompenser vos clients fidèles'}
+        </div>
+      </div>
+      <button class="btn" onclick="configurerFidelite()" style="${cfg.actif?'background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.4)':''}">⚙️ Configurer</button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="g4" style="margin-bottom:20px">
+      <div class="kpi-card kpi-amber">
+        <div class="ct">Clients avec points</div>
+        <div class="kpi-val" style="color:var(--amber)">${clientsAvecPoints.length}</div>
+        <div class="ms">sur ${S.clients.length} clients</div>
+      </div>
+      <div class="kpi-card kpi-blue">
+        <div class="ct">Total points distribués</div>
+        <div class="kpi-val" style="color:var(--navy)">${totalPoints.toLocaleString('fr-FR')}</div>
+        <div class="ms">pts</div>
+      </div>
+      <div class="kpi-card kpi-green">
+        <div class="ct">Valeur points</div>
+        <div class="kpi-val" style="color:var(--green)">${F(valeurPointsEnFCFA(totalPoints))}</div>
+        <div class="ms">en réductions potentielles</div>
+      </div>
+      <div class="kpi-card kpi-purple">
+        <div class="ct">Clients VIP</div>
+        <div class="kpi-val" style="color:var(--purple)">${S.clients.filter(c=>{const n=getNiveauClient(c.points||0);return n.nom==='VIP';}).length}</div>
+        <div class="ms">💎 niveau max</div>
+      </div>
+    </div>
+
+    <!-- Niveaux -->
+    <p class="st">🏆 Niveaux de fidélité</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+      ${(cfg.niveaux||[]).map(n => {
+        const nbClients = S.clients.filter(c => {
+          const pts = c.points||0;
+          const niveau = getNiveauClient(pts);
+          return niveau.nom === n.nom && pts >= n.seuil;
+        }).length;
+        return `<div class="card" style="flex:1;min-width:120px;text-align:center;padding:14px 10px">
+          <div style="font-size:28px;margin-bottom:4px">${n.emoji||'⭐'}</div>
+          <div style="font-size:13px;font-weight:700">${n.nom}</div>
+          <div style="font-size:11px;color:var(--text3)">Dès ${n.seuil.toLocaleString('fr-FR')} pts</div>
+          <div style="font-size:16px;font-weight:800;color:var(--navy);margin-top:6px">${nbClients}</div>
+          <div style="font-size:10px;color:var(--text3)">client${nbClients>1?'s':''}</div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <!-- Classement clients -->
+    <p class="st">🥇 Classement clients fidèles</p>
+    ${clientsAvecPoints.length === 0
+      ? '<div class="empty"><p>Aucun point distribué</p><small>Activez le programme et faites des ventes à vos clients</small></div>'
+      : `<div class="tbl-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Client</th><th>Points</th><th>Niveau</th><th>Valeur</th><th>Prochain niveau</th><th></th></tr></thead>
+          <tbody>
+            ${clientsAvecPoints.map((c,i) => {
+              const pts = c.points||0;
+              const niveau = getNiveauClient(pts);
+              const suivant = getNiveauSuivant(pts);
+              const pct = suivant ? Math.min(100,Math.round((pts-niveau.seuil)/(suivant.seuil-niveau.seuil)*100)) : 100;
+              return `<tr>
+                <td style="font-weight:700;color:var(--text3)">#${i+1}</td>
+                <td class="tdm">${c.nom}</td>
+                <td style="font-weight:800;color:var(--amber)">${pts.toLocaleString('fr-FR')} pts</td>
+                <td><span style="font-size:13px">${niveau.emoji} ${niveau.nom}</span></td>
+                <td style="font-weight:600;color:var(--green)">${F(valeurPointsEnFCFA(pts))}</td>
+                <td style="min-width:120px">
+                  ${suivant
+                    ? `<div style="font-size:10px;color:var(--text3);margin-bottom:2px">${suivant.emoji} ${suivant.nom} dans ${(suivant.seuil-pts).toLocaleString('fr-FR')} pts</div>
+                       <div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden">
+                         <div style="width:${pct}%;height:100%;background:var(--amber);border-radius:2px"></div>
+                       </div>`
+                    : '<span style="font-size:12px;color:var(--amber)">💎 Niveau max !</span>'}
+                </td>
+                <td><div class="td-actions">
+                  <button class="btn-icon btn-sm" onclick="utilisierPoints(${c.id})" title="Utiliser points" style="color:var(--green)">🎁</button>
+                  <button class="btn-icon btn-sm" onclick="ajusterPoints(${c.id})" title="Ajuster points">✏️</button>
+                </div></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`}
+  </div>`;
+}
+
+function configurerFidelite(){
+  const cfg = getFideliteConfig();
+  modal(`<div class="mft">⚙️ Configuration programme de fidélité</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 12px;background:var(--surface2);border-radius:var(--rs)">
+      <div class="toggle${cfg.actif?' on':''}" id="fidel-toggle" onclick="this.classList.toggle('on');majFideliteActif()"></div>
+      <label style="font-size:13px;font-weight:600;cursor:pointer" onclick="document.getElementById('fidel-toggle').click()">Programme actif</label>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Points par 1000 FCFA dépensés</label>
+        <input class="fi" type="number" id="fidel-pts" min="1" value="${cfg.pointsParFCFA||1}"></div>
+      <div class="fg"><label class="fl">Valeur d'1 point (en FCFA)</label>
+        <input class="fi" type="number" id="fidel-val" min="1" value="${cfg.valeurPoint||10}"></div>
+    </div>
+    <div style="background:var(--navy-bg);border-radius:var(--rs);padding:10px 12px;font-size:12px;color:var(--navy);margin-bottom:14px">
+      💡 Ex: achat de 10 000 FCFA = ${cfg.pointsParFCFA||1} × 10 = <strong>${(cfg.pointsParFCFA||1)*10} points</strong> = <strong>${F((cfg.pointsParFCFA||1)*10*(cfg.valeurPoint||10))}</strong> de réduction potentielle
+    </div>
+    <p style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">Niveaux de fidélité</p>
+    <div id="fidel-niveaux">
+      ${(cfg.niveaux||[]).map((n,i)=>`
+        <div style="display:grid;grid-template-columns:50px 1fr 100px 28px;gap:6px;align-items:center;margin-bottom:6px">
+          <input class="fi" value="${n.emoji||'⭐'}" maxlength="4" style="text-align:center;font-size:16px;padding:4px" placeholder="🥉">
+          <input class="fi" value="${n.nom}" placeholder="Nom niveau" style="font-size:12px">
+          <input class="fi" type="number" min="0" value="${n.seuil}" placeholder="Seuil pts" style="font-size:12px">
+          ${i===0?'<span></span>':`<button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px">✕</button>`}
+        </div>`).join('')}
+    </div>
+    <button class="btn btn-sm" onclick="ajouterNiveauFidelite()">+ Niveau</button>
+    <div class="mff">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="sauvegarderFidelite()">💾 Sauvegarder</button>
+    </div>`);
+  window._fidelActif = cfg.actif;
+}
+
+function majFideliteActif(){
+  window._fidelActif = document.getElementById('fidel-toggle')?.classList.contains('on');
+}
+
+function ajouterNiveauFidelite(){
+  const div = document.createElement('div');
+  div.style.cssText = 'display:grid;grid-template-columns:50px 1fr 100px 28px;gap:6px;align-items:center;margin-bottom:6px';
+  div.innerHTML = '<input class="fi" placeholder="⭐" maxlength="4" style="text-align:center;font-size:16px;padding:4px"><input class="fi" placeholder="Nom niveau" style="font-size:12px"><input class="fi" type="number" min="0" placeholder="Seuil pts" style="font-size:12px"><button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px">✕</button>';
+  document.getElementById('fidel-niveaux')?.appendChild(div);
+}
+
+function sauvegarderFidelite(){
+  const ptsParFCFA = +document.getElementById('fidel-pts')?.value || 1;
+  const valeurPoint = +document.getElementById('fidel-val')?.value || 10;
+  const actif = window._fidelActif !== undefined ? window._fidelActif : (S.fidelite?.actif||false);
+  // Lire les niveaux
+  const rows = document.querySelectorAll('#fidel-niveaux > div');
+  const niveaux = [];
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    if(inputs.length >= 3){
+      const emoji = inputs[0].value || '⭐';
+      const nom = inputs[1].value?.trim();
+      const seuil = +inputs[2].value || 0;
+      if(nom) niveaux.push({emoji, nom, seuil});
+    }
+  });
+  if(niveaux.length === 0) return toast('❌ Au moins un niveau requis');
+  niveaux.sort((a,b)=>a.seuil-b.seuil);
+  S.fidelite = {actif, pointsParFCFA:ptsParFCFA, valeurPoint, niveaux};
+  saveData();
+  closeModal();
+  toast('✅ Programme de fidélité configuré');
+  rFidelite();
+}
+
+// Utiliser les points d'un client (réduction sur prochaine vente)
+function utilisierPoints(id){
+  const c = S.clients.find(c=>c.id==id); if(!c) return;
+  const pts = c.points||0;
+  if(pts === 0) return toast('❌ Ce client n\'a pas de points');
+  const cfg = getFideliteConfig();
+  const valeur = valeurPointsEnFCFA(pts);
+  modal(`<div class="mft">🎁 Utiliser les points — ${c.nom}</div>
+    <div style="text-align:center;padding:16px 0">
+      <div style="font-size:32px;font-weight:900;color:var(--amber)">${pts.toLocaleString('fr-FR')} points</div>
+      <div style="font-size:14px;color:var(--text2);margin-top:4px">= <strong style="color:var(--green)">${F(valeur)}</strong> de réduction disponible</div>
+    </div>
+    <div class="fg"><label class="fl">Points à utiliser</label>
+      <input class="fi" type="number" id="use-pts" min="1" max="${pts}" value="${pts}"
+        oninput="document.getElementById('use-val').textContent=F(+this.value*(${cfg.valeurPoint||10}))"></div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Valeur : <strong id="use-val">${F(valeur)}</strong></div>
+    <div class="mff">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-success" onclick="confirmerUtilisationPoints(${id})">✓ Appliquer réduction</button>
+    </div>`);
+}
+
+function confirmerUtilisationPoints(id){
+  const c = S.clients.find(c=>c.id==id); if(!c) return;
+  const ptsUtilises = +document.getElementById('use-pts')?.value || 0;
+  if(ptsUtilises <= 0 || ptsUtilises > (c.points||0)) return toast('❌ Nombre de points invalide');
+  const cfg = getFideliteConfig();
+  const reduction = ptsUtilises * (cfg.valeurPoint||10);
+  c.points = (c.points||0) - ptsUtilises;
+  c.pointsHistorique = c.pointsHistorique || [];
+  c.pointsHistorique.push({date:D(), pts:-ptsUtilises, type:'utilisation', detail:'Réduction de ' + F(reduction)});
+  saveData();
+  closeModal();
+  toast('✅ ' + ptsUtilises.toLocaleString('fr-FR') + ' points utilisés — réduction de ' + F(reduction) + ' accordée à ' + c.nom);
+  rFidelite();
+}
+
+function ajusterPoints(id){
+  const c = S.clients.find(c=>c.id==id); if(!c) return;
+  modal(`<div class="mft">✏️ Ajuster les points — ${c.nom}</div>
+    <div style="text-align:center;margin-bottom:14px">
+      <div style="font-size:24px;font-weight:800;color:var(--amber)">${(c.points||0).toLocaleString('fr-FR')} points actuels</div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Opération</label>
+        <select class="fs" id="adj-type">
+          <option value="add">➕ Ajouter</option>
+          <option value="remove">➖ Retirer</option>
+          <option value="set">= Définir à</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Points</label>
+        <input class="fi" type="number" id="adj-pts" min="0" value="100">
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Raison</label>
+      <input class="fi" id="adj-note" placeholder="Ex: Correction, cadeau, parrainage...">
+    </div>
+    <div class="mff">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="confirmerAjustPoints(${id})">✓ Confirmer</button>
+    </div>`);
+}
+
+function confirmerAjustPoints(id){
+  const c = S.clients.find(c=>c.id==id); if(!c) return;
+  const type = document.getElementById('adj-type')?.value;
+  const pts = +document.getElementById('adj-pts')?.value || 0;
+  const note = document.getElementById('adj-note')?.value || 'Ajustement manuel';
+  const avant = c.points||0;
+  if(type==='add') c.points = avant + pts;
+  else if(type==='remove') c.points = Math.max(0, avant - pts);
+  else c.points = pts;
+  c.pointsHistorique = c.pointsHistorique||[];
+  c.pointsHistorique.push({date:D(), pts:c.points-avant, type:'ajustement', detail:note});
+  saveData();
+  closeModal();
+  toast('✅ Points ajustés : ' + avant.toLocaleString('fr-FR') + ' → ' + (c.points||0).toLocaleString('fr-FR'));
+  rFidelite();
 }
 
 // ─── SAUVEGARDE AUTOMATIQUE ───
