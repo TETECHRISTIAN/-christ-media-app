@@ -1318,6 +1318,12 @@ body.dark th{background:var(--surface3)}
     <div style="margin-top:14px;text-align:center;font-size:11px;color:var(--text3)">
       Première connexion ? Utilisez l'email et le mot de passe fournis par l'administrateur.
     </div>
+    <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
+      <button onclick="entrerModeDemo()" style="width:100%;padding:10px;background:var(--amber-bg);color:var(--amber);border:1.5px solid var(--amber-light);border-radius:var(--rs);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s" onmouseover="this.style.background='var(--amber)';this.style.color='#fff'" onmouseout="this.style.background='var(--amber-bg)';this.style.color='var(--amber)'">
+        🎮 Essayer en mode démo
+      </button>
+      <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:6px">Aucune donnée réelle ne sera modifiée</div>
+    </div>
     <div style="margin-top:10px;text-align:center">
       <button onclick="resetAdminLogin()" style="background:none;border:none;font-size:10px;color:var(--text3);cursor:pointer;text-decoration:underline">
         🔑 Réinitialiser l'accès administrateur
@@ -4446,6 +4452,15 @@ function rParametres(){
 
     <div class="param-section">
       <div class="param-section-title">🔧 Données & Système</div>
+      <div class="param-row">
+        <div>
+          <div class="param-label">Mode démo</div>
+          <div class="param-desc">${window._modeDemo?'🎮 Mode démo actif — données fictives':'Mode normal — données réelles'}</div>
+        </div>
+        ${window._modeDemo
+          ? '<button class="btn btn-danger" onclick="quitterModeDemo()">✕ Quitter le mode démo</button>'
+          : '<button class="btn" onclick="entrerModeDemo()">🎮 Entrer en mode démo</button>'}
+      </div>
       <div class="param-row">
         <div><div class="param-label">Exporter (JSON standard)</div><div class="param-desc">Sauvegarde JSON lisible</div></div>
         <button class="btn" onclick="exportData()">⬇️ JSON</button>
@@ -11162,6 +11177,152 @@ async function confirmerImportChiffre(){
     }
   }
 }
+
+
+// ─── MODE DÉMO ───
+// Le mode démo utilise des données fictives sans toucher aux données réelles.
+// Les données réelles sont sauvegardées dans _realS et restaurées à la sortie.
+window._modeDemo = false;
+let _realS = null;
+const DEMO_KEY = 'cm_demo_session';
+
+function genDemoData(){
+  const now = new Date();
+  const today = now.toISOString().slice(0,10);
+  const ym = now.toISOString().slice(0,7);
+  const ym1 = new Date(now.getFullYear(), now.getMonth()-1, 1).toISOString().slice(0,7);
+  const ym2 = new Date(now.getFullYear(), now.getMonth()-2, 1).toISOString().slice(0,7);
+
+  return {
+    stock:[
+      {id:1,code:'LNG001',nom:'Soutien-gorge noir T85',cat:'Lingerie',pa:800,pv:1500,si:25,qv:12,ea:0,seuil:5,pv2:1400,pv3:1300},
+      {id:2,code:'LNG002',nom:'Culotte coton T38',cat:'Lingerie',pa:300,pv:700,si:60,qv:22,ea:0,seuil:8},
+      {id:3,code:'LNG003',nom:'Ensemble lingerie rouge',cat:'Lingerie',pa:1500,pv:3500,si:10,qv:4,ea:0,seuil:3},
+      {id:4,code:'AV001',nom:'Câble HDMI 2m',cat:'Audio-Vidéo',pa:500,pv:1200,si:30,qv:15,ea:0,seuil:5},
+      {id:5,code:'AV002',nom:'Écouteurs bluetooth',cat:'Audio-Vidéo',pa:2500,pv:6000,si:8,qv:5,ea:0,seuil:2},
+      {id:6,code:'AV003',nom:'Batterie externe 20000mAh',cat:'Audio-Vidéo',pa:4000,pv:9000,si:5,qv:3,ea:0,seuil:2},
+      {id:7,code:'BUR001',nom:'Rame papier A4',cat:'Bureautique',pa:1200,pv:2500,si:20,qv:8,ea:0,seuil:4},
+      {id:8,code:'BUR002',nom:'Stylo bille (boîte 12)',cat:'Bureautique',pa:500,pv:1000,si:35,qv:10,ea:0,seuil:6},
+      {id:9,code:'BUR003',nom:'Cartouche encre HP',cat:'Bureautique',pa:3500,pv:7500,si:4,qv:2,ea:0,seuil:2},
+      {id:10,code:'LNG004',nom:'Body dentelle blanc T40',cat:'Lingerie',pa:2000,pv:4500,si:3,qv:1,ea:0,seuil:2},
+    ],
+    ventes:[
+      {id:101,date:today,lignes:[{aid:1,qte:2,pu:1500,mt:3000}],aid:1,qte:2,pu:1500,mt:3000,statut:'Payé',client:'Marie Kodjovi',mode:'Espèces',caissier_nom:'Demo Admin',caissier_emoji:'👑'},
+      {id:102,date:today,lignes:[{aid:4,qte:3,pu:1200,mt:3600},{aid:7,qte:1,pu:2500,mt:2500}],aid:4,qte:3,pu:1200,mt:6100,statut:'Payé',client:'Jean Amégavie',mode:'Flooz',caissier_nom:'Demo Admin',caissier_emoji:'👑'},
+      {id:103,date:today,lignes:[{aid:5,qte:1,pu:6000,mt:6000}],aid:5,qte:1,pu:6000,mt:6000,statut:'Non payé',client:'Ama Sossou',mode:'Mixx',caissier_nom:'Demo Admin',caissier_emoji:'👑'},
+      {id:104,date:ym+'-'+String(now.getDate()-1).padStart(2,'0'),lignes:[{aid:2,qte:5,pu:700,mt:3500}],aid:2,qte:5,pu:700,mt:3500,statut:'Payé',client:'Fatou Diallo',mode:'Espèces',caissier_nom:'Demo Admin',caissier_emoji:'👑'},
+      {id:105,date:ym+'-08',lignes:[{aid:3,qte:2,pu:3500,mt:7000}],aid:3,qte:2,pu:3500,mt:7000,statut:'Payé',client:'Marie Kodjovi',mode:'Espèces',caissier_nom:'Demo Admin',caissier_emoji:'👑'},
+      {id:106,date:ym+'-05',lignes:[{aid:9,qte:1,pu:7500,mt:7500}],aid:9,qte:1,pu:7500,mt:7500,statut:'Payé',client:'Kofi Mensah',mode:'Flooz',caissier_nom:'Demo Admin',caissier_emoji:'👑'},
+      {id:107,date:ym1+'-20',lignes:[{aid:6,qte:2,pu:9000,mt:18000}],aid:6,qte:2,pu:9000,mt:18000,statut:'Payé',client:'Jean Amégavie',mode:'Mixx',caissier_nom:'Demo Admin',caissier_emoji:'👑'},
+      {id:108,date:ym1+'-15',lignes:[{aid:1,qte:3,pu:1500,mt:4500}],aid:1,qte:3,pu:1500,mt:4500,statut:'Payé',client:'Fatou Diallo',mode:'Espèces',caissier_nom:'Demo Admin',caissier_emoji:'👑'},
+      {id:109,date:ym2+'-10',lignes:[{aid:4,qte:5,pu:1200,mt:6000}],aid:4,qte:5,pu:1200,mt:6000,statut:'Payé',client:'Ama Sossou',mode:'Espèces',caissier_nom:'Demo Admin',caissier_emoji:'👑'},
+    ],
+    clients:[
+      {id:1,nom:'Marie Kodjovi',tel:'90 12 34 56',secteur:'Lingerie',solde:0,statut:'VIP',notes:'Meilleure cliente',points:150},
+      {id:2,nom:'Jean Amégavie',tel:'91 23 45 67',secteur:'Audio-Vidéo',solde:0,statut:'Régulier',notes:'',points:85},
+      {id:3,nom:'Ama Sossou',tel:'92 34 56 78',secteur:'Lingerie',solde:6000,statut:'Débiteur',notes:'Doit 6000 FCFA',points:20},
+      {id:4,nom:'Fatou Diallo',tel:'94 56 78 90',secteur:'Lingerie',solde:0,statut:'Régulier',notes:'',points:60},
+      {id:5,nom:'Kofi Mensah',tel:'93 45 67 89',secteur:'Bureautique',solde:0,statut:'Régulier',notes:'',points:35},
+    ],
+    fournisseurs:[
+      {id:1,nom:'Mode Afrique SARL',tel:'90 11 00 01',secteur:'Lingerie',dette:25000,statut:'Actif'},
+      {id:2,nom:'TechnoTogo Plus',tel:'90 11 00 02',secteur:'Audio-Vidéo',dette:0,statut:'Actif'},
+      {id:3,nom:'BureauPlus Lomé',tel:'90 11 00 03',secteur:'Bureautique',dette:12000,statut:'Actif'},
+    ],
+    achats:[
+      {id:1,date:ym1+'-05',fid:1,aid:1,qte:25,pu:800,mt:20000,mode:'Flooz',notes:'Réappro lingerie'},
+      {id:2,date:ym+'-02',fid:2,aid:5,qte:5,pu:2500,mt:12500,mode:'Mixx',notes:'Écouteurs BT'},
+    ],
+    depenses:[
+      {id:1,date:ym+'-01',lib:'Loyer boutique',cat:'Loyer',mt:45000,mode:'Espèces'},
+      {id:2,date:ym+'-03',lib:'Électricité',cat:'Charges',mt:8500,mode:'Espèces'},
+      {id:3,date:today,lib:'Transport marchandises',cat:'Transport',mt:5000,mode:'Espèces'},
+    ],
+    objectifs:{ca_mensuel:500000,ventes_nb:50,depenses_max:200000,actif:true},
+    parametres:{nom:'Christ Media DÉMO',ville:'Lomé, Togo',devise:'FCFA',categories:['Lingerie','Audio-Vidéo','Bureautique'],planNom:'Christ Media DÉMO',planSub:'Mode Démo',planIco:'🎮'},
+    utilisateurs:[{id:1,nom:'Demo Admin',role:'admin',email:'demo@demo.com',password:'demo1234',emoji:'👑',actif:true}],
+    boutiques:[{id:1,nom:'Christ Media — Démo',actif:true}],
+    boutique_active:1,
+    depots:[{id:1,nom:'Boutique',emoji:'🏪',actif:true},{id:2,nom:'Entrepôt',emoji:'📦',actif:true}],
+    fidelite:{actif:true,pointsParFCFA:1,valeurPoint:10,niveaux:[{nom:'Bronze',seuil:0,emoji:'🥉'},{nom:'Argent',seuil:500,emoji:'🥈'},{nom:'Or',seuil:2000,emoji:'🥇'},{nom:'VIP',seuil:5000,emoji:'💎'}]},
+    historique:[], audit:[], promotions:[], commandes:[], transferts_stock:[],
+    revenus:[], charges:[], comptes:[], transferts:[], dettes:[], dettesPerso:[],
+    services:[], devis:[], planning:[], agenda:[], modeles:[], limites:[],
+    nid:300, version:Date.now(),
+    session:{uid:1,role:'admin',nom:'Demo Admin',emoji:'👑',email:'demo@demo.com'}
+  };
+}
+
+function entrerModeDemo(){
+  // Sauvegarder les données réelles
+  _realS = JSON.parse(JSON.stringify(S));
+  window._modeDemo = true;
+  // Charger les données démo
+  S = genDemoData();
+  // Masquer l'écran de login
+  document.getElementById('login-screen').style.display = 'none';
+  majBadgeUtilisateur();
+  appliquerAcces('admin');
+  // Bandeau démo visible
+  afficherBandeauDemo();
+  toast('🎮 Mode démo activé — aucune donnée réelle ne sera modifiée', 4000);
+  rDash();
+}
+
+function afficherBandeauDemo(){
+  let bandeau = document.getElementById('demo-banner');
+  if(!bandeau){
+    bandeau = document.createElement('div');
+    bandeau.id = 'demo-banner';
+    bandeau.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:850;background:var(--amber);color:#fff;padding:6px 16px;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.2)';
+    document.body.appendChild(bandeau);
+    // Décaler le contenu principal
+    document.querySelector('.app').style.marginTop = '34px';
+  }
+  bandeau.innerHTML = '<span>🎮 MODE DÉMO — Les modifications ne seront pas sauvegardées</span>' +
+    '<button onclick="quitterModeDemo()" style="background:rgba(0,0,0,.2);border:none;color:#fff;border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700">✕ Quitter le démo</button>';
+  bandeau.style.display = 'flex';
+}
+
+function quitterModeDemo(){
+  if(!confirm('Quitter le mode démo et revenir à vos données réelles ?')) return;
+  window._modeDemo = false;
+  // Restaurer les données réelles
+  if(_realS){
+    S = _realS;
+    _realS = null;
+  }
+  // Supprimer bandeau
+  const bandeau = document.getElementById('demo-banner');
+  if(bandeau) bandeau.style.display = 'none';
+  document.querySelector('.app').style.marginTop = '';
+  // Retour au login
+  S.session = {uid:null,role:null,nom:null};
+  document.querySelectorAll('.ni[data-page],.mn-dd-item,.admin-only').forEach(el=>el.style.display='');
+  document.getElementById('current-user-badge').style.display = 'none';
+  stopPresence();
+  toast('✅ Mode démo terminé — retour à vos données réelles');
+  afficherLoginScreen();
+}
+
+// Bloquer saveData en mode démo (ne pas écraser les données réelles)
+const _originalSaveData = saveData;
+saveData = async function(){
+  if(window._modeDemo){
+    // En mode démo, on simule juste la save locale sans Firebase
+    genVersion();
+    if(typeof majNotifBadge === 'function') majNotifBadge();
+    return;
+  }
+  return _originalSaveData.apply(this, arguments);
+};
+
+// Bloquer saveLocal en mode démo
+const _originalSaveLocal = saveLocal;
+saveLocal = function(data){
+  if(window._modeDemo) return; // Ne pas écraser localStorage en démo
+  return _originalSaveLocal.apply(this, arguments);
+};
 
 // ─── SAUVEGARDE AUTOMATIQUE ───
 let _autoBackupTimer=null;
