@@ -2952,6 +2952,7 @@ function rStock(){
             <button class="btn-icon btn-sm" onclick="imprimerEtiquette1(${a.id})" title="Étiquette code-barres">🏷️</button>
             <button class="btn-icon btn-sm" onclick="ouvrirPhotoModal(${a.id})" title="Photo">📸</button>
             <button class="btn-icon btn-sm" onclick="voirHistoPrix(${a.id})" title="Historique prix" style="color:var(--purple)">📈</button>
+            <button class="btn-icon btn-sm" onclick="ajustStockRapide(${a.id})" title="Ajuster stock" style="color:var(--navy)">⚡</button>
             <button class="btn-icon btn-sm" onclick="venteRapideArticle(${a.id})" title="Vente rapide" style="color:var(--green)">🛒</button>
             <button class="btn-icon btn-sm" onclick="editArticle(${a.id})" title="Modifier">✏️</button>
             <button class="btn-icon btn-sm" onclick="delArticle(${a.id})" style="color:var(--red)" title="Supprimer">✕</button>
@@ -3099,7 +3100,7 @@ function editArticle(id){
       <div id="prix-preview" class="total-preview" style="display:none"></div>
     </div>
     <div class="fr">
-      <div class="fg"><label class="fl">Stock initial</label><input class="fi" type="number" id="msi" value="${a.si}"></div>
+      <div class="fg"><label class="fl">Stock actuel</label><input class="fi" type="number" id="msi" value="${sa(a)}"></div>
       ${!isAdmin()?`<div class="fg"><label class="fl">Seuil alerte</label><input class="fi" type="number" id="mse" value="${a.seuil}"></div>`:''}
     </div>
     <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="updateArt(${id})">Enregistrer</button></div>`);
@@ -3114,7 +3115,8 @@ function updateArt(id){
   a.pv=+document.getElementById('mpv').value||0;
   a.pv2=+document.getElementById('mpv2')?.value||a.pv;
   a.pv3=+document.getElementById('mpv3')?.value||a.pv;
-  a.si=+document.getElementById('msi').value||0;
+  const stockVoulu=+(document.getElementById('msi').value??'');
+  a.si=stockVoulu+Math.max(0,a.qv||0)-(a.ea||0);
   a.seuil=+document.getElementById('mse').value||5;
   enregistrerHistoPrix(a, ancienPv, ancienPa);
   saveData();closeModal();toast('✅ Article modifié');rStock();
@@ -3123,6 +3125,57 @@ function delArticle(id){
   if(!confirm('Supprimer cet article ?'))return;
   S.stock=S.stock.filter(a=>a.id!=id);
   saveData();toast('🗑️ Article supprimé');rStock();
+}
+function ajustStockRapide(id){
+  const a=ga(id);if(!a)return;
+  const actuel=sa(a);
+  modal(`<div class="mft">⚡ Ajustement stock — ${a.nom}</div>
+    <div style="text-align:center;padding:8px 0 16px">
+      <span style="font-size:13px;color:var(--text3)">Stock actuel : </span>
+      <span style="font-size:22px;font-weight:700;color:var(--navy)">${actuel}</span>
+    </div>
+    <div class="fr" style="gap:8px;margin-bottom:12px">
+      <button class="btn" style="flex:1;font-size:20px;padding:10px" onclick="ajustStockDelta(${id},-1)">−</button>
+      <input class="fi" type="number" id="ajust-qte" value="1" min="1" style="text-align:center;font-size:18px;font-weight:700;width:80px;flex-shrink:0">
+      <button class="btn btn-primary" style="flex:1;font-size:20px;padding:10px" onclick="ajustStockDelta(${id},1)">+</button>
+    </div>
+    <div class="fr" style="gap:8px;margin-bottom:4px">
+      <button class="btn" style="flex:1" onclick="ajustStockDelta(${id},-5)">−5</button>
+      <button class="btn" style="flex:1" onclick="ajustStockDelta(${id},-10)">−10</button>
+      <button class="btn btn-primary" style="flex:1" onclick="ajustStockDelta(${id},5)">+5</button>
+      <button class="btn btn-primary" style="flex:1" onclick="ajustStockDelta(${id},10)">+10</button>
+    </div>
+    <div style="border-top:1px solid var(--border1);margin:14px 0 10px"></div>
+    <div class="fg" style="margin-bottom:0">
+      <label class="fl">Définir un stock précis</label>
+      <div class="fr" style="gap:8px">
+        <input class="fi" type="number" id="ajust-exact" placeholder="${actuel}" style="flex:1">
+        <button class="btn btn-primary" onclick="ajustStockExact(${id})">Appliquer</button>
+      </div>
+    </div>
+    <div class="mff" style="margin-top:14px"><button class="btn" onclick="closeModal()">Fermer</button></div>`);
+}
+function ajustStockDelta(id,delta){
+  const a=ga(id);if(!a)return;
+  const qteEl=document.getElementById('ajust-qte');
+  const qte=Math.max(1,+(qteEl?.value||1));
+  const actuel=sa(a);
+  const nouveau=Math.max(0,actuel+delta*(delta<0?qte:qte));
+  // Recalculer si pour que sa(a) == nouveau
+  a.si=nouveau+Math.max(0,a.qv||0)-(a.ea||0);
+  saveData();
+  // Mettre à jour l'affichage du stock actuel dans le modal
+  const span=document.querySelector('.mft')?.parentElement?.querySelector('span[style*="22px"]');
+  if(span) span.textContent=sa(a);
+  toast(`${delta>0?'📦 +':'📤 −'}${qte} — Stock : ${sa(a)}`);
+  rStock();
+}
+function ajustStockExact(id){
+  const a=ga(id);if(!a)return;
+  const val=+document.getElementById('ajust-exact')?.value;
+  if(isNaN(val)||val<0)return toast('❌ Valeur invalide');
+  a.si=val+Math.max(0,a.qv||0)-(a.ea||0);
+  saveData();closeModal();toast(`✅ Stock défini à ${val}`);rStock();
 }
 
 // ─── CLIENTS ───
@@ -3924,7 +3977,8 @@ function saveReglementDette(fid){
   f.dette=Math.max(0,f.dette-mt);
   S.depenses.push({id:genId(),date:D(),four:f.nom,cat:'Règlement dette',mt,mode:nomCompte(cid_d),cid:cid_d,notes:`Règlement dette — ${f.nom}`});
   debiterCompte(cid_d,mt);
-  saveData();closeModal();toast(`✅ Dette réglée : ${F(mt)}`);rTresorerie();
+  saveData();closeModal();toast(`✅ Dette réglée : ${F(mt)}`);
+  if(currentPage==='dettes') rDettes(); else rTresorerie();
 }
 
 // ─── FACTURE PDF ───
@@ -6948,8 +7002,10 @@ function rDettes(){
   const prets=S.dettesPerso.filter(d=>d.typeDette==='preter'&&d.statut!=='Soldé');
   const totalEmprunts=emprunts.reduce((s,d)=>s+(d.montant-(d.rembourse||0)),0);
   const totalPrets=prets.reduce((s,d)=>s+(d.montant-(d.rembourse||0)),0);
+  const foursDirects=(S.fournisseurs||[]).filter(f=>f.dette>0);
+  const totalFoursDirects=foursDirects.reduce((s,f)=>s+f.dette,0);
 
-  const tabs=[{id:'tout',label:'Tout'},{id:'fournisseurs',label:'📦 Fournisseurs'},{id:'clients',label:'👤 Clients'},{id:'emprunts',label:'📥 Emprunts'},{id:'prets',label:'📤 Prêts'}];
+  const tabs=[{id:'tout',label:'Tout'},{id:'fournisseurs',label:'📦 Fournisseurs (achats)'},{id:'foursDirects',label:'🏭 Fournisseurs (solde)'},{id:'clients',label:'👤 Clients'},{id:'emprunts',label:'📥 Emprunts'},{id:'prets',label:'📤 Prêts'}];
 
   const renderDP=(liste)=>liste.length===0
     ?`<tr><td colspan="9" style="text-align:center;padding:16px;color:var(--text3)">Aucune entrée</td></tr>`
@@ -6974,7 +7030,8 @@ function rDettes(){
 
   document.getElementById('content').innerHTML=`
     <div class="g4" style="margin-bottom:18px">
-      <div class="card" style="border-left:3px solid var(--red)"><div class="ct">Dettes fournisseurs</div><div class="mv" style="color:var(--red)">${F(resteF)}</div><div class="ms">${dettesF.length} achat(s)</div></div>
+      <div class="card" style="border-left:3px solid var(--red)"><div class="ct">Dettes fournisseurs (achats)</div><div class="mv" style="color:var(--red)">${F(resteF)}</div><div class="ms">${dettesF.length} achat(s)</div></div>
+      <div class="card" style="border-left:3px solid var(--pink)"><div class="ct">Fournisseurs (solde direct)</div><div class="mv" style="color:var(--pink)">${F(totalFoursDirects)}</div><div class="ms">${foursDirects.length} fournisseur(s)</div></div>
       <div class="card" style="border-left:3px solid var(--green)"><div class="ct">Clients impayés</div><div class="mv" style="color:var(--green)">${F(resteC)}</div><div class="ms">${dettesC.length} vente(s)</div></div>
       <div class="card" style="border-left:3px solid var(--amber)"><div class="ct">Emprunts perso</div><div class="mv" style="color:var(--amber)">${F(totalEmprunts)}</div><div class="ms">${emprunts.length} emprunt(s)</div></div>
       <div class="card" style="border-left:3px solid var(--teal)"><div class="ct">Prêts perso</div><div class="mv" style="color:var(--teal)">${F(totalPrets)}</div><div class="ms">${prets.length} prêt(s)</div></div>
@@ -7001,6 +7058,23 @@ function rDettes(){
             <td><div style="background:var(--surface2);border-radius:4px;height:6px;min-width:60px"><div style="width:${pct}%;background:var(--green);height:100%;border-radius:4px"></div></div><div style="font-size:10px;color:var(--text3)">${pct}%</div></td>
             <td><button class="btn btn-sm btn-success" onclick="configurerTranchesAchat(${a.id})">💳 Payer</button></td>
           </tr>`;}).join('')}
+      </tbody></table></div>`:``}
+    ${(dettesFiltreTab==='tout'||dettesFiltreTab==='foursDirects')?`
+    <p class="st" style="margin-top:16px">🏭 Fournisseurs — Solde direct (${F(totalFoursDirects)})</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Fournisseur</th><th>Tél</th><th>Secteur</th><th style="color:var(--red)">Dette</th><th></th></tr></thead>
+      <tbody>${foursDirects.length===0?'<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--text3)">✅ Aucune dette fournisseur directe</td></tr>':
+        foursDirects.slice().sort((a,b)=>b.dette-a.dette).map(f=>`<tr>
+          <td class="tdm">${f.nom}${(f.historiqueDetteAjouts&&f.historiqueDetteAjouts.length)?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${f.historiqueDetteAjouts.length} ajout(s)</div>`:''}</td>
+          <td style="font-size:12px;color:var(--text3)">${f.tel||'—'}</td>
+          <td style="font-size:12px">${f.secteur||'—'}</td>
+          <td style="color:var(--red);font-weight:700">${F(f.dette)}</td>
+          <td style="display:flex;gap:4px;flex-wrap:wrap">
+            <button class="btn btn-sm" style="background:var(--amber-bg);color:var(--amber);border-color:var(--amber)" onclick="augmenterDette(${f.id})">➕ Ajouter</button>
+            <button class="btn btn-sm btn-success" onclick="reglerDette(${f.id})">💳 Régler</button>
+            ${(f.historiqueDetteAjouts&&f.historiqueDetteAjouts.length)?`<button class="btn btn-sm" style="font-size:10px;color:var(--text3)" onclick="voirHistoDette(${f.id})">📋 Historique</button>`:''}
+          </td>
+        </tr>`).join('')}
       </tbody></table></div>`:``}
     ${(dettesFiltreTab==='tout'||dettesFiltreTab==='clients')?`
     <p class="st" style="margin-top:16px">👤 Clients impayés</p>
@@ -7115,6 +7189,70 @@ function delDettePerso(id){
   if(!confirm('Supprimer ?'))return;
   S.dettesPerso=S.dettesPerso.filter(d=>d.id!=id);
   saveData();rDettes();toast('🗑️ Supprimé');
+}
+
+function augmenterDette(fid){
+  const f=S.fournisseurs.find(x=>x.id==fid);if(!f)return;
+  modal(`<div class="mft">➕ Nouvelle dette — ${f.nom}</div>
+    <div style="background:var(--surface2);border-radius:var(--rs);padding:10px 12px;margin-bottom:14px;font-size:13px">
+      <div style="display:flex;justify-content:space-between"><span>Dette actuelle</span><strong style="color:var(--red)">${F(f.dette)}</strong></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Montant à ajouter (${(S.parametres&&S.parametres.devise)||'FCFA'})</label>
+        <input class="fi" type="number" id="ad-mt" placeholder="0" min="1">
+      </div>
+      <div class="fg"><label class="fl">Date</label>
+        <input class="fi" type="date" id="ad-date" value="${D()}">
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Remarque / Description</label>
+      <input class="fi" id="ad-notes" placeholder="Ex: achat crédit, avance reçue, marchandises...">
+    </div>
+    <div class="mff">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveAugmentDette(${fid})">➕ Ajouter à la dette</button>
+    </div>`);
+}
+
+function saveAugmentDette(fid){
+  const f=S.fournisseurs.find(x=>x.id==fid);if(!f)return;
+  const mt=+document.getElementById('ad-mt').value||0;
+  const notes=document.getElementById('ad-notes').value.trim();
+  const date=document.getElementById('ad-date').value||D();
+  if(!mt||mt<=0)return toast('❌ Montant invalide');
+  const avantDette=f.dette||0;
+  f.dette=(f.dette||0)+mt;
+  if(!f.historiqueDetteAjouts)f.historiqueDetteAjouts=[];
+  f.historiqueDetteAjouts.push({id:genId(),date,mt,avant:avantDette,apres:f.dette,notes:notes||'—'});
+  saveData();closeModal();toast(`➕ ${F(mt)} ajouté · Nouvelle dette : ${F(f.dette)}`);rDettes();
+}
+
+function voirHistoDette(fid){
+  const f=S.fournisseurs.find(x=>x.id==fid);if(!f)return;
+  const hist=f.historiqueDetteAjouts||[];
+  modal(`<div class="mft">📋 Historique ajouts — ${f.nom}</div>
+    <div style="max-height:360px;overflow-y:auto">
+    ${hist.length===0?'<div style="text-align:center;color:var(--text3);padding:20px">Aucun ajout enregistré</div>':
+    `<table style="width:100%;font-size:12px;border-collapse:collapse">
+      <thead><tr style="border-bottom:1px solid var(--border)">
+        <th style="padding:6px 8px;text-align:left">Date</th>
+        <th style="padding:6px 8px;text-align:right">Ajouté</th>
+        <th style="padding:6px 8px;text-align:right">Avant</th>
+        <th style="padding:6px 8px;text-align:right">Après</th>
+        <th style="padding:6px 8px;text-align:left">Remarque</th>
+      </tr></thead>
+      <tbody>${hist.slice().reverse().map(h=>`
+        <tr style="border-bottom:1px solid var(--surface2)">
+          <td style="padding:6px 8px;font-family:'DM Mono',monospace;color:var(--text3)">${h.date}</td>
+          <td style="padding:6px 8px;text-align:right;color:var(--amber);font-weight:600">+${F(h.mt)}</td>
+          <td style="padding:6px 8px;text-align:right;color:var(--text3)">${F(h.avant)}</td>
+          <td style="padding:6px 8px;text-align:right;color:var(--red);font-weight:600">${F(h.apres)}</td>
+          <td style="padding:6px 8px;color:var(--text2)">${h.notes}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`}
+    </div>
+    <div style="text-align:right;margin-top:12px"><button class="btn" onclick="closeModal()">Fermer</button></div>`);
 }
 
 // ─── MODULE : FLUX FINANCIER ───
