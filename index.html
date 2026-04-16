@@ -3713,16 +3713,19 @@ function delDep(id){
 }
 
 // ─── RAPPORTS AVEC GRAPHIQUES ───
-let chartVentes=null, chartSecteurs=null, chartDep=null;
+let chartVentes=null, chartSecteurs=null, chartDep=null, chartBilanEvol=null, chartBilanSect=null;
 let rapPeriode='mois';
+let rapTab='synthese';
+const bilanMoisCourant=(()=>{const n=new Date();return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`})();
+let bilanMoisNav=bilanMoisCourant;
 function rRap(){
+  if(rapTab==='bilan') return rBilanMensuel();
   const today=new Date();
   const yyyy=today.getFullYear();
   const mm=String(today.getMonth()+1).padStart(2,'0');
   const weekAgo=new Date(today-7*864e5).toISOString().split('T')[0];
   const monthStr=`${yyyy}-${mm}`;
   const yearStr=`${yyyy}`;
-
   const filterV=v=>{
     if(rapPeriode==='semaine') return v.date>=weekAgo;
     if(rapPeriode==='mois') return v.date.startsWith(monthStr);
@@ -3730,11 +3733,9 @@ function rRap(){
     return true;
   };
   const filterD=d=>filterV(d);
-
   const ventesF=S.ventes.filter(filterV);
   const depF=S.depenses.filter(filterD);
   const achatsF=S.achats.filter(filterV);
-
   const vp=ventesF.filter(v=>v.statut==='Payé').reduce((s,v)=>s+v.mt,0);
   const dep=depF.reduce((s,d)=>s+d.mt,0);
   const achats=achatsF.reduce((s,a)=>s+a.mt,0);
@@ -3742,7 +3743,6 @@ function rRap(){
   const sv=S.stock.reduce((s,a)=>s+(sa(a)*a.pv),0);
   const sc=S.stock.reduce((s,a)=>s+(sa(a)*a.pa),0);
   const mg=sv>0?Math.round((sv-sc)/sv*100):0;
-
   const modes=['Espèces','Flooz','Mixx','Virement'];
   const vModes=modes.map(m=>ventesF.filter(v=>v.mode===m&&v.statut==='Payé').reduce((s,v)=>s+v.mt,0));
   const cats=['Lingerie','Audio-Vidéo','Bureautique'];
@@ -3750,8 +3750,11 @@ function rRap(){
   const depCats=[...new Set(S.depenses.map(d=>d.cat))];
   const depMts=depCats.map(cat=>depF.filter(d=>d.cat===cat).reduce((s,d)=>s+d.mt,0));
   const periodeLabel={'semaine':'Cette semaine','mois':'Ce mois','annee':'Cette année','tout':'Tout'};
-
   document.getElementById('content').innerHTML=`
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+      <button class="btn btn-sm${rapTab==='synthese'?' btn-primary':''}" onclick="rapTab='synthese';rRap()">📊 Synthèse</button>
+      <button class="btn btn-sm${rapTab==='bilan'?' btn-primary':''}" onclick="rapTab='bilan';bilanMoisNav=bilanMoisCourant;rRap()">📅 Bilan mensuel</button>
+    </div>
     <div class="period-tabs">
       ${['semaine','mois','annee','tout'].map(p=>`<button class="ptab${rapPeriode===p?' active':''}" onclick="rapPeriode='${p}';rRap()">${periodeLabel[p]}</button>`).join('')}
     </div>
@@ -3798,7 +3801,6 @@ function rRap(){
         return`<tr><td class="tdm">${cat}</td><td style="font-weight:600;color:var(--red)">${F(depMts[i])}</td><td>${N(nb)}</td>
           <td><span class="badge ba">${part}%</span></td></tr>`;
       }).join('')}</tbody></table></div>`;
-
   setTimeout(()=>{
     if(chartSecteurs){chartSecteurs.destroy();chartSecteurs=null;}
     if(chartDep){chartDep.destroy();chartDep=null;}
@@ -3810,6 +3812,194 @@ function rRap(){
     if(cm) new Chart(cm,{type:'pie',data:{labels:modes,datasets:[{data:vModes,backgroundColor:['#e8edf5','#e0f5f1','#f8e8f0','#f0ebf8'],borderColor:['#0f1f3d','#0b6b5c','#8b2252','#5b3a8f'],borderWidth:2}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:8}}}}});
   },100);
 }
+
+// ─── BILAN MENSUEL AUTOMATIQUE ───
+function bilanMoisData(moisStr){
+  const ventes=S.ventes.filter(v=>v.date&&v.date.startsWith(moisStr));
+  const ventesP=ventes.filter(v=>v.statut==='Payé');
+  const ca=ventesP.reduce((s,v)=>s+v.mt,0);
+  const nbVentes=ventesP.length;
+  const impayés=ventes.filter(v=>v.statut==='Non payé').reduce((s,v)=>s+v.mt,0);
+  const dep=S.depenses.filter(d=>d.date&&d.date.startsWith(moisStr)).reduce((s,d)=>s+d.mt,0);
+  const achats=S.achats.filter(a=>a.date&&a.date.startsWith(moisStr)).reduce((s,a)=>s+a.mt,0);
+  const resultat=ca-dep;
+  const cats=['Lingerie','Audio-Vidéo','Bureautique'];
+  const catsCA=cats.map(cat=>ventesP.filter(v=>{const a=ga(v.aid);return a&&a.cat===cat;}).reduce((s,v)=>s+v.mt,0));
+  const modes=['Espèces','Flooz','Mixx','Virement'];
+  const modesCA=modes.map(m=>ventesP.filter(v=>v.mode===m).reduce((s,v)=>s+v.mt,0));
+  const depCats=[...new Set((S.depenses||[]).map(d=>d.cat))];
+  const depParCat=depCats.map(cat=>S.depenses.filter(d=>d.date&&d.date.startsWith(moisStr)&&d.cat===cat).reduce((s,d)=>s+d.mt,0));
+  const top5=ventesP.reduce((acc,v)=>{const a=ga(v.aid);if(!a)return acc;acc[a.nom]=(acc[a.nom]||0)+v.mt;return acc;},{});
+  const top5arr=Object.entries(top5).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  return{ca,nbVentes,impayés,dep,achats,resultat,catsCA,modesCA,cats,modes,depCats,depParCat,top5arr};
+}
+
+function bilanMoisPrecedent(moisStr){
+  const [y,m]=moisStr.split('-').map(Number);
+  const prev=m===1?`${y-1}-12`:`${y}-${String(m-1).padStart(2,'0')}`;
+  return prev;
+}
+
+function bilanMoisLabel(moisStr){
+  const [y,m]=moisStr.split('-').map(Number);
+  const noms=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  return`${noms[m-1]} ${y}`;
+}
+
+function bilanMois6(moisStr){
+  const res=[];
+  let [y,m]=moisStr.split('-').map(Number);
+  for(let i=5;i>=0;i--){
+    let mm=m-i;let yy=y;
+    if(mm<=0){mm+=12;yy--;}
+    const s=`${yy}-${String(mm).padStart(2,'0')}`;
+    const d=bilanMoisData(s);
+    const noms=['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+    res.push({label:noms[mm-1],ca:d.ca,dep:d.dep,resultat:d.resultat});
+  }
+  return res;
+}
+
+function delta(cur,prev){
+  if(!prev||prev===0) return cur>0?'<span style="color:var(--green);font-size:11px">▲ nouveau</span>':'<span style="font-size:11px;color:var(--text3)">—</span>';
+  const pct=Math.round((cur-prev)/prev*100);
+  const col=pct>=0?'var(--green)':'var(--red)';
+  const arrow=pct>=0?'▲':'▼';
+  return`<span style="color:${col};font-size:11px">${arrow} ${Math.abs(pct)}%</span>`;
+}
+
+function rBilanMensuel(){
+  const d=bilanMoisData(bilanMoisNav);
+  const prevStr=bilanMoisPrecedent(bilanMoisNav);
+  const p=bilanMoisData(prevStr);
+  const hist6=bilanMois6(bilanMoisNav);
+  const estCourant=bilanMoisNav===bilanMoisCourant;
+
+  document.getElementById('content').innerHTML=`
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+      <button class="btn btn-sm" onclick="rapTab='synthese';rRap()">📊 Synthèse</button>
+      <button class="btn btn-sm btn-primary">📅 Bilan mensuel</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+      <button class="btn btn-sm" onclick="bilanMoisNav=bilanMoisPrecedent(bilanMoisNav);rBilanMensuel()">◀ Mois préc.</button>
+      <div style="font-size:16px;font-weight:600;color:var(--navy);flex:1;text-align:center">${bilanMoisLabel(bilanMoisNav)}${estCourant?' <span style=\'font-size:11px;background:var(--green-bg);color:var(--green);padding:2px 8px;border-radius:10px\'>Mois en cours</span>':''}</div>
+      <button class="btn btn-sm" onclick="bilanMoisNav=bilanMoisSuivant(bilanMoisNav);rBilanMensuel()" ${bilanMoisNav>=bilanMoisCourant?'disabled':''}>Mois suiv. ▶</button>
+    </div>
+
+    <div class="g4" style="margin-bottom:6px">
+      <div class="card" style="border-left:3px solid var(--green)">
+        <div class="ct">Chiffre d'affaires</div>
+        <div class="mv" style="color:var(--green)">${F(d.ca)}</div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:4px">
+          <span style="color:var(--text3)">${d.nbVentes} ventes</span>${delta(d.ca,p.ca)}
+        </div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--red)">
+        <div class="ct">Dépenses</div>
+        <div class="mv" style="color:var(--red)">${F(d.dep)}</div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:4px">
+          <span style="color:var(--text3)">mois préc: ${F(p.dep)}</span>${delta(d.dep,p.dep)}
+        </div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--purple)">
+        <div class="ct">Achats stock</div>
+        <div class="mv" style="color:var(--purple)">${F(d.achats)}</div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:4px">
+          <span style="color:var(--text3)">mois préc: ${F(p.achats)}</span>${delta(d.achats,p.achats)}
+        </div>
+      </div>
+      <div class="card" style="border-left:3px solid ${d.resultat>=0?'var(--teal)':'var(--amber)'}">
+        <div class="ct">Résultat net</div>
+        <div class="mv" style="color:${d.resultat>=0?'var(--green)':'var(--red)'}">${F(d.resultat)}</div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:4px">
+          <span class="badge ${d.resultat>=0?'bg':'br'}" style="font-size:10px">${d.resultat>=0?'Bénéfice':'Déficit'}</span>${delta(d.resultat,p.resultat)}
+        </div>
+      </div>
+    </div>
+
+    ${d.impayés>0?`<div style="background:var(--amber-bg);border:1px solid var(--amber);border-radius:var(--rs);padding:10px 14px;margin-bottom:16px;font-size:13px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:18px">⚠️</span>
+      <span>Impayés clients ce mois : <strong style="color:var(--amber)">${F(d.impayés)}</strong> à encaisser</span>
+    </div>`:''}
+
+    <p class="st">Évolution sur 6 mois</p>
+    <div class="chart-wrap"><canvas class="chart-canvas" id="chart-bilan-evol" style="max-height:200px"></canvas></div>
+
+    <div class="g3" style="margin-top:16px">
+      <div>
+        <p class="st">Ventes par secteur</p>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Secteur</th><th>CA</th><th>Part</th><th>vs mois préc.</th></tr></thead>
+          <tbody>${d.cats.map((cat,i)=>{
+            const part=d.ca>0?Math.round(d.catsCA[i]/d.ca*100):0;
+            return`<tr><td class="tdm">${cat}</td><td style="font-weight:600;color:var(--green)">${F(d.catsCA[i])}</td>
+              <td><div style="background:var(--surface2);border-radius:3px;height:5px;width:80px;display:inline-block;vertical-align:middle"><div style="width:${part}%;background:var(--green);height:100%;border-radius:3px"></div></div> <span style="font-size:11px">${part}%</span></td>
+              <td>${delta(d.catsCA[i],p.catsCA[i])}</td></tr>`;
+          }).join('')}</tbody>
+        </table></div>
+      </div>
+      <div>
+        <p class="st">Modes de paiement</p>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Mode</th><th>Montant</th><th>Part</th></tr></thead>
+          <tbody>${d.modes.map((mode,i)=>{
+            const part=d.ca>0?Math.round(d.modesCA[i]/d.ca*100):0;
+            return`<tr><td class="tdm">${mode}</td><td style="font-weight:600">${F(d.modesCA[i])}</td>
+              <td><span style="font-size:11px;color:var(--text3)">${part}%</span></td></tr>`;
+          }).join('')}</tbody>
+        </table></div>
+      </div>
+      <div>
+        <p class="st">Top 5 articles</p>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Article</th><th>CA</th></tr></thead>
+          <tbody>${d.top5arr.length===0?'<tr><td colspan="2" style="text-align:center;color:var(--text3);padding:12px">Aucune vente</td></tr>':
+            d.top5arr.map(([nom,mt])=>`<tr><td class="tdm" style="font-size:12px">${nom}</td><td style="font-weight:600;color:var(--navy)">${F(mt)}</td></tr>`).join('')}
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <p class="st">Détail dépenses</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Catégorie</th><th>Montant</th><th>Part</th></tr></thead>
+      <tbody>${d.depCats.length===0?'<tr><td colspan="3" style="text-align:center;color:var(--text3);padding:12px">Aucune dépense</td></tr>':
+        d.depCats.map((cat,i)=>{
+          const part=d.dep>0?Math.round(d.depParCat[i]/d.dep*100):0;
+          return`<tr><td class="tdm">${cat}</td><td style="font-weight:600;color:var(--red)">${F(d.depParCat[i])}</td>
+            <td><span class="badge ba" style="font-size:10px">${part}%</span></td></tr>`;
+        }).join('')}
+      </tbody>
+    </table></div>
+
+    <div style="text-align:center;margin-top:20px">
+      <button class="btn" onclick="printRapport()">🖨️ Imprimer ce bilan</button>
+    </div>`;
+
+  setTimeout(()=>{
+    if(chartBilanEvol){chartBilanEvol.destroy();chartBilanEvol=null;}
+    const ce=document.getElementById('chart-bilan-evol');
+    if(ce) chartBilanEvol=new Chart(ce,{
+      type:'bar',
+      data:{
+        labels:hist6.map(h=>h.label),
+        datasets:[
+          {label:'CA',data:hist6.map(h=>h.ca),backgroundColor:'rgba(11,107,92,0.2)',borderColor:'#0b6b5c',borderWidth:2,borderRadius:4,order:2},
+          {label:'Dépenses',data:hist6.map(h=>h.dep),backgroundColor:'rgba(176,40,40,0.15)',borderColor:'#b02828',borderWidth:2,borderRadius:4,order:2},
+          {label:'Résultat',data:hist6.map(h=>h.resultat),type:'line',borderColor:'#1a3a5c',backgroundColor:'transparent',borderWidth:2,pointRadius:4,pointBackgroundColor:'#1a3a5c',order:1}
+        ]
+      },
+      options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:10}}},scales:{y:{ticks:{font:{size:9},callback:v=>v>=1000?Math.round(v/1000)+'k':v},grid:{color:'rgba(0,0,0,0.04)'}},x:{ticks:{font:{size:10}}}}}
+    });
+  },100);
+}
+
+function bilanMoisSuivant(moisStr){
+  const [y,m]=moisStr.split('-').map(Number);
+  const next=m===12?`${y+1}-01`:`${y}-${String(m+1).padStart(2,'0')}`;
+  return next;
+}
+
 function printRapport(){window.print();}
 
 // ─── REÇU PDF ───
