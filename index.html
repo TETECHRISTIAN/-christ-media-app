@@ -854,6 +854,8 @@ body.dark th{background:var(--surface3)}
       <span id="cu-role-badge" style="margin-left:auto;font-size:9px;padding:1px 6px;border-radius:8px;background:rgba(255,255,255,.15)">—</span>
     </div>
   </div>
+  <!-- ─── SÉLECTEUR DE BOUTIQUE ─── -->
+  <div id="boutique-switcher" style="display:none;padding:8px 0 4px;border-bottom:1px solid rgba(255,255,255,.08)"></div>
   <nav class="nav">
     <div class="nav-sec">Principal</div>
     <div class="ni active" data-page="dashboard" onclick="nav(this,'dashboard')">
@@ -1416,7 +1418,10 @@ const defaultData={
   dettes:[],
   historique_prix:[],
   objectifs:{ca_mensuel:500000,ventes_nb:50,depenses_max:200000,actif:true},
-  boutiques:[{id:1,nom:'Christ Media — Lomé',actif:true}],
+  boutiques:[
+    {id:1,nom:'Boutique A',emoji:'🏪',couleur:'#0f1f3d',categories:['Lingerie','Audio-Vidéo','Bureautique'],actif:true},
+    {id:2,nom:'Boutique B',emoji:'🏬',couleur:'#1a5c2e',categories:['Lingerie','Audio-Vidéo','Bureautique'],actif:true}
+  ],
   fidelite:{actif:false,pointsParFCFA:1,valeurPoint:10,niveaux:[{nom:'Bronze',seuil:0,emoji:'🥉'},{nom:'Argent',seuil:500,emoji:'🥈'},{nom:'Or',seuil:2000,emoji:'🥇'},{nom:'VIP',seuil:5000,emoji:'💎'}]},
   boutique_active:1,
   depots:[{id:1,nom:'Boutique principale',emoji:'🏪',actif:true},{id:2,nom:'Entrepôt',emoji:'📦',actif:true}],
@@ -1436,8 +1441,9 @@ const defaultData={
     compte_auto:true
   },
   utilisateurs:[
-    {id:1,nom:'Christian',role:'admin',pin:'1234',email:'christmedia176@gmail.com',password:'admin1234',emoji:'👑',actif:true}
+    {id:1,nom:'Christian',role:'admin',pin:'1234',email:'christmedia176@gmail.com',password:'admin1234',emoji:'👑',actif:true,boutique_id:null}
     // Rôles disponibles: 'admin', 'caissier', 'vendeur'
+    // boutique_id: null = admin (accès toutes boutiques), ou id de boutique pour vendeur/caissier
   ],
   session:{uid:null,role:null,nom:null}
 };
@@ -1872,6 +1878,121 @@ const gf=id=>S.fournisseurs.find(f=>f.id==id);
 const cb=cat=>{const m={'Lingerie':'cat-l','Audio-Vidéo':'cat-a','Bureautique':'cat-b'};return`<span class="${m[cat]||'cat-b'}">${cat}</span>`};
 const sb=s=>{const m={'Payé':'bg','Non payé':'br','Débiteur':'br','Régulier':'bt','Actif':'bg','VIP':'bp','Inactif':'ba'};return`<span class="badge ${m[s]||'bb'}">${s}</span>`};
 
+// ═══════════════════════════════════════════════════════
+// ─── SYSTÈME MULTI-BOUTIQUE ─────────────────────────
+// ═══════════════════════════════════════════════════════
+
+// Retourne l'id de la boutique active pour la session courante
+function getBid(){
+  const s = S.session || {};
+  // Vendeur/caissier → toujours sa boutique assignée
+  if(s.role !== 'admin' && s.boutique_id) return s.boutique_id;
+  // Admin → boutique sélectionnée (stockée dans la session)
+  if(s.boutique_active) return s.boutique_active;
+  // Fallback : boutique_active globale ou 1
+  return S.boutique_active || 1;
+}
+
+// Retourne l'objet boutique active
+function getBoutiqueActive(){
+  const bid = getBid();
+  return (S.boutiques||[]).find(b=>b.id==bid) || (S.boutiques||[])[0] || {id:1,nom:'Boutique',emoji:'🏪',couleur:'#0f1f3d',categories:[]};
+}
+
+// Switcher de boutique (admin uniquement)
+function switcherBoutique(bid){
+  if(S.session?.role !== 'admin'){toast('⛔ Réservé à l\'admin');return;}
+  if(!S.session) S.session = {};
+  S.session.boutique_active = bid;
+  S.boutique_active = bid; // sync global
+  saveLocal(S);
+  majBoutiqueUI();
+  // Rafraîchir la page courante
+  try{
+    ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,
+      vente:rVente,services:rServices,achats:rAchats,stock:rStock,
+      clients:rClients,fournisseurs:rFour,depenses:rDep,
+      tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,
+      inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,
+      comptes:rComptes,devis:rDevis,planning:rPlanning,
+      calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,
+      limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,
+      caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,
+      depots:rDepots,fidelite:rFidelite,audit:rAudit})[currentPage]();
+  }catch(e){}
+  const b = getBoutiqueActive();
+  toast(`🏪 Boutique : ${b.emoji} ${b.nom}`);
+}
+
+// Met à jour l'affichage du switcher dans la sidebar
+function majBoutiqueUI(){
+  const bid = getBid();
+  const b = getBoutiqueActive();
+  const switcher = document.getElementById('boutique-switcher');
+  if(!switcher) return;
+  const role = S.session?.role;
+  if(role !== 'admin'){
+    switcher.style.display = 'none';
+    return;
+  }
+  switcher.style.display = 'block';
+  const boutiques = S.boutiques || [];
+  switcher.innerHTML = `
+    <div style="font-size:9px;font-weight:600;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;padding:0 10px;margin-bottom:4px">Boutique active</div>
+    <div style="display:flex;flex-direction:column;gap:2px;padding:0 8px">
+      ${boutiques.map(bq=>`
+        <div onclick="switcherBoutique(${bq.id})"
+          style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;transition:all .15s;
+          background:${bq.id==bid?'rgba(255,255,255,.15)':'transparent'};
+          border:1px solid ${bq.id==bid?'rgba(255,255,255,.2)':'transparent'}">
+          <span style="font-size:15px">${bq.emoji||'🏪'}</span>
+          <span style="font-size:12px;font-weight:${bq.id==bid?'700':'400'};color:${bq.id==bid?'#fff':'rgba(255,255,255,.6)'};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${bq.nom}</span>
+          ${bq.id==bid?'<span style="font-size:9px;background:rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:1px 5px">✓</span>':''}
+        </div>`).join('')}
+    </div>`;
+}
+
+// Filtre stock par boutique active
+function getStockBoutique(bid){
+  bid = bid || getBid();
+  return (S.stock||[]).filter(a => !a.bid || a.bid == bid);
+}
+
+// Filtre ventes par boutique active
+function getVentesBoutique(bid){
+  bid = bid || getBid();
+  return (S.ventes||[]).filter(v => !v.bid || v.bid == bid);
+}
+
+// Filtre achats par boutique active
+function getAchatsBoutique(bid){
+  bid = bid || getBid();
+  return (S.achats||[]).filter(a => !a.bid || a.bid == bid);
+}
+
+// Filtre dépenses par boutique active
+function getDepensesBoutique(bid){
+  bid = bid || getBid();
+  return (S.depenses||[]).filter(d => !d.bid || d.bid == bid);
+}
+
+// Filtre clients par boutique active
+function getClientsBoutique(bid){
+  bid = bid || getBid();
+  return (S.clients||[]).filter(c => !c.bid || c.bid == bid);
+}
+
+// Catégories de la boutique active
+function getCatsBoutique(){
+  const b = getBoutiqueActive();
+  return (b.categories && b.categories.length) ? b.categories : (S.parametres?.categories || ['Lingerie','Audio-Vidéo','Bureautique']);
+}
+
+// Couleur de la boutique active
+function getCouleurBoutique(){
+  return getBoutiqueActive().couleur || '#0f1f3d';
+}
+
 // ─── TOAST ───
 function toast(msg,dur=2200){
   const t=document.getElementById('toast');
@@ -1990,8 +2111,13 @@ function rDashVendeur(){
   const heureLabel = now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
   const dateLabel = now.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
 
-  // Ventes de CE vendeur uniquement
-  const mesVentes = S.ventes.filter(v => v.caissier_uid == uid || v.caissier_nom === nom);
+  // Boutique du vendeur
+  const bid = getBid();
+  const bActive = getBoutiqueActive();
+  const ventesB = getVentesBoutique(bid);
+
+  // Ventes de CE vendeur uniquement (filtrées par sa boutique)
+  const mesVentes = ventesB.filter(v => v.caissier_uid == uid || v.caissier_nom === nom);
   const mesVentesAuj = mesVentes.filter(v => v.date && v.date.startsWith(todayStr) && v.statut === 'Payé');
   const mesVentesMois = mesVentes.filter(v => v.date && v.date.startsWith(curM) && v.statut === 'Payé');
   const mesVentesAujCredit = mesVentes.filter(v => v.date && v.date.startsWith(todayStr) && v.statut === 'Non payé');
@@ -2017,10 +2143,10 @@ function rDashVendeur(){
   else if(caPct >= 25){ scoreEmoji = '⏳'; scoreMsg = 'Continue !'; }
   else { scoreEmoji = '🚀'; scoreMsg = 'Lance-toi !'; }
 
-  // Classement de la journée (tous vendeurs)
+  // Classement de la journée (tous vendeurs de la même boutique)
   const classement = [];
   const vendeursMap = {};
-  S.ventes.filter(v => v.date && v.date.startsWith(todayStr) && v.statut === 'Payé').forEach(v => {
+  ventesB.filter(v => v.date && v.date.startsWith(todayStr) && v.statut === 'Payé').forEach(v => {
     const n = v.caissier_nom || '—';
     const e = v.caissier_emoji || '👤';
     if(!vendeursMap[n]) vendeursMap[n] = {nom:n, emoji:e, mt:0, nb:0};
@@ -2057,7 +2183,7 @@ function rDashVendeur(){
     <div class="vd-header">
       <div class="vd-avatar">${emoji}</div>
       <div class="vd-name">${nom}</div>
-      <div class="vd-role">${role==='caissier'?'💰 Caissier':'🛒 Vendeur'}</div>
+      <div class="vd-role">${role==='caissier'?'💰 Caissier':'🛒 Vendeur'} · <span style="background:rgba(255,255,255,.15);border-radius:8px;padding:1px 8px">${bActive.emoji||'🏪'} ${bActive.nom}</span></div>
       <div class="vd-date">📅 ${dateLabel} · ${heureLabel}</div>
       <div class="vd-score">
         <div style="font-size:36px">${scoreEmoji}</div>
@@ -2181,38 +2307,55 @@ function rDash(){
   // Tableau de bord adapté au rôle
   const role = S.session?.role || 'vendeur';
   if(role !== 'admin') { rDashVendeur(); return; }
+  // ─── Données filtrées par boutique active ───
+  const bid = getBid();
+  const bActive = getBoutiqueActive();
+  const stockB = getStockBoutique(bid);
+  const ventesB = getVentesBoutique(bid);
+  const depensesB = getDepensesBoutique(bid);
   // Mois courant et mois précédent
   const now=new Date();
   const curM=now.toISOString().slice(0,7);
   const prevDate=new Date(now.getFullYear(),now.getMonth()-1,1);
   const prevM=prevDate.toISOString().slice(0,7);
-  const ventesM=mois=>S.ventes.filter(v=>v.statut==='Payé'&&v.date&&v.date.startsWith(mois)).reduce((s,v)=>s+v.mt,0);
-  const depM=mois=>S.depenses.filter(d=>d.date&&d.date.startsWith(mois)).reduce((s,d)=>s+d.mt,0);
+  const ventesM=mois=>ventesB.filter(v=>v.statut==='Payé'&&v.date&&v.date.startsWith(mois)).reduce((s,v)=>s+v.mt,0);
+  const depM=mois=>depensesB.filter(d=>d.date&&d.date.startsWith(mois)).reduce((s,d)=>s+d.mt,0);
   const vpCur=ventesM(curM),vpPrev=ventesM(prevM);
   const depCur=depM(curM),depPrev=depM(prevM);
   const trend=(cur,prev)=>{if(!prev)return'<span class="trend-flat">— nouveau</span>';const pct=Math.round((cur-prev)/prev*100);if(pct>0)return`<span class="trend-up">↑ +${pct}% vs mois préc.</span>`;if(pct<0)return`<span class="trend-down">↓ ${pct}% vs mois préc.</span>`;return'<span class="trend-flat">= stable</span>';};
-  const vp=S.ventes.filter(v=>v.statut==='Payé').reduce((s,v)=>s+v.mt,0);
-  const vi=S.ventes.filter(v=>v.statut==='Non payé').reduce((s,v)=>s+v.mt,0);
-  const dep=S.depenses.reduce((s,d)=>s+d.mt,0);
+  const vp=ventesB.filter(v=>v.statut==='Payé').reduce((s,v)=>s+v.mt,0);
+  const vi=ventesB.filter(v=>v.statut==='Non payé').reduce((s,v)=>s+v.mt,0);
+  const dep=depensesB.reduce((s,d)=>s+d.mt,0);
   const solde=vp-dep;
-  const sv=S.stock.reduce((s,a)=>s+(sa(a)*a.pv),0);
-  const al=S.stock.filter(a=>sa(a)<=a.seuil&&sa(a)>=0);
-  const vc=cat=>S.ventes.filter(v=>{const a=ga(v.aid);return a&&a.cat===cat&&v.statut==='Payé'}).reduce((s,v)=>s+v.mt,0);
-  const vl=vc('Lingerie'),vav=vc('Audio-Vidéo'),vb=vc('Bureautique'),vt=vp||1;
+  const sv=stockB.reduce((s,a)=>s+(sa(a)*a.pv),0);
+  const al=stockB.filter(a=>sa(a)<=a.seuil&&sa(a)>=0);
+  const vc=cat=>ventesB.filter(v=>{const a=stockB.find(x=>x.id==v.aid);return a&&a.cat===cat&&v.statut==='Payé'}).reduce((s,v)=>s+v.mt,0);
+  const cats = getCatsBoutique();
+  const vt=vp||1;
   // Objectifs
   const obj=S.objectifs||{ca_mensuel:500000,ventes_nb:50,depenses_max:200000,actif:true};
-  const vNbCur=S.ventes.filter(v=>v.statut==='Payé'&&v.date&&v.date.startsWith(curM)).length;
+  const vNbCur=ventesB.filter(v=>v.statut==='Payé'&&v.date&&v.date.startsWith(curM)).length;
   const caPct=Math.min(100,obj.ca_mensuel?Math.round(vpCur/obj.ca_mensuel*100):0);
   const nbPct=Math.min(100,obj.ventes_nb?Math.round(vNbCur/obj.ventes_nb*100):0);
   const depPct=Math.min(100,obj.depenses_max?Math.round(depCur/obj.depenses_max*100):0);
   document.getElementById('content').innerHTML=`
+    <!-- Bandeau boutique active -->
+    <div style="display:flex;align-items:center;gap:10px;background:${bActive.couleur||'var(--navy)'};color:#fff;border-radius:var(--rs);padding:10px 16px;margin-bottom:16px;flex-wrap:wrap">
+      <span style="font-size:20px">${bActive.emoji||'🏪'}</span>
+      <span style="font-size:14px;font-weight:700">${bActive.nom}</span>
+      <span style="font-size:11px;opacity:.7">Tableau de bord de cette boutique</span>
+      ${(S.boutiques||[]).filter(b=>b.id!=bid).map(b=>`
+        <button onclick="switcherBoutique(${b.id})" style="margin-left:auto;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">
+          ${b.emoji||'🏪'} Voir ${b.nom} →
+        </button>`).join('')}
+    </div>
     ${al.length?`<div class="alert alert-r">⚠️ ${al.length} article(s) en stock bas : ${al.slice(0,3).map(a=>`<strong>${a.nom}</strong> (${sa(a)} restants)`).join(' · ')}${al.length>3?` +${al.length-3} autres`:''}</div>`:''}
     <p class="st">Vue d'ensemble <span style="font-size:11px;color:var(--text3);font-weight:400;margin-left:8px">${curM}</span></p>
     <div class="g4">
       <div class="card"><div class="ct">Solde net</div><div class="mv" style="color:${solde>=0?'var(--green)':'var(--red)'}">${F(solde)}</div><span class="badge ${solde>=0?'bg':'br'}">${solde>=0?'Bénéfice':'Déficit'}</span></div>
       <div class="card"><div class="ct">Ventes encaissées</div><div class="mv">${F(vpCur)}</div>${trend(vpCur,vpPrev)}</div>
       <div class="card"><div class="ct">Dépenses du mois</div><div class="mv" style="color:var(--red)">${F(depCur)}</div>${trend(depCur,depPrev)}</div>
-      <div class="card"><div class="ct">Valeur stock</div><div class="mv">${F(sv)}</div><span class="badge bb">${S.stock.length} articles</span></div>
+      <div class="card"><div class="ct">Valeur stock</div><div class="mv">${F(sv)}</div><span class="badge bb">${stockB.length} articles</span></div>
     </div>
     ${obj.actif!==false?`
     <p class="st">Objectifs du mois <button onclick="nav(document.querySelector('[data-page=objectifs]'),'objectifs')" style="font-size:11px;font-weight:500;background:none;border:none;color:var(--navy);cursor:pointer;margin-left:8px">Voir détail →</button></p>
@@ -2223,21 +2366,19 @@ function rDash(){
     </div>`:``}
     <p class="st">Ventes par secteur</p>
     <div class="g3">
-      <div class="card"><div class="ct">Lingerie</div><div class="mv">${F(vl)}</div><div class="pbar"><div class="pfill" style="width:${Math.round(vl/vt*100)}%;background:var(--pink)"></div></div><div class="ms">${Math.round(vl/vt*100)}% du CA</div></div>
-      <div class="card"><div class="ct">Audio-Vidéo</div><div class="mv">${F(vav)}</div><div class="pbar"><div class="pfill" style="width:${Math.round(vav/vt*100)}%;background:var(--navy)"></div></div><div class="ms">${Math.round(vav/vt*100)}% du CA</div></div>
-      <div class="card"><div class="ct">Bureautique</div><div class="mv">${F(vb)}</div><div class="pbar"><div class="pfill" style="width:${Math.round(vb/vt*100)}%;background:var(--teal)"></div></div><div class="ms">${Math.round(vb/vt*100)}% du CA</div></div>
+      ${cats.slice(0,3).map(cat=>{const mt=vc(cat);const pct=Math.round(mt/vt*100);const colors={'Lingerie':'var(--pink)','Audio-Vidéo':'var(--navy)','Bureautique':'var(--teal)'};const c=colors[cat]||'var(--navy)';return`<div class="card"><div class="ct">${cat}</div><div class="mv">${F(mt)}</div><div class="pbar"><div class="pfill" style="width:${pct}%;background:${c}"></div></div><div class="ms">${pct}% du CA</div></div>`;}).join('')}
     </div>
     <div class="g2">
       <div>
         <p class="st">Dernières ventes</p>
         <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Article</th><th>Montant</th><th>Statut</th></tr></thead><tbody>
-          ${S.ventes.slice().reverse().slice(0,6).map(v=>{const a=ga(v.aid);return`<tr><td>${v.date}</td><td class="tdm">${a?a.nom:'?'}</td><td>${F(v.mt)}</td><td>${sb(v.statut)}</td></tr>`}).join('')}
+          ${ventesB.slice().reverse().slice(0,6).map(v=>{const a=stockB.find(x=>x.id==v.aid)||ga(v.aid);return`<tr><td>${v.date}</td><td class="tdm">${a?a.nom:'?'}</td><td>${F(v.mt)}</td><td>${sb(v.statut)}</td></tr>`}).join('')}
         </tbody></table></div>
       </div>
       <div>
         <p class="st">Alertes stock</p>
         <div class="tbl-wrap"><table><thead><tr><th>Article</th><th>Stock</th><th>Seuil</th></tr></thead><tbody>
-          ${S.stock.sort((a,b)=>sa(a)-sa(b)).slice(0,6).map(a=>{
+          ${stockB.slice().sort((a,b)=>sa(a)-sa(b)).slice(0,6).map(a=>{
             const s=sa(a),c=s<=a.seuil?'var(--red)':s<=a.seuil*2?'var(--amber)':'var(--green)';
             return`<tr><td class="tdm">${a.nom}</td><td style="color:${c};font-weight:600">${N(s)}</td><td style="color:var(--text3)">${N(a.seuil)}</td></tr>`}).join('')}
         </tbody></table></div>
@@ -2245,7 +2386,7 @@ function rDash(){
     </div>
     <p class="st">Finances résumé</p>
     <div class="g3">
-      <div class="card"><div class="ct">Total dépenses</div><div class="mv" style="color:var(--red)">${F(dep)}</div><span class="badge br">${S.depenses.length} opérations</span></div>
+      <div class="card"><div class="ct">Total dépenses</div><div class="mv" style="color:var(--red)">${F(dep)}</div><span class="badge br">${depensesB.length} opérations</span></div>
       <div class="card"><div class="ct">Dettes fournisseurs</div><div class="mv" style="color:var(--amber)">${F(S.fournisseurs.reduce((s,f)=>s+f.dette,0))}</div><span class="badge ba">À régler</span></div>
       <div class="card"><div class="ct">Clients débiteurs</div><div class="mv">${N(S.clients.filter(c=>c.solde>0).length)}</div><span class="badge ba">${F(S.clients.reduce((s,c)=>s+c.solde,0))}</span></div>
     </div>
@@ -2361,14 +2502,18 @@ function rVente(){
   if(!window.venteSearch) window.venteSearch='';
   if(!window.venteCat) window.venteCat='Tout';
 
+  const bid = getBid();
+  const stockB = getStockBoutique(bid);
+  const ventesB = getVentesBoutique(bid);
+
   const sousTotal=window.panier.reduce((s,l)=>s+l.mt,0);
   const remiseMt=window.remise.type==='%'?Math.round(sousTotal*window.remise.val/100):Math.min(window.remise.val||0,sousTotal);
   const totalFinal=Math.max(0,sousTotal-remiseMt);
   const totalQte=window.panier.reduce((s,l)=>s+l.qte,0);
 
-  // Filtrer les articles
-  const cats=['Tout',...new Set(S.stock.map(a=>a.cat))];
-  let stockFiltre=S.stock.filter(a=>sa(a)>=0);
+  // Filtrer les articles par boutique
+  const cats=['Tout',...new Set(stockB.map(a=>a.cat))];
+  let stockFiltre=stockB.filter(a=>sa(a)>=0);
   if(window.venteCat&&window.venteCat!=='Tout') stockFiltre=stockFiltre.filter(a=>a.cat===window.venteCat);
   if(window.venteSearch){
     const q=window.venteSearch.toLowerCase();
@@ -2450,7 +2595,7 @@ function rVente(){
     <p class="st" style="margin-top:24px">Historique des ventes</p>
     <div class="tbl-wrap"><table>
       <thead><tr><th>Date</th><th>Articles</th><th>Montant</th><th>Client</th><th>Compte</th><th>Statut</th><th></th></tr></thead>
-      <tbody>${S.ventes.slice().reverse().map(v=>{
+      <tbody>${ventesB.slice().reverse().map(v=>{
         const lignes=v.lignes||[{aid:v.aid,qte:v.qte,pu:v.pu,mt:v.mt}];
         const noms=lignes.map(l=>{const a=ga(l.aid);return a?a.nom:'?'}).join(', ');
         return`<tr>
@@ -2635,6 +2780,7 @@ function validerPanier(){
     const vid=genId();
     S.ventes.push({
       id:vid,date:D(),
+      bid:getBid(),
       lignes:window.panier.map(l=>({aid:l.aid,qte:l.qte,pu:l.pu,mt:l.mt,typePrix:l.typePrix})),
       aid:window.panier[0].aid,qte:window.panier[0].qte,pu:window.panier[0].pu,
       mt,sousTotal,remise:remiseMt,typePrix:window.typePrix||'detail',
@@ -2839,7 +2985,7 @@ function saveAchat(){
   const statut_achat=document.getElementById('mstatut')?.value||'Payé';
   const achatId=genId();
   const mt=pu*qte;
-  S.achats.push({id:achatId,date,fid,aid,qte,pu,mt,mode,cid,notes,statut:statut_achat});
+  S.achats.push({id:achatId,date,fid,aid,qte,pu,mt,mode,cid,notes,statut:statut_achat,bid:getBid()});
   if(statut_achat==='Payé'){
     debiterCompte(cid,mt);
   } else {
@@ -2892,12 +3038,15 @@ let stockTri='nom';
 function filterStock(v){stockFilter=v.toLowerCase();rStock();}
 
 function rStock(){
-  const al=S.stock.filter(a=>sa(a)<=a.seuil&&sa(a)>=0);
-  const cats=(S.parametres&&S.parametres.categories)||['Lingerie','Audio-Vidéo','Bureautique'];
-  const allCats=[...new Set([...cats,...S.stock.map(a=>a.cat).filter(Boolean)])];
+  const bid = getBid();
+  const stockB = getStockBoutique(bid);
+  const bActive = getBoutiqueActive();
+  const al=stockB.filter(a=>sa(a)<=a.seuil&&sa(a)>=0);
+  const cats=getCatsBoutique();
+  const allCats=[...new Set([...cats,...stockB.map(a=>a.cat).filter(Boolean)])];
 
   // Filtrage
-  let filtered=S.stock.filter(a=>{
+  let filtered=stockB.filter(a=>{
     const matchText=!stockFilter||(a.nom.toLowerCase().includes(stockFilter)||a.code.toLowerCase().includes(stockFilter)||a.cat.toLowerCase().includes(stockFilter));
     const matchCat=!stockCatFiltre||a.cat===stockCatFiltre;
     return matchText&&matchCat;
@@ -2910,6 +3059,9 @@ function rStock(){
   else if(stockTri==='valeur') filtered=filtered.slice().sort((a,b)=>(sa(b)*b.pv)-(sa(a)*a.pv));
 
   document.getElementById('content').innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;background:${bActive.couleur||'var(--navy)'};color:#fff;border-radius:var(--rs);padding:7px 14px;margin-bottom:12px;font-size:12px;font-weight:600">
+      ${bActive.emoji||'🏪'} ${bActive.nom} — Stock
+    </div>
     ${al.length?`<div class="alert alert-a">⚠️ ${al.length} article(s) à réapprovisionner : ${al.slice(0,4).map(a=>`<strong>${a.nom}</strong> (${sa(a)})`).join(' · ')}${al.length>4?` +${al.length-4} autres`:''}</div>`:''}
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
       <div style="display:flex;gap:4px;flex-wrap:wrap">
@@ -2960,10 +3112,10 @@ function rStock(){
         </tr>`;}).join('')}
       </tbody></table></div>
     <div class="g4" style="margin-top:18px">
-      <div class="card col-valeur"><div class="ct">Valeur totale stock</div><div class="mv">${F(S.stock.reduce((s,a)=>s+(sa(a)*a.pv),0))}</div></div>
-      <div class="card"><div class="ct">Nb articles</div><div class="mv">${N(S.stock.length)}</div><div class="ms">${N(filtered.length)} affichés</div></div>
-      <div class="card"><div class="ct">Ruptures</div><div class="mv" style="color:var(--red)">${N(S.stock.filter(a=>sa(a)===0).length)}</div></div>
-      <div class="card"><div class="ct">Stock bas</div><div class="mv" style="color:var(--amber)">${N(S.stock.filter(a=>sa(a)>0&&sa(a)<=a.seuil).length)}</div></div>
+      <div class="card col-valeur"><div class="ct">Valeur totale stock</div><div class="mv">${F(stockB.reduce((s,a)=>s+(sa(a)*a.pv),0))}</div></div>
+      <div class="card"><div class="ct">Nb articles</div><div class="mv">${N(stockB.length)}</div><div class="ms">${N(filtered.length)} affichés</div></div>
+      <div class="card"><div class="ct">Ruptures</div><div class="mv" style="color:var(--red)">${N(stockB.filter(a=>sa(a)===0).length)}</div></div>
+      <div class="card"><div class="ct">Stock bas</div><div class="mv" style="color:var(--amber)">${N(stockB.filter(a=>sa(a)>0&&sa(a)<=a.seuil).length)}</div></div>
     </div>`;
   if(document.getElementById('stock-search'))document.getElementById('stock-search').value=stockFilter;
 }
@@ -3060,6 +3212,7 @@ async function saveArt(){
   const newId=genId();
   S.stock.push({
     id:newId,code:c,nom:n,
+    bid:getBid(),
     cat:document.getElementById('mcat').value,
     pa:isAdmin()?(+document.getElementById('mpa')?.value||0):(S.stock.find(a=>a.id==editId)?.pa||0),
     pv,pv2,pv3,
@@ -3677,7 +3830,7 @@ function saveDep(){
   if(!f||!mt)return toast('❌ Fournisseur et montant requis');
   const cid=document.getElementById('mm').value;
   const mode=nomCompte(cid);
-  S.depenses.push({id:genId(),date:document.getElementById('mda').value||D(),four:f,cat:document.getElementById('mc').value,mt,mode,cid,notes:document.getElementById('mno').value});
+  S.depenses.push({id:genId(),date:document.getElementById('mda').value||D(),four:f,cat:document.getElementById('mc').value,mt,mode,cid,notes:document.getElementById('mno').value,bid:getBid()});
   debiterCompte(cid,mt);
   verifierLimites();
   saveData();closeModal();toast('✅ Dépense enregistrée');rDep();
@@ -4615,11 +4768,18 @@ function rParametres(){
       <div class="param-section-title">🏪 Boutiques / Points de vente</div>
       ${S.boutiques.map(b=>`
         <div class="boutique-card${S.boutique_active===b.id?' active':''}" onclick="activerBoutique(${b.id})">
-          <div>
-            <div style="font-weight:600;font-size:13px">${b.nom}</div>
-            ${S.boutique_active===b.id?'<div style="font-size:11px;color:var(--navy);margin-top:2px">✓ Active</div>':''}
+          <div style="display:flex;align-items:center;gap:10px;flex:1">
+            <span style="font-size:22px">${b.emoji||'🏪'}</span>
+            <div>
+              <div style="font-weight:600;font-size:13px">${b.nom}</div>
+              ${S.boutique_active===b.id?'<div style="font-size:11px;color:var(--navy);margin-top:2px">✓ Active</div>':''}
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">${((S.utilisateurs||[]).filter(u=>u.boutique_id==b.id).length)} vendeur(s) assigné(s)</div>
+            </div>
           </div>
-          <button class="btn btn-sm" onclick="event.stopPropagation();supprimerBoutique(${b.id})" style="color:var(--red);border-color:var(--red-light)">Suppr.</button>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm" onclick="event.stopPropagation();editBoutiqueModal(${b.id})">✏️</button>
+            <button class="btn btn-sm" onclick="event.stopPropagation();supprimerBoutique(${b.id})" style="color:var(--red);border-color:var(--red-light)">✕</button>
+          </div>
         </div>`).join('')}
       <button class="btn btn-primary" onclick="ajouterBoutique()">+ Nouvelle boutique</button>
     </div>
@@ -4876,16 +5036,61 @@ function supprimerCatCharge(i){
 }
 function activerBoutique(id){S.boutique_active=id;saveData();rParametres();toast('✅ Boutique activée');}
 function ajouterBoutique(){
-  modal(`<div class="mft">Nouvelle boutique</div>
-    <div class="fg"><label class="fl">Nom de la boutique</label><input class="fi" id="mb-nom" placeholder="Ex: Christ Media — Tsévié"></div>
+  modal(`<div class="mft">🏪 Nouvelle boutique</div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Emoji</label>
+        <input class="fi" id="mb-emoji" value="🏪" maxlength="4" style="font-size:20px;text-align:center;width:70px"></div>
+      <div class="fg"><label class="fl">Nom de la boutique</label>
+        <input class="fi" id="mb-nom" placeholder="Ex: Boutique A, Annexe Tsévié..."></div>
+    </div>
+    <div class="fg"><label class="fl">Couleur (barre de titre)</label>
+      <input type="color" id="mb-couleur" value="#0f1f3d" style="width:60px;height:36px;border-radius:6px;border:1px solid var(--border2);cursor:pointer"></div>
+    <div class="fg"><label class="fl">Catégories (séparées par virgule)</label>
+      <input class="fi" id="mb-cats" placeholder="Lingerie, Audio-Vidéo, Bureautique" value="Lingerie, Audio-Vidéo, Bureautique"></div>
     <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button>
       <button class="btn btn-primary" onclick="saveNvBoutique()">Créer</button></div>`);
 }
+
+function editBoutiqueModal(id){
+  const b = (S.boutiques||[]).find(b=>b.id==id); if(!b) return;
+  modal(`<div class="mft">✏️ Modifier — ${b.nom}</div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Emoji</label>
+        <input class="fi" id="mb-emoji" value="${b.emoji||'🏪'}" maxlength="4" style="font-size:20px;text-align:center;width:70px"></div>
+      <div class="fg"><label class="fl">Nom</label>
+        <input class="fi" id="mb-nom" value="${b.nom||''}"></div>
+    </div>
+    <div class="fg"><label class="fl">Couleur</label>
+      <input type="color" id="mb-couleur" value="${b.couleur||'#0f1f3d'}" style="width:60px;height:36px;border-radius:6px;border:1px solid var(--border2);cursor:pointer"></div>
+    <div class="fg"><label class="fl">Catégories (séparées par virgule)</label>
+      <input class="fi" id="mb-cats" value="${(b.categories||[]).join(', ')}"></div>
+    <div class="mff">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveBoutiqueEdit(${id})">💾 Enregistrer</button></div>`);
+}
+
+function saveBoutiqueEdit(id){
+  const b = (S.boutiques||[]).find(b=>b.id==id); if(!b) return;
+  const nom = document.getElementById('mb-nom')?.value?.trim();
+  if(!nom) return toast('❌ Nom requis');
+  b.nom = nom;
+  b.emoji = document.getElementById('mb-emoji')?.value||'🏪';
+  b.couleur = document.getElementById('mb-couleur')?.value||'#0f1f3d';
+  const catsRaw = document.getElementById('mb-cats')?.value||'';
+  b.categories = catsRaw.split(',').map(c=>c.trim()).filter(Boolean);
+  saveData(); closeModal(); toast('✅ Boutique modifiée'); rParametres();
+  majBoutiqueUI();
+}
 function saveNvBoutique(){
-  const nom=document.getElementById('mb-nom').value;
+  const nom=document.getElementById('mb-nom')?.value?.trim();
   if(!nom)return toast('❌ Nom requis');
-  S.boutiques.push({id:genId(),nom,actif:false});
+  const emoji=document.getElementById('mb-emoji')?.value||'🏪';
+  const couleur=document.getElementById('mb-couleur')?.value||'#0f1f3d';
+  const catsRaw=document.getElementById('mb-cats')?.value||'';
+  const categories=catsRaw.split(',').map(c=>c.trim()).filter(Boolean);
+  S.boutiques.push({id:genId(),nom,emoji,couleur,categories,actif:true});
   saveData();closeModal();toast('✅ Boutique créée');rParametres();
+  majBoutiqueUI();
 }
 function supprimerBoutique(id){
   if(S.boutiques.length<=1)return toast('⚠️ Au moins une boutique requise');
@@ -6489,12 +6694,16 @@ function connexionEmail(){
   // Connexion réussie
   localStorage.setItem('cm_last_email',email);
   if(errEl)errEl.style.display='none';
-  S.session={uid:u.id,role:u.role,nom:u.nom,emoji:u.emoji||'👤',email:u.email};
+  // Déterminer la boutique active : vendeur/caissier → sa boutique, admin → boutique_active globale
+  let boutiqueActive = S.boutique_active || 1;
+  if(u.role !== 'admin' && u.boutique_id) boutiqueActive = u.boutique_id;
+  S.session={uid:u.id,role:u.role,nom:u.nom,emoji:u.emoji||'👤',email:u.email,boutique_id:u.boutique_id||null,boutique_active:boutiqueActive};
   // Enregistrer dans l'historique des connexions
   enregistrerConnexion(u, 'connexion');
   document.getElementById('login-screen').style.display='none';
   majBadgeUtilisateur();
   appliquerAcces(u.role);
+  majBoutiqueUI();
   toast(`✅ Bienvenue ${u.nom} !`);
   addAudit('LOGIN','Connexion','Connexion de '+u.nom+' ('+u.role+') depuis '+navigator.userAgent.substring(0,50), null, null);
   // Démarrer la présence en temps réel
@@ -6544,10 +6753,11 @@ function majBadgeUtilisateur(){
   if(!badge||!s||!s.uid)return;
   badge.style.display='flex';
   document.getElementById('cu-emoji').textContent=s.emoji||'👤';
+  const b = getBoutiqueActive();
   document.getElementById('cu-nom').textContent=s.nom||'';
   document.getElementById('cu-role-badge').textContent=s.role==='admin'?'Admin':s.role==='caissier'?'Caissier':'Vendeur';
   // Remplir le pill topbar
-  const roleLabel=s.role==='admin'?'👑 Administrateur':s.role==='caissier'?'💰 Caissier':'🛒 Vendeur';
+  const roleLabel=s.role==='admin'?('👑 Admin · '+b.emoji+' '+b.nom):s.role==='caissier'?('💰 Caissier · '+b.emoji+' '+b.nom):('🛒 Vendeur · '+b.emoji+' '+b.nom);
   const av=document.getElementById('up-avatar');const pn=document.getElementById('up-name');
   const pr=document.getElementById('up-role');const dn=document.getElementById('udd-name');
   const de=document.getElementById('udd-email');const dr=document.getElementById('udd-role');
@@ -6655,6 +6865,7 @@ function doLogout(){
   const empCss=document.getElementById('employe-css');
   if(empCss)empCss.remove();
   document.getElementById('current-user-badge').style.display='none';
+  const bsw=document.getElementById('boutique-switcher');if(bsw)bsw.style.display='none';
   addAudit('LOGIN','Déconnexion','Déconnexion de '+(S.session?.nom||'utilisateur'), null, null);
   stopPresence();
   toast('👋 Déconnecté');
@@ -6670,6 +6881,7 @@ async function initAuth(){
     document.getElementById('login-screen').style.display='none';
     majBadgeUtilisateur();
     appliquerAcces(S.session.role);
+    majBoutiqueUI();
   }
 }
 
@@ -6741,7 +6953,9 @@ function rWorkspace(){
 
         <p class="st">👥 Gestion des utilisateurs</p>
         <div class="param-section">
-          ${(S.utilisateurs||[]).map(u=>`
+          ${(S.utilisateurs||[]).map(u=>{
+            const userBoutique = u.boutique_id ? (S.boutiques||[]).find(b=>b.id==u.boutique_id) : null;
+            return `
             <div class="employe-card">
               <div style="display:flex;align-items:center;gap:10px">
                 <span style="font-size:24px">${u.emoji||'👤'}</span>
@@ -6749,13 +6963,14 @@ function rWorkspace(){
                   <div style="font-weight:600;font-size:13px">${u.nom}</div>
                   <div style="font-size:11px;color:var(--text3);margin-top:1px">${u.role==='admin'?'👑 Administrateur':u.role==='caissier'?'💰 Caissier':'🛒 Vendeur'}</div>
                   <div style="font-size:11px;color:var(--navy);margin-top:2px">${u.email||'<em style=color:var(--red)>⚠ Email manquant</em>'}</div>
+                  ${userBoutique?`<div style="font-size:10px;margin-top:2px;background:rgba(15,31,61,.08);border-radius:4px;padding:1px 6px;display:inline-block">${userBoutique.emoji||'🏪'} ${userBoutique.nom}</div>`:`<div style="font-size:10px;color:var(--text3);margin-top:2px">Toutes boutiques</div>`}
                 </div>
               </div>
               <div style="display:flex;gap:6px">
                 <button class="btn btn-sm" onclick="editUserWS(${u.id})">✏️</button>
                 ${u.id!==1?`<button class="btn btn-sm" onclick="delUserWS(${u.id})" style="color:var(--red)">✕</button>`:''}
               </div>
-            </div>`).join('')}
+            </div>`;}).join('')}
           <button class="btn btn-primary" onclick="addUserWS()" style="margin-top:8px">+ Ajouter utilisateur</button>
         </div>
       </div>
@@ -6817,12 +7032,18 @@ function appliquerMenusVisibles(){
 }
 
 function addUserWS(){
+  const boutiques = S.boutiques || [];
+  const boutiquesOpts = `<option value="">— Toutes (Admin) —</option>` + boutiques.map(b=>`<option value="${b.id}">${b.emoji||'🏪'} ${b.nom}</option>`).join('');
   modal(`<div class="mft">➕ Nouvel utilisateur</div>
     <div class="fr">
       <div class="fg"><label class="fl">Prénom / Nom</label><input class="fi" id="wu-nom" placeholder="Ex: Marie Kodjovi"></div>
       <div class="fg"><label class="fl">Rôle</label>
         <select class="fs" id="wu-role"><option value="vendeur">🛒 Vendeur</option><option value="caissier">💰 Caissier</option><option value="admin">👑 Administrateur</option></select>
       </div>
+    </div>
+    <div class="fg"><label class="fl">🏪 Boutique assignée</label>
+      <select class="fs" id="wu-boutique">${boutiquesOpts}</select>
+      <div style="font-size:11px;color:var(--text3);margin-top:3px">Vendeur/Caissier : choisir sa boutique. Admin : laisser vide.</div>
     </div>
     <div class="fg"><label class="fl">Adresse e-mail (identifiant de connexion)</label>
       <input class="fi" type="email" id="wu-email" placeholder="marie@christmedia.com"></div>
@@ -6844,11 +7065,14 @@ function saveUserWS(){
   // Vérifier unicité email
   if(S.utilisateurs.find(u=>u.email&&u.email.toLowerCase()===email))return toast('❌ Cet email est déjà utilisé');
   const roleVal = document.getElementById('wu-role').value;
-  S.utilisateurs.push({id:genId(),nom,role:roleVal,email,password,pin:'0000',emoji:document.getElementById('wu-emoji').value||'👤',actif:true});
+  const bidVal = document.getElementById('wu-boutique')?.value ? +document.getElementById('wu-boutique').value : null;
+  S.utilisateurs.push({id:genId(),nom,role:roleVal,email,password,pin:'0000',emoji:document.getElementById('wu-emoji').value||'👤',actif:true,boutique_id:bidVal});
   saveData();closeModal();toast('✅ Utilisateur créé');rWorkspace();
 }
 function editUserWS(id){
   const u=(S.utilisateurs||[]).find(u=>u.id==id);if(!u)return;
+  const boutiques = S.boutiques || [];
+  const boutiquesOpts = `<option value=""${!u.boutique_id?' selected':''}>— Toutes (Admin) —</option>` + boutiques.map(b=>`<option value="${b.id}"${u.boutique_id==b.id?' selected':''}>${b.emoji||'🏪'} ${b.nom}</option>`).join('');
   modal(`<div class="mft">✏️ Modifier — ${u.nom}</div>
     <div class="fr">
       <div class="fg"><label class="fl">Nom</label><input class="fi" id="wu-nom" value="${u.nom}"></div>
@@ -6859,6 +7083,10 @@ function editUserWS(id){
           <option value="admin"${u.role==='admin'?' selected':''}>👑 Administrateur</option>
         </select>
       </div>
+    </div>
+    <div class="fg"><label class="fl">🏪 Boutique assignée</label>
+      <select class="fs" id="wu-boutique">${boutiquesOpts}</select>
+      <div style="font-size:11px;color:var(--text3);margin-top:3px">Vendeur/Caissier : choisir sa boutique. Admin : laisser vide.</div>
     </div>
     <div class="fg"><label class="fl">Email</label>
       <input class="fi" type="email" id="wu-email" value="${u.email||''}"></div>
@@ -6879,6 +7107,7 @@ function updateUserWS(id){
   u.role=document.getElementById('wu-role').value;
   u.email=email;
   u.emoji=document.getElementById('wu-emoji').value||'👤';
+  u.boutique_id = document.getElementById('wu-boutique')?.value ? +document.getElementById('wu-boutique').value : null;
   const newPw=document.getElementById('wu-password').value;
   if(newPw&&newPw.length>=4)u.password=newPw;
   saveData();closeModal();toast('✅ Utilisateur modifié');rWorkspace();
@@ -8194,7 +8423,7 @@ if(!S.clients)S.clients=[];
 if(!S.fournisseurs)S.fournisseurs=[];
 if(!S.depenses)S.depenses=[];
 if(!S.utilisateurs||S.utilisateurs.length===0){
-  S.utilisateurs=[{id:1,nom:'Admin',role:'admin',pin:'1234',email:'christmedia176@gmail.com',password:'admin1234',emoji:'👑',actif:true}];
+  S.utilisateurs=[{id:1,nom:'Admin',role:'admin',pin:'1234',email:'christmedia176@gmail.com',password:'admin1234',emoji:'👑',actif:true,boutique_id:null}];
 }
 // Migration: ajouter email+password aux anciens utilisateurs sans email
 S.utilisateurs=S.utilisateurs.map(u=>{
@@ -8206,8 +8435,31 @@ S.utilisateurs=S.utilisateurs.map(u=>{
   }
   // Migrer anciens rôles 'employe' vers 'vendeur'
   if(u.role==='employe') u.role='vendeur';
+  // Assurer que boutique_id existe
+  if(u.boutique_id===undefined) u.boutique_id = (u.role==='admin'?null:1);
   return u;
 });
+// ─── MIGRATION MULTI-BOUTIQUE ───
+// S'assurer que les boutiques ont les bonnes propriétés
+if(!S.boutiques||S.boutiques.length===0){
+  S.boutiques=[
+    {id:1,nom:'Boutique A',emoji:'🏪',couleur:'#0f1f3d',categories:['Lingerie','Audio-Vidéo','Bureautique'],actif:true},
+    {id:2,nom:'Boutique B',emoji:'🏬',couleur:'#1a5c2e',categories:['Lingerie','Audio-Vidéo','Bureautique'],actif:true}
+  ];
+} else {
+  // Migrer les boutiques existantes sans emoji/couleur/categories
+  S.boutiques = S.boutiques.map((b,i) => ({
+    emoji: i===0?'🏪':'🏬',
+    couleur: i===0?'#0f1f3d':'#1a5c2e',
+    categories: (S.parametres&&S.parametres.categories)||['Lingerie','Audio-Vidéo','Bureautique'],
+    ...b
+  }));
+  // Ajouter une 2ème boutique si une seule existe
+  if(S.boutiques.length===1){
+    S.boutiques.push({id:genId(),nom:'Boutique B',emoji:'🏬',couleur:'#1a5c2e',categories:(S.parametres&&S.parametres.categories)||['Lingerie','Audio-Vidéo','Bureautique'],actif:true});
+  }
+}
+if(!S.boutique_active) S.boutique_active = S.boutiques[0]?.id || 1;
 // ─── VENTE RAPIDE DEPUIS STOCK ───
 function venteRapideArticle(aid){
   const a=ga(aid);if(!a)return;
@@ -9070,6 +9322,7 @@ function crValider(){
     const cid = premierCompteId();
     S.ventes.push({
       id:vid, date:D(),
+      bid:getBid(),
       lignes: crPanier.map(l => ({aid:l.aid, qte:l.qte, pu:l.pu, mt:l.mt, typePrix:'detail'})),
       aid:crPanier[0].aid, qte:crPanier[0].qte, pu:crPanier[0].pu,
       mt:total, sousTotal:total, remise:0, typePrix:'detail',
