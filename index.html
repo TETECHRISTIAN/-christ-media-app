@@ -1952,10 +1952,10 @@ function majBoutiqueUI(){
     </div>`;
 }
 
-// Filtre stock par boutique active
+// Filtre stock par boutique — strict : sans bid = boutique 1 seulement
 function getStockBoutique(bid){
   bid = bid || getBid();
-  return (S.stock||[]).filter(a => !a.bid || a.bid == bid);
+  return (S.stock||[]).filter(a => (a.bid == bid) || (!a.bid && bid == 1));
 }
 
 // Filtre ventes par boutique active
@@ -1985,7 +1985,9 @@ function getClientsBoutique(bid){
 // Catégories de la boutique active
 function getCatsBoutique(){
   const b = getBoutiqueActive();
-  return (b.categories && b.categories.length) ? b.categories : (S.parametres?.categories || ['Lingerie','Audio-Vidéo','Bureautique']);
+  if(b && b.categories && b.categories.length) return b.categories;
+  // Fallback : catégories globales (si la boutique n'en a pas encore)
+  return (S.parametres?.categories) || ['Lingerie','Audio-Vidéo','Bureautique'];
 }
 
 // Couleur de la boutique active
@@ -2009,7 +2011,7 @@ const actionsMap={
   vente:()=>'<button class="btn" onclick="ouvrirCaisseRapide()" title="Mode plein écran optimisé caisse">⚡ Caisse Rapide</button>',
   services:()=>'<button class="btn btn-primary" onclick="addService()">+ Service</button>',
   achats:()=>'<button class="btn" onclick="modalExportExcel()">📊 Excel</button> <button class="btn btn-primary" onclick="addAchat()">+ Achat</button>',
-  stock:()=>`<div class="search-bar"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><input type="text" placeholder="Rechercher..." oninput="filterStock(this.value)" id="stock-search"></div><button class="btn" onclick="openScanner('stock')" title="Scanner code-barres">📷 Scanner</button><button class="btn" onclick="ouvrirEtiquettes()">🏷️ Étiquettes</button><button class="btn" onclick="modalExportExcel()">📊 Excel</button><button class="btn btn-primary" onclick="addArticle()">+ Article</button>`,
+  stock:()=>`<div class="search-bar"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><input type="text" placeholder="Rechercher..." oninput="filterStock(this.value)" id="stock-search"></div><button class="btn" onclick="openScanner('stock')" title="Scanner code-barres">📷 Scanner</button><button class="btn" onclick="ouvrirEtiquettes()">🏷️ Étiquettes</button><button class="btn" onclick="modalExportExcel()">📊 Excel</button>${isAdmin()?'<button class="btn" onclick="migrerArticlesBoutique()" title="Assigner les articles sans boutique">🔀 Assigner</button>':''}<button class="btn btn-primary" onclick="addArticle()">+ Article</button>`,
   clients:()=>'<button class="btn" onclick="ouvrirRelanceClients()">📱 Relances</button> <button class="btn btn-primary" onclick="addClient()">+ Client</button>',
   fournisseurs:()=>'<button class="btn btn-primary" onclick="addFour()">+ Fournisseur</button>',
   depenses:()=>'<button class="btn btn-danger" onclick="addDep()">+ Dépense</button>',
@@ -2892,7 +2894,9 @@ function applyDf(key,items){
 }
 
 function rAchats(){
-  const filtered=applyDf('achats',S.achats);
+  const bid = getBid();
+  const achatsB = getAchatsBoutique(bid);
+  const filtered=applyDf('achats',achatsB);
   const tot=filtered.reduce((s,a)=>s+a.mt,0);
   const totalDu=filtered.filter(a=>a.statut==='À payer').reduce((s,a)=>s+a.mt,0);
   document.getElementById('content').innerHTML=dfHtml('achats')+`
@@ -2932,7 +2936,8 @@ function rAchats(){
 }
 function addAchat(){
   const fourOpts=S.fournisseurs.map(f=>`<option value="${f.id}">${f.nom}</option>`).join('');
-  const artOpts=S.stock.map(a=>`<option value="${a.id}">[${a.code}] ${a.nom}</option>`).join('');
+  const stockB=getStockBoutique(getBid());
+  const artOpts=stockB.map(a=>`<option value="${a.id}">[${a.code}] ${a.nom}</option>`).join('');
   modal(`<div class="mft">Enregistrer un achat</div>
     <div class="search-rapide" style="margin-bottom:12px">
       <span class="search-rapide-label">🔍 Code article</span>
@@ -3120,9 +3125,10 @@ function rStock(){
   if(document.getElementById('stock-search'))document.getElementById('stock-search').value=stockFilter;
 }
 function addArticle(preCode=''){
-  const cats=(S.parametres&&S.parametres.categories)||['Lingerie','Audio-Vidéo','Bureautique'];
+  const cats=getCatsBoutique();
+  const bActive=getBoutiqueActive();
   const catOpts=cats.map(c=>`<option>${c}</option>`).join('');
-  modal(`<div class="mft">Ajouter un article</div>
+  modal(`<div class="mft">Ajouter un article <span style="font-size:11px;font-weight:400;color:var(--text3);background:var(--surface2);padding:2px 8px;border-radius:8px;margin-left:6px">${bActive.emoji||'🏪'} ${bActive.nom}</span></div>
     <div class="fr">
       <div class="fg"><label class="fl">Code</label><input class="fi" id="mc" placeholder="LNG006" value="${preCode}"></div>
       <div class="fg"><label class="fl">Catégorie
@@ -3188,10 +3194,12 @@ function previewPrixArt(){
 function ajouterNvCat(){
   const nom=prompt('Nom de la nouvelle catégorie :');
   if(!nom||!nom.trim())return;
-  if(!S.parametres)S.parametres={categories:[]};
-  if(!S.parametres.categories)S.parametres.categories=[];
-  if(S.parametres.categories.includes(nom.trim()))return toast('⚠️ Catégorie déjà existante');
-  S.parametres.categories.push(nom.trim());
+  const bid=getBid();
+  const b=(S.boutiques||[]).find(b=>b.id==bid);
+  if(!b)return toast('❌ Boutique introuvable');
+  if(!b.categories)b.categories=[];
+  if(b.categories.includes(nom.trim()))return toast('⚠️ Catégorie déjà existante dans cette boutique');
+  b.categories.push(nom.trim());
   saveData();
   // Mettre à jour le select dans le modal
   const sel=document.getElementById('mcat');
@@ -3200,7 +3208,7 @@ function ajouterNvCat(){
     opt.value=nom.trim();opt.textContent=nom.trim();opt.selected=true;
     sel.appendChild(opt);
   }
-  toast(`✅ Catégorie "${nom.trim()}" ajoutée`);
+  toast(`✅ Catégorie "${nom.trim()}" ajoutée à ${b.nom}`);
 }
 
 async function saveArt(){
@@ -3230,13 +3238,18 @@ async function saveArt(){
 }
 function editArticle(id){
   const a=ga(id);if(!a)return;
-  const cats=(S.parametres&&S.parametres.categories)||['Lingerie','Audio-Vidéo','Bureautique'];
+  // Catégories de la boutique de l'article (ou boutique active)
+  const artBid = a.bid || getBid();
+  const artBoutique = (S.boutiques||[]).find(b=>b.id==artBid) || getBoutiqueActive();
+  const cats = (artBoutique.categories && artBoutique.categories.length) ? artBoutique.categories : getCatsBoutique();
   const catOpts=cats.map(c=>`<option${a.cat===c?' selected':''}>${c}</option>`).join('');
+  // Inclure la catégorie actuelle si elle n'est pas dans la liste
+  const catOptsAll = cats.includes(a.cat) ? catOpts : `<option selected>${a.cat}</option>` + catOpts;
   const devise=(S.parametres&&S.parametres.devise)||'FCFA';
   modal(`<div class="mft">Modifier — ${a.nom}</div>
     <div class="fr">
       <div class="fg"><label class="fl">Code</label><input class="fi" id="mc" value="${a.code}"></div>
-      <div class="fg"><label class="fl">Catégorie</label><select class="fs" id="mcat">${catOpts}</select></div>
+      <div class="fg"><label class="fl">Catégorie</label><select class="fs" id="mcat">${catOptsAll}</select></div>
     </div>
     <div class="fg"><label class="fl">Nom</label><input class="fi" id="mn" value="${a.nom}"></div>
     ${isAdmin()?`<div class="fr">
@@ -3256,6 +3269,11 @@ function editArticle(id){
       <div class="fg"><label class="fl">Stock actuel</label><input class="fi" type="number" id="msi" value="${sa(a)}"></div>
       ${!isAdmin()?`<div class="fg"><label class="fl">Seuil alerte</label><input class="fi" type="number" id="mse" value="${a.seuil}"></div>`:''}
     </div>
+    ${isAdmin()?`<div class="fg"><label class="fl">🏪 Boutique assignée</label>
+      <select class="fs" id="mart-bid">
+        ${(S.boutiques||[]).map(b=>`<option value="${b.id}"${a.bid==b.id?' selected':''}>${b.emoji||'🏪'} ${b.nom}</option>`).join('')}
+      </select>
+    </div>`:''}
     <div class="mff"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="updateArt(${id})">Enregistrer</button></div>`);
 }
 function updateArt(id){
@@ -3271,6 +3289,9 @@ function updateArt(id){
   const stockVoulu=+(document.getElementById('msi').value??'');
   a.si=stockVoulu+Math.max(0,a.qv||0)-(a.ea||0);
   a.seuil=+document.getElementById('mse').value||5;
+  // Mise à jour de la boutique si admin
+  const bidEl=document.getElementById('mart-bid');
+  if(isAdmin()&&bidEl) a.bid=+bidEl.value;
   enregistrerHistoPrix(a, ancienPv, ancienPa);
   saveData();closeModal();toast('✅ Article modifié');rStock();
 }
@@ -3278,6 +3299,89 @@ function delArticle(id){
   if(!confirm('Supprimer cet article ?'))return;
   S.stock=S.stock.filter(a=>a.id!=id);
   saveData();toast('🗑️ Article supprimé');rStock();
+}
+
+// ─── MIGRATION ARTICLES MULTI-BOUTIQUE ───
+function migrerArticlesBoutique(){
+  const sansBid = S.stock.filter(a=>!a.bid);
+  const boutiques = S.boutiques||[];
+  if(sansBid.length===0){
+    // Tous les articles ont déjà un bid — montrer tableau de réassignation
+    modal(`<div class="mft">🔀 Réassigner des articles</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Tous vos articles ont déjà une boutique assignée. Vous pouvez modifier l'assignation d'un article en le modifiant depuis la liste du stock.</div>
+      <div style="max-height:320px;overflow-y:auto">
+        ${boutiques.map(b=>{
+          const arts=S.stock.filter(a=>a.bid==b.id);
+          return `<div style="margin-bottom:12px">
+            <div style="font-weight:700;font-size:13px;margin-bottom:6px">${b.emoji||'🏪'} ${b.nom} — <span style="color:var(--text3);font-weight:400">${arts.length} article(s)</span></div>
+            ${arts.slice(0,5).map(a=>`<div style="font-size:12px;color:var(--text2);padding:3px 0;border-bottom:1px solid var(--border)">${a.code} · ${a.nom}</div>`).join('')}
+            ${arts.length>5?`<div style="font-size:11px;color:var(--text3);padding:4px 0">+${arts.length-5} autres...</div>`:''}
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="mff"><button class="btn" onclick="closeModal()">Fermer</button></div>`);
+    return;
+  }
+  const boutiquesOpts = boutiques.map(b=>`<option value="${b.id}">${b.emoji||'🏪'} ${b.nom}</option>`).join('');
+  modal(`<div class="mft">🔀 Assigner les articles aux boutiques</div>
+    <div class="alert alert-a" style="margin-bottom:14px">
+      <strong>${sansBid.length} article(s)</strong> n'ont pas encore de boutique assignée. Choisissez leur destination.
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:14px">
+      Vous pouvez assigner tous en une fois ou article par article.
+    </div>
+
+    <!-- Assignation globale rapide -->
+    <div style="background:var(--navy-bg);border:1px solid var(--navy-light);border-radius:var(--rs);padding:12px 14px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px">⚡ Assignation rapide — tous en une fois</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select class="fs" id="mig-boutique-all" style="flex:1;min-width:160px">${boutiquesOpts}</select>
+        <button class="btn btn-primary" onclick="appliquerMigrationTous()">✓ Tout assigner ici</button>
+      </div>
+    </div>
+
+    <!-- Assignation par catégorie -->
+    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📁 Par catégorie</div>
+    <div style="max-height:220px;overflow-y:auto;margin-bottom:14px">
+      ${[...new Set(sansBid.map(a=>a.cat||'Sans catégorie'))].map(cat=>{
+        const nbCat = sansBid.filter(a=>(a.cat||'Sans catégorie')===cat).length;
+        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div style="flex:1">
+            <span style="font-weight:600;font-size:13px">${cat}</span>
+            <span style="font-size:11px;color:var(--text3);margin-left:6px">${nbCat} article(s)</span>
+          </div>
+          <select class="fs" id="mig-cat-${cat.replace(/[^a-zA-Z0-9]/g,'_')}" style="width:160px">${boutiquesOpts}</select>
+          <button class="btn btn-sm btn-primary" onclick="appliquerMigrationCat('${cat}')">✓</button>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="mff">
+      <button class="btn" onclick="closeModal()">Fermer</button>
+      <button class="btn btn-success" onclick="appliquerMigrationTous();closeModal();rStock();toast('✅ Migration terminée !')">✅ Terminer</button>
+    </div>`);
+}
+
+function appliquerMigrationTous(){
+  const bid = +document.getElementById('mig-boutique-all')?.value;
+  if(!bid)return toast('❌ Sélectionnez une boutique');
+  const nb = S.stock.filter(a=>!a.bid).length;
+  S.stock.forEach(a=>{ if(!a.bid) a.bid=bid; });
+  saveData();
+  toast(`✅ ${nb} article(s) assigné(s) à la boutique`);
+  closeModal();rStock();
+}
+
+function appliquerMigrationCat(cat){
+  const key='mig-cat-'+cat.replace(/[^a-zA-Z0-9]/g,'_');
+  const bid = +document.getElementById(key)?.value;
+  if(!bid)return toast('❌ Sélectionnez une boutique');
+  const arts = S.stock.filter(a=>!a.bid&&(a.cat||'Sans catégorie')===cat);
+  arts.forEach(a=>a.bid=bid);
+  saveData();
+  toast(`✅ ${arts.length} article(s) "${cat}" assigné(s)`);
+  // Rafraîchir le modal
+  migrerArticlesBoutique();
 }
 function ajustStockRapide(id){
   const a=ga(id);if(!a)return;
@@ -3724,7 +3828,9 @@ function delFour(id){
 
 // ─── DÉPENSES ───
 function rDep(){
-  const filtered=applyDf('dep',S.depenses);
+  const bid = getBid();
+  const depB = getDepensesBoutique(bid);
+  const filtered=applyDf('dep',depB);
   const tot=filtered.reduce((s,d)=>s+d.mt,0);
   document.getElementById('content').innerHTML=dfHtml('dep')+`
     <div class="tbl-wrap"><table>
@@ -3873,6 +3979,9 @@ const bilanMoisCourant=(()=>{const n=new Date();return`${n.getFullYear()}-${Stri
 let bilanMoisNav=bilanMoisCourant;
 function rRap(){
   if(rapTab==='bilan') return rBilanMensuel();
+  const bid = getBid();
+  const bActive = getBoutiqueActive();
+  const stockB = getStockBoutique(bid);
   const today=new Date();
   const yyyy=today.getFullYear();
   const mm=String(today.getMonth()+1).padStart(2,'0');
@@ -3886,24 +3995,27 @@ function rRap(){
     return true;
   };
   const filterD=d=>filterV(d);
-  const ventesF=S.ventes.filter(filterV);
-  const depF=S.depenses.filter(filterD);
-  const achatsF=S.achats.filter(filterV);
+  const ventesF=getVentesBoutique(bid).filter(filterV);
+  const depF=getDepensesBoutique(bid).filter(filterD);
+  const achatsF=getAchatsBoutique(bid).filter(filterV);
   const vp=ventesF.filter(v=>v.statut==='Payé').reduce((s,v)=>s+v.mt,0);
   const dep=depF.reduce((s,d)=>s+d.mt,0);
   const achats=achatsF.reduce((s,a)=>s+a.mt,0);
   const solde=vp-dep;
-  const sv=S.stock.reduce((s,a)=>s+(sa(a)*a.pv),0);
-  const sc=S.stock.reduce((s,a)=>s+(sa(a)*a.pa),0);
+  const sv=stockB.reduce((s,a)=>s+(sa(a)*a.pv),0);
+  const sc=stockB.reduce((s,a)=>s+(sa(a)*a.pa),0);
   const mg=sv>0?Math.round((sv-sc)/sv*100):0;
   const modes=['Espèces','Flooz','Mixx','Virement'];
   const vModes=modes.map(m=>ventesF.filter(v=>v.mode===m&&v.statut==='Payé').reduce((s,v)=>s+v.mt,0));
-  const cats=['Lingerie','Audio-Vidéo','Bureautique'];
-  const vCats=cats.map(cat=>ventesF.filter(v=>{const a=ga(v.aid);return a&&a.cat===cat&&v.statut==='Payé'}).reduce((s,v)=>s+v.mt,0));
-  const depCats=[...new Set(S.depenses.map(d=>d.cat))];
+  const cats=getCatsBoutique();
+  const vCats=cats.map(cat=>ventesF.filter(v=>{const a=stockB.find(x=>x.id==v.aid);return a&&a.cat===cat&&v.statut==='Payé'}).reduce((s,v)=>s+v.mt,0));
+  const depCats=[...new Set(depF.map(d=>d.cat))];
   const depMts=depCats.map(cat=>depF.filter(d=>d.cat===cat).reduce((s,d)=>s+d.mt,0));
   const periodeLabel={'semaine':'Cette semaine','mois':'Ce mois','annee':'Cette année','tout':'Tout'};
   document.getElementById('content').innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;background:${bActive.couleur||'var(--navy)'};color:#fff;border-radius:var(--rs);padding:7px 14px;margin-bottom:12px;font-size:12px;font-weight:600">
+      ${bActive.emoji||'🏪'} ${bActive.nom} — Rapports
+    </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
       <button class="btn btn-sm${rapTab==='synthese'?' btn-primary':''}" onclick="rapTab='synthese';rRap()">📊 Synthèse</button>
       <button class="btn btn-sm${rapTab==='bilan'?' btn-primary':''}" onclick="rapTab='bilan';bilanMoisNav=bilanMoisCourant;rRap()">📅 Bilan mensuel</button>
@@ -4156,29 +4268,6 @@ function bilanMoisSuivant(moisStr){
 function printRapport(){window.print();}
 
 // ─── REÇU PDF ───
-function printRecu(vid){
-  const v=S.ventes.find(v=>v.id==vid);if(!v)return;
-  const a=ga(v.aid);
-  const recuDiv=document.getElementById('recu-print');
-  recuDiv.innerHTML=`
-    <div class="recu-header">
-      <div class="recu-title">Christ Media</div>
-      <div class="recu-sub">Lomé, Togo · Reçu de vente</div>
-      <div class="recu-sub">Reçu N° ${String(v.id).padStart(4,'0')} · ${v.date}</div>
-    </div>
-    <div class="recu-body">
-      <div class="recu-row"><span>Client</span><span>${v.client||'Client anonyme'}</span></div>
-      <div class="recu-row"><span>Article</span><span>${a?a.nom:'Article supprimé'}</span></div>
-      <div class="recu-row"><span>Quantité</span><span>${v.qte}</span></div>
-      <div class="recu-row"><span>Prix unitaire</span><span>${F(v.pu)}</span></div>
-      <div class="recu-row"><span>Mode de paiement</span><span>${v.mode}</span></div>
-      <div class="recu-row"><span>Statut</span><span>${v.statut}</span></div>
-    </div>
-    <div class="recu-total">Total : ${F(v.mt)}</div>
-    <div class="recu-footer">Merci pour votre confiance · Christ Media</div>`;
-  window.print();
-}
-
 // ─── HISTORIQUE STOCK ───
 function addHistorique(type, article, qte, notes){
   if(!S.historique) S.historique=[];
@@ -4191,7 +4280,11 @@ function addHistorique(type, article, qte, notes){
 }
 function rHistorique(){
   if(!S.historique) S.historique=[];
-  const hist=S.historique;
+  const bid = getBid();
+  const stockB = getStockBoutique(bid);
+  const stockBIds = new Set(stockB.map(a=>a.id));
+  // Filtrer les mouvements de la boutique active (par nom d'article présent dans cette boutique)
+  const hist = S.historique.filter(h => !h.aid || stockBIds.has(h.aid));
   document.getElementById('content').innerHTML=`
     <p class="st">Mouvements de stock (${hist.length} entrées)</p>
     ${hist.length===0?`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><p>Aucun mouvement enregistré</p><small>Les entrées/sorties de stock apparaîtront ici</small></div>`:`
@@ -4217,21 +4310,30 @@ function clearHistorique(){
 
 // ─── TRÉSORERIE & SANTÉ FINANCIÈRE ───
 function rTresorerie(){
-  const vp=S.ventes.filter(v=>v.statut==='Payé').reduce((s,v)=>s+v.mt,0);
-  const vi=S.ventes.filter(v=>v.statut==='Non payé').reduce((s,v)=>s+v.mt,0);
-  const dep=S.depenses.reduce((s,d)=>s+d.mt,0);
-  const achats=S.achats.reduce((s,a)=>s+a.mt,0);
+  const bid = getBid();
+  const bActive = getBoutiqueActive();
+  const ventesB = getVentesBoutique(bid);
+  const depensesB = getDepensesBoutique(bid);
+  const achatsB = getAchatsBoutique(bid);
+  const stockB = getStockBoutique(bid);
+  const vp=ventesB.filter(v=>v.statut==='Payé').reduce((s,v)=>s+v.mt,0);
+  const vi=ventesB.filter(v=>v.statut==='Non payé').reduce((s,v)=>s+v.mt,0);
+  const dep=depensesB.reduce((s,d)=>s+d.mt,0);
+  const achats=achatsB.reduce((s,a)=>s+a.mt,0);
   const detteFour=S.fournisseurs.reduce((s,f)=>s+f.dette,0);
   const creanceClients=S.clients.reduce((s,c)=>s+c.solde,0)+vi;
   const tresorerie=vp-dep;
-  const sv=S.stock.reduce((s,a)=>s+(sa(a)*a.pv),0);
+  const sv=stockB.reduce((s,a)=>s+(sa(a)*a.pv),0);
   const patrimoine=tresorerie+sv-detteFour;
 
   const clientsDebiteurs=S.clients.filter(c=>c.solde>0);
-  const ventesCredit=S.ventes.filter(v=>v.statut==='Non payé');
+  const ventesCredit=ventesB.filter(v=>v.statut==='Non payé');
   const foursDette=S.fournisseurs.filter(f=>f.dette>0);
 
   document.getElementById('content').innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;background:${bActive.couleur||'var(--navy)'};color:#fff;border-radius:var(--rs);padding:7px 14px;margin-bottom:12px;font-size:12px;font-weight:600">
+      ${bActive.emoji||'🏪'} ${bActive.nom} — Trésorerie
+    </div>
     <p class="st">Tableau de trésorerie</p>
     <div class="g4">
       <div class="card" style="border-left:3px solid var(--green)">
@@ -4533,14 +4635,20 @@ function delCharge(id){
 
 // ─── RAPPORT D'INVENTAIRE ───
 function rInventaire(){
-  const cats=(S.parametres&&S.parametres.categories)||['Lingerie','Audio-Vidéo','Bureautique'];
-  const totalValPV=S.stock.reduce((s,a)=>s+(sa(a)*a.pv),0);
-  const totalValPA=S.stock.reduce((s,a)=>s+(sa(a)*a.pa),0);
-  const totalArticles=S.stock.reduce((s,a)=>s+sa(a),0);
-  const enAlerte=S.stock.filter(a=>sa(a)<=a.seuil).length;
+  const bid = getBid();
+  const stockB = getStockBoutique(bid);
+  const bActive = getBoutiqueActive();
+  const cats=getCatsBoutique();
+  const totalValPV=stockB.reduce((s,a)=>s+(sa(a)*a.pv),0);
+  const totalValPA=stockB.reduce((s,a)=>s+(sa(a)*a.pa),0);
+  const totalArticles=stockB.reduce((s,a)=>s+sa(a),0);
+  const enAlerte=stockB.filter(a=>sa(a)<=a.seuil).length;
   document.getElementById('content').innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;background:${bActive.couleur||'var(--navy)'};color:#fff;border-radius:var(--rs);padding:7px 14px;margin-bottom:12px;font-size:12px;font-weight:600">
+      ${bActive.emoji||'🏪'} ${bActive.nom} — Inventaire
+    </div>
     <div class="inv-summary">
-      <div class="inv-chip"><div class="ct">Articles distincts</div><div class="mv">${N(S.stock.length)}</div></div>
+      <div class="inv-chip"><div class="ct">Articles distincts</div><div class="mv">${N(stockB.length)}</div></div>
       <div class="inv-chip"><div class="ct">Qté totale en stock</div><div class="mv">${N(totalArticles)}</div></div>
       <div class="inv-chip"><div class="ct">Valeur au prix d'achat</div><div class="mv" style="color:var(--purple)">${F(totalValPA)}</div></div>
       <div class="inv-chip"><div class="ct">Valeur au prix de vente</div><div class="mv" style="color:var(--green)">${F(totalValPV)}</div></div>
@@ -4548,7 +4656,7 @@ function rInventaire(){
       <div class="inv-chip"><div class="ct">Articles en alerte</div><div class="mv" style="color:var(--red)">${N(enAlerte)}</div></div>
     </div>
     ${cats.map(cat=>{
-      const arts=S.stock.filter(a=>a.cat===cat);
+      const arts=stockB.filter(a=>a.cat===cat);
       const valPV=arts.reduce((s,a)=>s+(sa(a)*a.pv),0);
       const valPA=arts.reduce((s,a)=>s+(sa(a)*a.pa),0);
       return`
@@ -4725,13 +4833,24 @@ function rParametres(){
     </div>
 
     <div class="param-section">
-      <div class="param-section-title">📂 Catégories de produits</div>
-      ${(p.categories||[]).map((cat,i)=>`
-        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
-          <input class="fi" value="${cat}" oninput="majCategorie(${i},this.value)" style="flex:1">
-          <button class="del-btn" onclick="supprimerCategorie(${i})">✕</button>
+      <div class="param-section-title">📂 Catégories de produits par boutique</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Chaque boutique a ses propres catégories d'articles.</div>
+      ${(S.boutiques||[]).map(b=>`
+        <div style="margin-bottom:16px;background:var(--surface2);border-radius:var(--rs);padding:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span style="font-size:18px">${b.emoji||'🏪'}</span>
+            <span style="font-weight:700;font-size:13px">${b.nom}</span>
+          </div>
+          <div id="cats-boutique-${b.id}">
+            ${(b.categories||[]).map((cat,i)=>`
+              <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+                <input class="fi" value="${cat}" oninput="majCatBoutique(${b.id},${i},this.value)" style="flex:1">
+                <button class="del-btn" onclick="supprimerCatBoutique(${b.id},${i})">✕</button>
+              </div>`).join('')}
+          </div>
+          <button class="btn btn-sm" onclick="ajouterCatBoutique(${b.id})">+ Nouvelle catégorie</button>
         </div>`).join('')}
-      <button class="btn" onclick="ajouterCategorie()">+ Nouvelle catégorie</button>
+      <button class="btn btn-primary" onclick="sauvegarderParams()">💾 Sauvegarder</button>
     </div>
 
     <div class="param-section">
@@ -4978,6 +5097,29 @@ function rParametres(){
     </div>`;
 }
 
+// ─── CATÉGORIES PAR BOUTIQUE ───
+function majCatBoutique(bid, i, val){
+  const b=(S.boutiques||[]).find(b=>b.id==bid);
+  if(b&&b.categories) b.categories[i]=val;
+}
+function ajouterCatBoutique(bid){
+  const b=(S.boutiques||[]).find(b=>b.id==bid);
+  if(!b)return;
+  if(!b.categories)b.categories=[];
+  b.categories.push('Nouvelle catégorie');
+  saveData();rParametres();
+}
+function supprimerCatBoutique(bid, i){
+  const b=(S.boutiques||[]).find(b=>b.id==bid);
+  if(!b||!b.categories)return;
+  if(b.categories.length<=1)return toast('⚠️ Au moins une catégorie requise');
+  b.categories.splice(i,1);saveData();rParametres();
+}
+// Garder les anciennes fonctions pour compatibilité mais les rediriger
+function majCategorie(i,val){majCatBoutique(getBid(),i,val);}
+function ajouterCategorie(){ajouterCatBoutique(getBid());}
+function supprimerCategorie(i){supprimerCatBoutique(getBid(),i);}
+function majCatDep(i,val){if(!S.parametres)S.parametres={};if(!S.parametres.categoriesDep)S.parametres.categoriesDep=getCatsDep();S.parametres.categoriesDep[i]=val;}
 function majParam(k,v){if(!S.parametres)S.parametres={};S.parametres[k]=v;}
 function sauvegarderParams(){
   addAudit('UPDATE','Paramètres','Modification des paramètres généraux', null, {nom:S.parametres?.nom});
@@ -4985,18 +5127,7 @@ function sauvegarderParams(){
   majLogo();
   toast('✅ Paramètres sauvegardés');
 }
-function majCategorie(i,val){if(S.parametres&&S.parametres.categories)S.parametres.categories[i]=val;}
-function ajouterCategorie(){
-  if(!S.parametres.categories)S.parametres.categories=[];
-  S.parametres.categories.push('Nouvelle catégorie');
-  saveData();rParametres();
-}
-function supprimerCategorie(i){
-  if(S.parametres.categories.length<=1)return toast('⚠️ Au moins une catégorie requise');
-  S.parametres.categories.splice(i,1);saveData();rParametres();
-}
 // Catégories dépenses
-function majCatDep(i,val){if(!S.parametres)S.parametres={};if(!S.parametres.categoriesDep)S.parametres.categoriesDep=getCatsDep();S.parametres.categoriesDep[i]=val;}
 function ajouterCatDepParam(){
   if(!S.parametres)S.parametres={};
   if(!S.parametres.categoriesDep)S.parametres.categoriesDep=getCatsDep();
@@ -5399,6 +5530,8 @@ async function supprimerPhoto(aid){
 // ─── TRANSACTIONS ───
 let txnFilter='jour';
 function rTransactions(){
+  const bid = getBid();
+  const bActive = getBoutiqueActive();
   const today=D();
   const now2=new Date();
   const day2=now2.getDay()||7;
@@ -5411,9 +5544,9 @@ function rTransactions(){
     if(txnFilter==='mois') return item.date&&item.date.startsWith(curM2);
     return true;
   };
-  const ventes=S.ventes.filter(filterFn);
-  const achats=S.achats.filter(filterFn);
-  const deps=S.depenses.filter(filterFn);
+  const ventes=getVentesBoutique(bid).filter(filterFn);
+  const achats=getAchatsBoutique(bid).filter(filterFn);
+  const deps=getDepensesBoutique(bid).filter(filterFn);
   const revs=(S.revenus||[]).filter(filterFn);
   const svcs=(S.ventes_services||[]).filter(filterFn);
 
@@ -5436,6 +5569,9 @@ function rTransactions(){
   ].sort((a,b)=>b.id-a.id);
 
   document.getElementById('content').innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;background:${bActive.couleur||'var(--navy)'};color:#fff;border-radius:var(--rs);padding:7px 14px;margin-bottom:12px;font-size:12px;font-weight:600">
+      ${bActive.emoji||'🏪'} ${bActive.nom} — Transactions
+    </div>
     <div class="period-tabs" id="txn-tabs">
       <button class="ptab${txnFilter==='jour'?' active':''}" onclick="txnFilter='jour';rTransactions()">Aujourd\'hui</button>
       <button class="ptab${txnFilter==='semaine'?' active':''}" onclick="txnFilter='semaine';rTransactions()">Semaine</button>
@@ -10145,7 +10281,8 @@ function editPromo(id){
 
 function _modalPromo(p){
   const isEdit = !!p;
-  const cats = S.parametres?.categories || ['Lingerie','Audio-Vidéo','Bureautique'];
+  const cats = getCatsBoutique();
+  const stockB = getStockBoutique(getBid());
   modal(`<div class="mft">${isEdit?'✏️ Modifier':'🏷️ Nouvelle'} promotion</div>
     <div class="fg"><label class="fl">Nom de la promotion</label>
       <input class="fi" id="pr-nom" value="${p?.nom||''}" placeholder="Ex: Soldes été, Promo rentrée..."></div>
@@ -10168,7 +10305,7 @@ function _modalPromo(p){
     </div>
     <div id="pr-portee-detail">
       ${p?.type==='categorie' ? `<div class="fg"><label class="fl">Catégorie</label><select class="fs" id="pr-cat">${cats.map(c=>`<option${p?.categorie===c?' selected':''}>${c}</option>`).join('')}</select></div>` : ''}
-      ${p?.type==='article' ? `<div class="fg"><label class="fl">Articles (cochez)</label><div style="max-height:160px;overflow-y:auto;border:1px solid var(--border2);border-radius:var(--rs);padding:8px">${S.stock.map(a=>`<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;cursor:pointer"><input type="checkbox" value="${a.id}"${(p?.aids||[]).includes(a.id)?' checked':''}> ${a.nom} — ${F(a.pv)}</label>`).join('')}</div></div>` : ''}
+      ${p?.type==='article' ? `<div class="fg"><label class="fl">Articles (cochez)</label><div style="max-height:160px;overflow-y:auto;border:1px solid var(--border2);border-radius:var(--rs);padding:8px">${stockB.map(a=>`<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;cursor:pointer"><input type="checkbox" value="${a.id}"${(p?.aids||[]).includes(a.id)?' checked':''}> ${a.nom} — ${F(a.pv)}</label>`).join('')}</div></div>` : ''}
     </div>
     <div class="fr">
       <div class="fg"><label class="fl">Date début</label>
@@ -10184,13 +10321,14 @@ function _modalPromo(p){
 
 function majPorteePromo(){
   const type = document.getElementById('pr-type')?.value;
-  const cats = S.parametres?.categories || ['Lingerie','Audio-Vidéo','Bureautique'];
+  const cats = getCatsBoutique();
+  const stockB = getStockBoutique(getBid());
   const div = document.getElementById('pr-portee-detail');
   if(!div) return;
   if(type === 'categorie'){
     div.innerHTML = `<div class="fg"><label class="fl">Catégorie</label><select class="fs" id="pr-cat">${cats.map(c=>`<option>${c}</option>`).join('')}</select></div>`;
   } else if(type === 'article'){
-    div.innerHTML = `<div class="fg"><label class="fl">Articles (cochez)</label><div style="max-height:160px;overflow-y:auto;border:1px solid var(--border2);border-radius:var(--rs);padding:8px">${S.stock.map(a=>`<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;cursor:pointer"><input type="checkbox" value="${a.id}"> ${a.nom} — ${F(a.pv)}</label>`).join('')}</div></div>`;
+    div.innerHTML = `<div class="fg"><label class="fl">Articles (cochez)</label><div style="max-height:160px;overflow-y:auto;border:1px solid var(--border2);border-radius:var(--rs);padding:8px">${stockB.map(a=>`<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;cursor:pointer"><input type="checkbox" value="${a.id}"> ${a.nom} — ${F(a.pv)}</label>`).join('')}</div></div>`;
   } else {
     div.innerHTML = '';
   }
