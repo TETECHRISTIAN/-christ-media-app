@@ -1,136 +1,132 @@
-// ─── CHRIST MEDIA SERVICE WORKER v11 ───
-const CACHE_NAME = 'christmedia-v11';
-const CACHE_STATIC = 'christmedia-static-v11';
+// ─── CHRIST MEDIA — SERVICE WORKER ───
+// Version du cache — incrementer pour forcer la mise à jour
+const CACHE_NAME = 'christmedia-v3';
 
-// Ressources à mettre en cache au démarrage
-const PRECACHE_URLS = [
+// Fichiers à mettre en cache pour le mode hors-ligne
+const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
   './icons/icon-192x192.png',
   './icons/icon-512x512.png',
-  // Bibliothèques CDN critiques
-  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',
-  'https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap',
+  // CDN externes mis en cache automatiquement lors de la première visite
 ];
 
-// ─── INSTALL : mise en cache initiale ───
+// ─── INSTALLATION ───
+// Met en cache les fichiers essentiels au démarrage
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_STATIC)
-      .then(cache => {
-        // On cache ce qu'on peut, on ignore les erreurs sur les CDN
-        return Promise.allSettled(
-          PRECACHE_URLS.map(url =>
-            cache.add(url).catch(err => console.warn('Cache miss:', url, err))
-          )
-        );
-      })
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(ASSETS_TO_CACHE).catch(err => {
+        // Si certains fichiers manquent (ex: icônes), ignorer l'erreur
+        console.warn('SW: certains fichiers non mis en cache:', err);
+      });
+    }).then(() => {
+      // Prendre le contrôle immédiatement sans attendre le rechargement
+      return self.skipWaiting();
+    })
   );
 });
 
-// ─── ACTIVATE : nettoyer les anciens caches ───
+// ─── ACTIVATION ───
+// Supprime les anciens caches lors d'une mise à jour
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames
-          .filter(name => name !== CACHE_NAME && name !== CACHE_STATIC)
+          .filter(name => name !== CACHE_NAME)
           .map(name => {
-            console.log('[SW] Suppression ancien cache:', name);
+            console.log('SW: suppression ancien cache:', name);
             return caches.delete(name);
           })
       );
-    }).then(() => self.clients.claim())
-  );
-});
-
-// ─── FETCH : stratégie Cache First pour assets, Network First pour données ───
-self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-
-  // Ignorer les requêtes Firebase (toujours réseau)
-  if (url.hostname.includes('firebaseio.com') ||
-      url.hostname.includes('firebaseapp.com') ||
-      url.hostname.includes('googleapis.com') && url.pathname.includes('firebase')) {
-    return;
-  }
-
-  // Ignorer les requêtes non-GET
-  if (event.request.method !== 'GET') return;
-
-  // index.html → Network First (pour avoir la dernière version)
-  if (url.pathname.endsWith('index.html') || url.pathname.endsWith('/')) {
-    event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          if (response && response.status === 200) {
-            const cloned = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, cloned));
-          }
-          return response;
-        })
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  // Polices Google Fonts → Cache First
-  if (url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com')) {
-    event.respondWith(
-      caches.match(event.request).then(cached => {
-        if (cached) return cached;
-        return fetch(event.request).then(response => {
-          const cloned = response.clone();
-          caches.open(CACHE_STATIC).then(cache => cache.put(event.request, cloned));
-          return response;
-        });
-      })
-    );
-    return;
-  }
-
-  // CDN libs (Chart.js, ZXing…) → Cache First longue durée
-  if (url.hostname.includes('cdnjs.cloudflare.com') || url.hostname.includes('unpkg.com')) {
-    event.respondWith(
-      caches.match(event.request).then(cached => {
-        if (cached) return cached;
-        return fetch(event.request).then(response => {
-          const cloned = response.clone();
-          caches.open(CACHE_STATIC).then(cache => cache.put(event.request, cloned));
-          return response;
-        }).catch(() => new Response('', { status: 503 }));
-      })
-    );
-    return;
-  }
-
-  // Tout le reste → Stale While Revalidate
-  event.respondWith(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.match(event.request).then(cached => {
-        const fetchPromise = fetch(event.request).then(response => {
-          if (response && response.status === 200) {
-            cache.put(event.request, response.clone());
-          }
-          return response;
-        }).catch(() => cached);
-        return cached || fetchPromise;
-      });
+    }).then(() => {
+      // Prendre le contrôle de toutes les pages ouvertes
+      return self.clients.claim();
     })
   );
 });
 
-// ─── MESSAGE : forcer mise à jour depuis l'app ───
+// ─── STRATÉGIE DE CACHE ───
+// Network First pour les données Firebase (toujours fraîches)
+// Cache First pour les assets statiques (rapide)
+self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+
+  // Ignorer les requêtes non-GET
+  if (event.request.method !== 'GET') return;
+
+  // Ignorer Firebase, Cloudinary et autres APIs — toujours réseau
+  if (
+    url.hostname.includes('firebase') ||
+    url.hostname.includes('firebaseio') ||
+    url.hostname.includes('googleapis') ||
+    url.hostname.includes('cloudinary') ||
+    url.hostname.includes('qrserver') ||
+    url.hostname.includes('wa.me') ||
+    url.protocol === 'chrome-extension:'
+  ) {
+    return; // Pas d'interception — laisser passer
+  }
+
+  // Pour les CDN (fonts, scripts) — Cache First avec fallback réseau
+  if (
+    url.hostname.includes('fonts.googleapis') ||
+    url.hostname.includes('fonts.gstatic') ||
+    url.hostname.includes('cdnjs.cloudflare') ||
+    url.hostname.includes('unpkg.com') ||
+    url.hostname.includes('cdn.jsdelivr') ||
+    url.hostname.includes('gstatic.com')
+  ) {
+    event.respondWith(
+      caches.match(event.request).then(cached => {
+        if (cached) return cached;
+        return fetch(event.request).then(response => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          }
+          return response;
+        }).catch(() => cached || new Response('', { status: 503 }));
+      })
+    );
+    return;
+  }
+
+  // Pour l'app elle-même (index.html, manifest, icônes) — Network First
+  // Si le réseau échoue, utiliser le cache
+  event.respondWith(
+    fetch(event.request)
+      .then(response => {
+        // Mettre à jour le cache avec la version fraîche
+        if (response && response.status === 200 && response.type !== 'opaque') {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return response;
+      })
+      .catch(() => {
+        // Réseau indisponible — utiliser le cache
+        return caches.match(event.request).then(cached => {
+          if (cached) return cached;
+          // Fallback vers index.html pour la navigation
+          if (event.request.mode === 'navigate') {
+            return caches.match('./index.html');
+          }
+          return new Response('Hors ligne', { status: 503, statusText: 'Service Unavailable' });
+        });
+      })
+  );
+});
+
+// ─── MESSAGE DU CLIENT ───
+// Permet de forcer la mise à jour depuis l'app
 self.addEventListener('message', event => {
-  if (event.data === 'SKIP_WAITING') {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
-  if (event.data === 'CLEAR_CACHE') {
-    caches.keys().then(names => {
-      names.forEach(name => caches.delete(name));
-    });
-    event.ports[0]?.postMessage({ cleared: true });
+  if (event.data && event.data.type === 'GET_VERSION') {
+    event.ports[0].postMessage({ version: CACHE_NAME });
   }
 });
