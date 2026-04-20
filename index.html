@@ -1738,28 +1738,78 @@ async function saveData(){
 }
 
 // ─── MANUAL SYNC ───
+async // ─── FUSION INTELLIGENTE PAR COLLECTION ───
+// Principe : on ne choisit JAMAIS un appareil entier gagnant.
+// Pour chaque collection (tableaux), on garde l'union des deux côtés
+// identifiée par ID. En cas de doublon d'ID, on garde l'enregistrement
+// avec le timestamp (ts / updatedAt / date) le plus récent.
+// Pour les scalaires (parametres, boutiques…) on garde le plus récent selon version.
+function fusionnerDonnees(local, remote){
+  const result = Object.assign({}, remote); // base = remote
+  // Version finale = la plus haute (timestamp)
+  result.version = Math.max(local.version||0, remote.version||0);
+  // Collections à fusionner par ID
+  FB_COLLECTIONS.forEach(col => {
+    const L = Array.isArray(local[col]) ? local[col] : [];
+    const R = Array.isArray(remote[col]) ? remote[col] : [];
+    if(L.length === 0 && R.length === 0){ result[col] = []; return; }
+    // Construire un map id→item en préférant le plus récent
+    const map = new Map();
+    const tsOf = item => item.ts || item.updatedAt || item.date_ts || item.created_at || 0;
+    [...R, ...L].forEach(item => {
+      if(!item || item.id == null) return;
+      const key = String(item.id);
+      if(!map.has(key)){
+        map.set(key, item);
+      } else {
+        // Garder le plus récent
+        if(tsOf(item) > tsOf(map.get(key))){
+          map.set(key, item);
+        }
+      }
+    });
+    result[col] = Array.from(map.values());
+  });
+  // Paramètres : garder celui de l'appareil avec la version la plus haute
+  if((local.version||0) > (remote.version||0)){
+    result.parametres = local.parametres || remote.parametres;
+    result.boutiques = local.boutiques || remote.boutiques;
+    result.boutique_active = local.boutique_active ?? remote.boutique_active;
+    result.utilisateurs = local.utilisateurs || remote.utilisateurs;
+  }
+  return result;
+}
+
+function appliquerEtatFusionne(merged){
+  const savedSession = S.session;
+  S = merged;
+  if(savedSession && savedSession.uid) S.session = savedSession;
+  saveLocal(S);
+}
+
+function rafraichirPageCourante(){
+  try{
+    ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive})[currentPage]();
+  }catch(e){}
+}
+
 async function manualSync(){
   if(!navigator.onLine){toast('📵 Pas de connexion internet');setSyncStatus('offline','Hors ligne');return;}
   if(!fbReady){toast('⚠️ Firebase non initialisé');return;}
   setSyncStatus('syncing','Synchronisation...');
   toast('🔄 Synchronisation en cours...');
-  const remote=await loadFromFirebase();
+  const remote = await loadFromFirebase();
   if(remote){
-    const remoteVer=remote.version||remote.nid||0;
-    const localVer=S.version||S.nid||0;
-    if(remoteVer >= localVer){
-      S=remote;
-      saveLocal(S);
-      setSyncStatus('online','Synchronisé ✓');
-      toast('✅ Données synchronisées depuis le cloud');
-      ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive})[currentPage]();
-    }else{
-      await saveToFirebase(S);
-      toast('✅ Données locales envoyées au cloud');
-    }
+    const merged = fusionnerDonnees(S, remote);
+    appliquerEtatFusionne(merged);
+    await saveToFirebase(S);
+    setSyncStatus('online','Synchronisé ✓');
+    toast('✅ Synchronisation fusionnée (' + (S.ventes||[]).length + ' ventes)');
+    rafraichirPageCourante();
   }else{
     await saveToFirebase(S);
     toast('✅ Données envoyées au cloud (premier sync)');
+    setSyncStatus('online','Synchronisé ✓');
   }
 }
 
@@ -1772,17 +1822,18 @@ async function startFirebaseSync(){
     if(navigator.onLine){
       setSyncStatus('syncing','Chargement cloud...');
       const remote=await loadFromFirebase();
-      const remoteVer=remote?(remote.version||remote.nid||0):0;
-      const localVer=S.version||S.nid||0;
-      if(remote && remoteVer>=localVer){
-        const savedSession=S.session;
-        S=remote;
-        if(savedSession&&savedSession.uid) S.session=savedSession;
-        saveLocal(S);
+      if(remote){
+        // FUSION au lieu de remplacement aveugle
+        const merged = fusionnerDonnees(S, remote);
+        appliquerEtatFusionne(merged);
         setSyncStatus('online','Synchronisé ✓');
-        ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive})[currentPage]();
-      }else{
+        rafraichirPageCourante();
+        // Pousser la fusion vers Firebase pour que tous les appareils en bénéficient
         await saveToFirebase(S);
+      }else{
+        // Aucune donnée cloud → premier appareil, on pousse le local
+        await saveToFirebase(S);
+        setSyncStatus('online','Synchronisé ✓');
       }
       // Activer la sync temps réel après le chargement initial
       activerListenerTempsReel();
