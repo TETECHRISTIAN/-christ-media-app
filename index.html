@@ -596,7 +596,10 @@ body.dark th{background:var(--surface3)}
 .search-global-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
 
 /* ─── COMPTES & TRANSFERTS ─── */
-.compte-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);cursor:pointer;transition:all .15s}
+.compte-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);cursor:grab;transition:all .15s;user-select:none}
+.compte-card:active{cursor:grabbing}
+.compte-card.drag-over{border:2px dashed var(--navy);background:var(--navy-bg);transform:scale(1.02)}
+.compte-card.dragging{opacity:.4;transform:scale(.97)}
 .compte-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.1);transform:translateY(-1px)}
 .compte-card.actif{border-color:var(--navy);background:var(--navy-bg)}
 .compte-solde{font-size:22px;font-weight:800;letter-spacing:-.5px;margin:8px 0 4px}
@@ -986,6 +989,10 @@ body.dark th{background:var(--surface3)}
       Opérations suivantes
     </div>
     <div class="nav-sec admin-only">Direction</div>
+    <div class="ni admin-only" data-page="bilan_jour" onclick="nav(this,'bilan_jour')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M4 8h8M4 11h5M4 5h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      Bilan Journalier
+    </div>
     <div class="ni admin-only" data-page="kpis" onclick="nav(this,'kpis')">
       <svg viewBox="0 0 16 16" fill="none"><polyline points="1,12 5,7 8,9 12,4 15,6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="11,4 15,4 15,8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
       KPIs & Rentabilité
@@ -1722,7 +1729,7 @@ function activerListenerTempsReel(){
           inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,
           comptes:rComptes,devis:rDevis,planning:rPlanning,
           calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,
-          limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive,rh:rRH,comptabilite:rComptabilite,kpis:rKPIs,fourni_avance:rFourniAvance})[currentPage]();
+          limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive,rh:rRH,comptabilite:rComptabilite,kpis:rKPIs,fourni_avance:rFourniAvance,bilan_jour:rBilanJour})[currentPage]();
       }catch(e){}
       toast('🔄 Données mises à jour',1500);
     } else if(remoteVer === localVer && remoteVer > 0){
@@ -2127,7 +2134,7 @@ function toast(msg,dur=2200){
 }
 
 // ─── NAVIGATION ───
-const titles={dashboard:'Tableau de bord',objectifs:'Objectifs & KPIs',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres',dettes:'Gestion des dettes',flux:'Flux financier',limites:'Limites de dépenses',modeles:"Modèles d'opération",agenda:'Opérations suivantes',journal:'Journal privé',caisse:'Rapport de caisse',stats:'Statistiques vendeurs',promos:'Promotions & Réductions',commandes:'Commandes fournisseurs',depots:'Stock multi-dépôt',fidelite:'Programme de fidélité',audit:"Journal d'audit",live:'🔴 Live — Ventes en temps réel',rh:'RH & Salaires',comptabilite:'Comptabilité & Bilan',kpis:'KPIs & Rentabilité',fourni_avance:'Fournisseurs Pro'};
+const titles={dashboard:'Tableau de bord',objectifs:'Objectifs & KPIs',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres',dettes:'Gestion des dettes',flux:'Flux financier',limites:'Limites de dépenses',modeles:"Modèles d'opération",agenda:'Opérations suivantes',journal:'Journal privé',caisse:'Rapport de caisse',stats:'Statistiques vendeurs',promos:'Promotions & Réductions',commandes:'Commandes fournisseurs',depots:'Stock multi-dépôt',fidelite:'Programme de fidélité',audit:"Journal d'audit",live:'🔴 Live — Ventes en temps réel',rh:'RH & Salaires',comptabilite:'Comptabilité & Bilan',kpis:'KPIs & Rentabilité',fourni_avance:'Fournisseurs Pro',bilan_jour:'Bilan Journalier'};
 const actionsMap={
   dashboard:()=>'<button class="btn btn-success" onclick="nav(document.querySelector(\'[data-page=vente]\'),\'vente\')">+ Vente</button>',
   objectifs:()=>'<button class="btn btn-primary" onclick="editObjectifs()">⚙️ Modifier objectifs</button>',
@@ -2159,7 +2166,8 @@ const actionsMap={
   rh:()=>'<button class="btn btn-primary" onclick="ouvrirModalNouvelEmploye()">+ Employé</button><button class="btn" onclick="ouvrirModalSalaire()" style="margin-left:6px">💰 Payer salaire</button>',
   comptabilite:()=>'<button class="btn" onclick="exportJournal()">📥 Exporter journal</button>',
   kpis:()=>'<select id="kpi-period" onchange="rKPIs()" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--rs);font-family:inherit;font-size:13px;background:var(--surface)"><option value="mois">Ce mois</option><option value="trim">Ce trimestre</option><option value="annee">Cette année</option><option value="tout">Tout</option></select>',
-  fourni_avance:()=>'<button class="btn btn-primary" onclick="ouvrirModalEvalFourn()">⭐ Évaluer</button>'};
+  fourni_avance:()=>'<button class="btn btn-primary" onclick="ouvrirModalEvalFourn()">⭐ Évaluer</button>',
+  bilan_jour:()=>`<input type="date" id="bj-date" value="${D()}" onchange="rBilanJour()" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--rs);font-family:inherit;font-size:13px;background:var(--surface)">`};
 
 let currentPage='dashboard';
 function nav(el,page){
@@ -2177,7 +2185,7 @@ function nav(el,page){
   if(_presenceId&&fbReady&&db){
     db.ref('christmedia/presence/'+_presenceId+'/page').set(page).catch(()=>{});
   }
-  ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive,rh:rRH,comptabilite:rComptabilite,kpis:rKPIs,fourni_avance:rFourniAvance})[page]();
+  ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive,rh:rRH,comptabilite:rComptabilite,kpis:rKPIs,fourni_avance:rFourniAvance,bilan_jour:rBilanJour})[page]();
   closeMobileSidebar();
   document.getElementById('mn-dropdown').classList.remove('open');
 }
@@ -2955,6 +2963,7 @@ function confirmerPaiementVente(id){
   saveData();closeModal();toast('✅ Vente encaissée sur "'+nomCompte(cid)+'"');rVente();
 }
 function delVente(id){
+  if(S.session&&S.session.role!=='admin'){toast('🔒 Seul l\'admin peut supprimer une vente');return;}
   if(!confirm('Supprimer cette vente ?'))return;
   const vDel = S.ventes.find(v=>v.id==id);
   if(vDel) addAudit('DELETE','Vente','Suppression vente '+F(vDel.mt)+' — '+(vDel.client||'—')+' du '+vDel.date, {id:vDel.id,mt:vDel.mt,client:vDel.client}, null);
@@ -3122,7 +3131,7 @@ function saveAchat(){
   const statut_achat=document.getElementById('mstatut')?.value||'Payé';
   const achatId=genId();
   const mt=pu*qte;
-  S.achats.push({id:achatId,date,fid,aid,qte,pu,mt,mode,cid,notes,statut:statut_achat,bid:getBid()});
+  S.achats.push({id:achatId,date,fid,aid,qte,pu,mt,mode,cid,notes,statut:statut_achat,bid:getBid(),heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});
   if(statut_achat==='Payé'){
     debiterCompte(cid,mt);
   } else {
@@ -4068,7 +4077,7 @@ function saveDep(){
   if(!f||!mt)return toast('❌ Fournisseur et montant requis');
   const cid=document.getElementById('mm').value;
   const mode=nomCompte(cid);
-  S.depenses.push({id:genId(),date:document.getElementById('mda').value||D(),four:f,cat:document.getElementById('mc').value,mt,mode,cid,notes:document.getElementById('mno').value,bid:getBid()});
+  S.depenses.push({id:genId(),date:document.getElementById('mda').value||D(),four:f,cat:document.getElementById('mc').value,mt,mode,cid,notes:document.getElementById('mno').value,bid:getBid(),heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});
   debiterCompte(cid,mt);
   verifierLimites();
   saveData();closeModal();toast('✅ Dépense enregistrée');rDep();
@@ -4552,7 +4561,7 @@ function saveReglementDette(fid){
   const mt=+document.getElementById('mmt').value||0;
   const cid_d=document.getElementById('mmo').value;
   f.dette=Math.max(0,f.dette-mt);
-  S.depenses.push({id:genId(),date:D(),four:f.nom,cat:'Règlement dette',mt,mode:nomCompte(cid_d),cid:cid_d,notes:`Règlement dette — ${f.nom}`});
+  S.depenses.push({id:genId(),date:D(),four:f.nom,cat:'Règlement dette',mt,mode:nomCompte(cid_d),cid:cid_d,notes:`Règlement dette — ${f.nom}`,heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});
   debiterCompte(cid_d,mt);
   saveData();closeModal();toast(`✅ Dette réglée : ${F(mt)}`);
   if(currentPage==='dettes') rDettes(); else rTresorerie();
@@ -4727,7 +4736,7 @@ function saveRevenu(){
   if(!desc||!mt)return toast('❌ Description et montant requis');
   const cid_rev=document.getElementById('mmo').value;
   if(!S.revenus)S.revenus=[];
-  S.revenus.push({id:genId(),date:document.getElementById('mda').value,desc,cat:document.getElementById('mcat').value,mt,mode:nomCompte(cid_rev),cid:cid_rev});
+  S.revenus.push({id:genId(),date:document.getElementById('mda').value,desc,cat:document.getElementById('mcat').value,mt,mode:nomCompte(cid_rev),cid:cid_rev,heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});
   crediterCompte(cid_rev,mt);
   saveData();closeModal();toast('✅ Revenu enregistré');rRevenus();
 }
@@ -5884,7 +5893,7 @@ function saveVenteService(id){
   S.ventes_services.push({
     id:genId(),date:D(),sid:id,nom_service:sv.nom,
     client:document.getElementById('ms-client').value,
-    qte,pu,mt:mt_svc,mode:nomCompte(cid_svc),cid:cid_svc,statut:statut_svc
+    qte,pu,mt:mt_svc,mode:nomCompte(cid_svc),cid:cid_svc,statut:statut_svc,heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})
   });
   if(statut_svc==='Payé') crediterCompte(cid_svc,mt_svc);
   saveData();closeModal();toast(`✅ Prestation enregistrée : ${F(mt_svc)}`);rServices();
@@ -6300,8 +6309,13 @@ function rComptes(){
     </div>
     <p class="st">Mes comptes</p>
     <div class="g3" style="margin-bottom:20px">
-      ${S.comptes.map(c=>`
-        <div class="compte-card" onclick="editCompte(${c.id})">
+      ${S.comptes.map((c,idx)=>`
+        <div class="compte-card" draggable="true"
+          ondragstart="dragCompte(event,${c.id})"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="dropCompte(event,${c.id});this.classList.remove('drag-over')"
+          onclick="editCompte(${c.id})">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div>
               <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase">${c.type}</div>
@@ -6360,6 +6374,33 @@ function saveCompte(){
   S.comptes.push({id:genId(),nom,type:document.getElementById('mc-type').value,solde:+document.getElementById('mc-solde').value||0,couleur:document.getElementById('mc-couleur').value});
   saveData();closeModal();toast('✅ Compte créé');rComptes();
 }
+
+// ── DRAG & DROP COMPTES ──
+let _dragCompteId = null;
+function dragCompte(event, id){
+  _dragCompteId = id;
+  event.dataTransfer.effectAllowed = 'move';
+  setTimeout(()=>{
+    const el = event.target.closest('.compte-card');
+    if(el) el.classList.add('dragging');
+  }, 0);
+}
+function dropCompte(event, targetId){
+  event.preventDefault();
+  if(_dragCompteId === null || _dragCompteId === targetId) return;
+  const fromIdx = S.comptes.findIndex(c=>c.id==_dragCompteId);
+  const toIdx   = S.comptes.findIndex(c=>c.id==targetId);
+  if(fromIdx<0||toIdx<0) return;
+  // Swap positions
+  const tmp = S.comptes[fromIdx];
+  S.comptes[fromIdx] = S.comptes[toIdx];
+  S.comptes[toIdx] = tmp;
+  _dragCompteId = null;
+  saveData();
+  rComptes();
+  toast('✅ Ordre des comptes sauvegardé');
+}
+
 function editCompte(id){
   const c=S.comptes.find(c=>c.id==id);if(!c)return;
   modal(`<div class="mft">Modifier — ${c.nom}</div>
@@ -6440,7 +6481,7 @@ function saveTransfert(){
   de.solde-=mt;
   vers.solde+=mt;
   if(!S.transferts)S.transferts=[];
-  S.transferts.push({id:genId(),date:D(),de:deId,vers:versId,mt,notes:document.getElementById('mt-notes').value});
+  S.transferts.push({id:genId(),date:D(),de:deId,vers:versId,mt,notes:document.getElementById('mt-notes').value,heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});
   saveData();closeModal();toast(`✅ ${F(mt)} transféré de ${de.nom} vers ${vers.nom}`);rComptes();
 }
 function delTransfert(id){
@@ -7183,7 +7224,7 @@ const PERMISSIONS = {
     pages: ['dashboard','objectifs','transactions','vente','services','achats','stock','clients',
             'fournisseurs','depenses','tresorerie','revenus','rapports','inventaire','historique',
             'comptes','devis','planning','calculatrice','workspace','parametres',
-            'dettes','flux','limites','modeles','agenda','journal','caisse','stats','promos','commandes','depots','fidelite','audit','live','rh','comptabilite','kpis','fourni_avance'],
+            'dettes','flux','limites','modeles','agenda','journal','caisse','stats','promos','commandes','depots','fidelite','audit','live','rh','comptabilite','kpis','fourni_avance','bilan_jour'],
     label: '👑 Administrateur',
     couleur: '#f5c060'
   },
@@ -8387,12 +8428,12 @@ function confirmerModele(id){
   const date=document.getElementById('app-date').value||D();
   const notes=document.getElementById('app-notes').value||m.notes||'';
   if(m.type==='depense'){
-    S.depenses.push({id:genId(),date,four:m.nom,cat:m.cat||'Modèle',mt,mode:nomCompte(cid),cid,notes});
+    S.depenses.push({id:genId(),date,four:m.nom,cat:m.cat||'Modèle',mt,mode:nomCompte(cid),cid,notes,heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});
     debiterCompte(cid,mt);
     verifierLimites();
   }else if(m.type==='revenu'){
     if(!S.revenus)S.revenus=[];
-    S.revenus.push({id:genId(),date,desc:m.nom,cat:m.cat||'Modèle',mt,mode:nomCompte(cid),cid});
+    S.revenus.push({id:genId(),date,desc:m.nom,cat:m.cat||'Modèle',mt,mode:nomCompte(cid),cid,heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});
     crediterCompte(cid,mt);
   }
   saveData();closeModal();
@@ -8631,12 +8672,12 @@ function confirmerFait(id){
   // Exécuter l'opération selon le type
   if(mt>0){
     if(op.type==='depense'){
-      S.depenses.push({id:genId(),date,four:op.titre,cat:cat||op.cat||'Agenda',mt,mode:nomCompte(cid),cid,notes});
+      S.depenses.push({id:genId(),date,four:op.titre,cat:cat||op.cat||'Agenda',mt,mode:nomCompte(cid),cid,notes,heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});
       debiterCompte(cid,mt);
       verifierLimites();
     } else if(op.type==='revenu'){
       if(!S.revenus)S.revenus=[];
-      S.revenus.push({id:genId(),date,desc:op.titre,cat:cat||op.cat||'Agenda',mt,mode:nomCompte(cid),cid});
+      S.revenus.push({id:genId(),date,desc:op.titre,cat:cat||op.cat||'Agenda',mt,mode:nomCompte(cid),cid,heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});
       crediterCompte(cid,mt);
     } else if(op.type==='achat'){
       toast('📦 Achat — allez dans la section Achats pour enregistrer le détail');
@@ -8646,7 +8687,7 @@ function confirmerFait(id){
         debiterCompte(cid,mt);
         crediterCompte(cidVers,mt);
         if(!S.transferts)S.transferts=[];
-        S.transferts.push({id:genId(),date,de:cid,vers:cidVers,mt,notes});
+        S.transferts.push({id:genId(),date,de:cid,vers:cidVers,mt,notes,heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});
         toast(`✅ Transfert de ${F(mt)} — ${nomCompte(cid)} → ${nomCompte(cidVers)}`);
       } else {
         return toast('❌ Comptes source et destination doivent être différents');
@@ -13874,6 +13915,170 @@ function validerEvalFourn(){
   toast('✅ Évaluation enregistrée'); fourniTab='evaluation'; rFourniAvance();
 }
 
+
+// ═══════════════════════════════════════════════════════════════════
+// MODULE — BILAN JOURNALIER (ENTRÉES VS SORTIES PAR JOUR)
+// ═══════════════════════════════════════════════════════════════════
+function rBilanJour(){
+  const dateEl = document.getElementById('bj-date');
+  const jour = dateEl ? dateEl.value : D();
+  const bid = getBid();
+
+  // ── Collecte toutes les opérations du jour ──
+  const ventes = getVentesBoutique(bid).filter(v=>v.date===jour&&v.statut==='Payé');
+  const ventesCredit = getVentesBoutique(bid).filter(v=>v.date===jour&&v.statut==='Non payé');
+  const svcs = (S.ventes_services||[]).filter(v=>v.date===jour&&v.statut==='Payé');
+  const revs = (S.revenus||[]).filter(r=>r.date===jour);
+  const achats = getAchatsBoutique(bid).filter(a=>a.date===jour);
+  const deps = getDepensesBoutique(bid).filter(d=>d.date===jour);
+  const sals = (S.salaires||[]).filter(s=>s.date===jour);
+  const avances = (S.avances_employe||[]).filter(a=>a.date===jour);
+  const transferts = (S.transferts||[]).filter(t=>t.date===jour);
+
+  // ── Totaux ──
+  const totalEntrees = ventes.reduce((s,v)=>s+v.mt,0)
+    + svcs.reduce((s,v)=>s+v.mt,0)
+    + revs.reduce((s,r)=>s+r.mt,0);
+  const totalSorties = achats.reduce((s,a)=>s+a.mt,0)
+    + deps.reduce((s,d)=>s+d.mt,0)
+    + sals.reduce((s,s2)=>s+s2.montant,0)
+    + avances.reduce((s,a)=>s+a.montant,0);
+  const soldeJour = totalEntrees - totalSorties;
+  const nbOps = ventes.length+svcs.length+revs.length+achats.length+deps.length+sals.length+avances.length;
+
+  // ── Barre de comparaison ──
+  const total = totalEntrees + totalSorties || 1;
+  const pctE = Math.round(totalEntrees/total*100);
+  const pctS = Math.round(totalSorties/total*100);
+
+  const row = (icon,label,montant,heure,color,sub) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);transition:background .12s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <div style="width:30px;height:30px;border-radius:50%;background:${color}22;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600">${label}</div>
+        ${sub?`<div style="font-size:10px;color:var(--text3)">${sub}</div>`:''}
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-weight:700;color:${color};font-size:13px">${montant}</div>
+        ${heure?`<div style="font-size:10px;color:var(--text3)">${heure}</div>`:''}
+      </div>
+    </div>`;
+
+  document.getElementById('content').innerHTML=`
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    <input type="date" id="bj-date" value="${jour}" onchange="rBilanJour()" style="padding:6px 12px;border:1px solid var(--border2);border-radius:var(--rs);font-family:inherit;font-size:13px;background:var(--surface)">
+    <span style="font-size:13px;color:var(--text3)">${new Date(jour+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</span>
+    <span style="font-size:12px;background:var(--surface2);padding:3px 10px;border-radius:20px;color:var(--text2)">${nbOps} opération(s)</span>
+  </div>
+
+  <!-- KPI bar -->
+  <div class="card" style="margin-bottom:16px;padding:20px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.5px">Entrées</div>
+        <div style="font-size:24px;font-weight:800;color:var(--green)">${F(totalEntrees)}</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;font-weight:700;color:${soldeJour>=0?'var(--green)':'var(--red)'};text-transform:uppercase;letter-spacing:.5px">Solde du jour</div>
+        <div style="font-size:28px;font-weight:900;color:${soldeJour>=0?'var(--green)':'var(--red)'}">${soldeJour>=0?'+':''}${F(soldeJour)}</div>
+        <div style="font-size:11px;color:var(--text3)">${soldeJour>=0?'✅ Journée bénéficiaire':'❌ Journée déficitaire'}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.5px">Sorties</div>
+        <div style="font-size:24px;font-weight:800;color:var(--red)">${F(totalSorties)}</div>
+      </div>
+    </div>
+    <!-- Barre comparative -->
+    <div style="height:12px;background:var(--surface2);border-radius:6px;overflow:hidden;display:flex">
+      <div style="width:${pctE}%;background:var(--green);border-radius:6px 0 0 6px;transition:width .6s"></div>
+      <div style="width:${pctS}%;background:var(--red);border-radius:0 6px 6px 0;transition:width .6s"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:10px;color:var(--text3)">
+      <span>🟢 Entrées ${pctE}%</span>
+      <span>🔴 Sorties ${pctS}%</span>
+    </div>
+  </div>
+
+  <div class="g2">
+    <!-- ENTRÉES -->
+    <div>
+      <div class="bilan-section">
+        <div class="bilan-title" style="background:var(--green)">
+          <span>💚 ENTRÉES</span><span>${F(totalEntrees)}</span>
+        </div>
+        ${ventes.length===0&&svcs.length===0&&revs.length===0
+          ?'<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px">Aucune entrée ce jour</div>'
+          :`
+          ${ventes.length>0?`
+            <div style="padding:6px 14px;background:var(--green-bg);font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.5px">🛒 Ventes encaissées (${ventes.length})</div>
+            ${ventes.map(v=>{
+              const lignes=v.lignes||[{aid:v.aid}];
+              const desc=lignes.map(l=>(ga(l.aid)||{}).nom||'Article').join(', ');
+              return row('🛒',desc,'+ '+F(v.mt),v.heure||'','var(--green)',v.client||'');
+            }).join('')}`:''}
+          ${svcs.length>0?`
+            <div style="padding:6px 14px;background:var(--teal-bg);font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.5px">⭐ Services (${svcs.length})</div>
+            ${svcs.map(v=>row('⭐',v.nom_service||'Service','+ '+F(v.mt),v.heure||'','var(--teal)',v.client||'')).join('')}`:''}
+          ${revs.length>0?`
+            <div style="padding:6px 14px;background:var(--navy-bg);font-size:10px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px">💵 Revenus (${revs.length})</div>
+            ${revs.map(r=>row('💵',r.desc||'Revenu','+ '+F(r.mt),r.heure||'','var(--navy)',r.cat||'')).join('')}`:''}
+          `}
+      </div>
+      ${ventesCredit.length>0?`
+      <div class="bilan-section" style="margin-top:8px">
+        <div class="bilan-title" style="background:var(--amber)"><span>⏳ Ventes à crédit</span><span>${F(ventesCredit.reduce((s,v)=>s+v.mt,0))}</span></div>
+        ${ventesCredit.map(v=>{
+          const lignes=v.lignes||[{aid:v.aid}];
+          const desc=lignes.map(l=>(ga(l.aid)||{}).nom||'Article').join(', ');
+          return row('⏳',desc,F(v.mt),v.heure||'','var(--amber)',v.client||'');
+        }).join('')}
+      </div>`:''}
+    </div>
+
+    <!-- SORTIES -->
+    <div>
+      <div class="bilan-section">
+        <div class="bilan-title" style="background:var(--red)">
+          <span>❤️ SORTIES</span><span>${F(totalSorties)}</span>
+        </div>
+        ${achats.length===0&&deps.length===0&&sals.length===0&&avances.length===0
+          ?'<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px">Aucune sortie ce jour</div>'
+          :`
+          ${achats.length>0?`
+            <div style="padding:6px 14px;background:var(--red-bg);font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.5px">📦 Achats (${achats.length})</div>
+            ${achats.map(a=>{
+              const art=ga(a.aid);const f=gf(a.fid);
+              return row('📦',art?art.nom:'Article','− '+F(a.mt),a.heure||'','var(--red)',f?f.nom:'');
+            }).join('')}`:''}
+          ${deps.length>0?`
+            <div style="padding:6px 14px;background:var(--red-bg);font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.5px">💸 Dépenses (${deps.length})</div>
+            ${deps.map(d=>row('💸',d.four||d.cat||'Dépense','− '+F(d.mt),d.heure||'','var(--red)',d.cat||'')).join('')}`:''}
+          ${sals.length>0?`
+            <div style="padding:6px 14px;background:var(--purple-bg);font-size:10px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.5px">👥 Salaires (${sals.length})</div>
+            ${sals.map(s=>{
+              const emp=(S.employes||[]).find(e=>e.id==s.emp_id);
+              return row('👥',emp?emp.nom:'Employé','− '+F(s.montant),s.heure||'','var(--purple)','Salaire');
+            }).join('')}`:''}
+          ${avances.length>0?`
+            <div style="padding:6px 14px;background:var(--purple-bg);font-size:10px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.5px">💳 Avances (${avances.length})</div>
+            ${avances.map(a=>{
+              const emp=(S.employes||[]).find(e=>e.id==a.emp_id);
+              return row('💳',emp?emp.nom:'Employé','− '+F(a.montant),a.heure||'','var(--purple)','Avance salaire');
+            }).join('')}`:''}
+          `}
+      </div>
+      ${transferts.length>0?`
+      <div class="bilan-section" style="margin-top:8px">
+        <div class="bilan-title" style="background:var(--teal)"><span>↔️ Transferts internes</span><span>${transferts.length}</span></div>
+        ${transferts.map(t=>{
+          const de=(S.comptes||[]).find(c=>c.id==t.de);
+          const vers=(S.comptes||[]).find(c=>c.id==t.vers);
+          return row('↔️',(de?de.nom:'?')+' → '+(vers?vers.nom:'?'),F(t.mt),t.heure||'','var(--teal)',t.notes||'');
+        }).join('')}
+      </div>`:''}
+    </div>
+  </div>`;
+}
 // ─── DIAGNOSTIC LOGIN ───
 function afficherDiag(){
   const p = document.getElementById('diag-panel');
