@@ -1644,21 +1644,9 @@ function activerListenerTempsReel(){
     // FUSION : on accepte toujours les données distantes plus récentes
     // ET on merge les collections pour ne pas perdre les opérations locales
     if(remoteVer > localVer){
-      const savedSession=S.session;
-      // Fusionner collection par collection : garder le plus long tableau
-      // (évite qu'un rechargement efface des ventes faites par un autre)
-      const merged=Object.assign({},remote);
-      FB_COLLECTIONS.forEach(col=>{
-        const remoteArr=remote[col]||[];
-        const localArr=S[col]||[];
-        if(localArr.length > remoteArr.length){
-          // Local a plus d'entrées → garder local pour cette collection
-          merged[col]=localArr;
-        }
-      });
-      S=merged;
-      if(savedSession&&savedSession.uid) S.session=savedSession;
-      saveLocal(S);
+      // Fusion intelligente (même logique que startFirebaseSync)
+      const merged = fusionnerDonnees(S, remote);
+      appliquerEtatFusionne(merged);
       setSyncStatus('online','Synchronisé ✓');
       try{
         ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,
@@ -1738,28 +1726,88 @@ async function saveData(){
 }
 
 // ─── MANUAL SYNC ───
+async // ─── FUSION INTELLIGENTE PAR COLLECTION ───
+// Principe : on ne choisit JAMAIS un appareil entier gagnant.
+// Pour chaque collection (tableaux), on garde l'union des deux côtés
+// identifiée par ID. En cas de doublon d'ID, on garde l'enregistrement
+// avec le timestamp (ts / updatedAt / date) le plus récent.
+// Pour les scalaires (parametres, boutiques…) on garde le plus récent selon version.
+function fusionnerDonnees(local, remote){
+  const result = Object.assign({}, remote); // base = remote
+  // Version finale = la plus haute (timestamp)
+  result.version = Math.max(local.version||0, remote.version||0);
+  // Collections à fusionner par ID
+  FB_COLLECTIONS.forEach(col => {
+    const L = Array.isArray(local[col]) ? local[col] : [];
+    const R = Array.isArray(remote[col]) ? remote[col] : [];
+    if(L.length === 0 && R.length === 0){ result[col] = []; return; }
+    // Construire un map id→item en préférant le plus récent
+    const map = new Map();
+    const tsOf = item => item.ts || item.updatedAt || item.date_ts || item.created_at || 0;
+    [...R, ...L].forEach(item => {
+      if(!item || item.id == null) return;
+      const key = String(item.id);
+      if(!map.has(key)){
+        map.set(key, item);
+      } else {
+        // Garder le plus récent
+        if(tsOf(item) > tsOf(map.get(key))){
+          map.set(key, item);
+        }
+      }
+    });
+    result[col] = Array.from(map.values());
+  });
+  // Paramètres : garder celui de l'appareil avec la version la plus haute
+  if((local.version||0) > (remote.version||0)){
+    result.parametres = local.parametres || remote.parametres;
+    result.boutiques = local.boutiques || remote.boutiques;
+    result.boutique_active = local.boutique_active ?? remote.boutique_active;
+  }
+  // Utilisateurs : fusion par ID — ne jamais perdre un compte (surtout l'admin)
+  const usersMap = new Map();
+  (remote.utilisateurs||[]).forEach(u => { if(u&&u.id!=null) usersMap.set(String(u.id), u); });
+  (local.utilisateurs||[]).forEach(u => { if(u&&u.id!=null) usersMap.set(String(u.id), u); });
+  const mergedUsers = Array.from(usersMap.values());
+  // Garantie ultime : si aucun admin actif trouvé, réinjecter le compte admin par défaut
+  const hasAdmin = mergedUsers.some(u => u.actif!==false && u.role==='admin');
+  if(!hasAdmin){
+    mergedUsers.unshift({id:1,nom:'Christian',role:'admin',pin:'1234',email:'christmedia176@gmail.com',password:'admin1234',emoji:'👑',actif:true,boutique_id:null});
+  }
+  result.utilisateurs = mergedUsers;
+  return result;
+}
+
+function appliquerEtatFusionne(merged){
+  const savedSession = S.session;
+  S = merged;
+  if(savedSession && savedSession.uid) S.session = savedSession;
+  saveLocal(S);
+}
+
+function rafraichirPageCourante(){
+  try{
+    ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive})[currentPage]();
+  }catch(e){}
+}
+
 async function manualSync(){
   if(!navigator.onLine){toast('📵 Pas de connexion internet');setSyncStatus('offline','Hors ligne');return;}
   if(!fbReady){toast('⚠️ Firebase non initialisé');return;}
   setSyncStatus('syncing','Synchronisation...');
   toast('🔄 Synchronisation en cours...');
-  const remote=await loadFromFirebase();
+  const remote = await loadFromFirebase();
   if(remote){
-    const remoteVer=remote.version||remote.nid||0;
-    const localVer=S.version||S.nid||0;
-    if(remoteVer >= localVer){
-      S=remote;
-      saveLocal(S);
-      setSyncStatus('online','Synchronisé ✓');
-      toast('✅ Données synchronisées depuis le cloud');
-      ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive})[currentPage]();
-    }else{
-      await saveToFirebase(S);
-      toast('✅ Données locales envoyées au cloud');
-    }
+    const merged = fusionnerDonnees(S, remote);
+    appliquerEtatFusionne(merged);
+    await saveToFirebase(S);
+    setSyncStatus('online','Synchronisé ✓');
+    toast('✅ Synchronisation fusionnée (' + (S.ventes||[]).length + ' ventes)');
+    rafraichirPageCourante();
   }else{
     await saveToFirebase(S);
     toast('✅ Données envoyées au cloud (premier sync)');
+    setSyncStatus('online','Synchronisé ✓');
   }
 }
 
@@ -1772,24 +1820,29 @@ async function startFirebaseSync(){
     if(navigator.onLine){
       setSyncStatus('syncing','Chargement cloud...');
       const remote=await loadFromFirebase();
-      const remoteVer=remote?(remote.version||remote.nid||0):0;
-      const localVer=S.version||S.nid||0;
-      if(remote && remoteVer>=localVer){
-        const savedSession=S.session;
-        S=remote;
-        if(savedSession&&savedSession.uid) S.session=savedSession;
-        saveLocal(S);
+      if(remote){
+        // FUSION au lieu de remplacement aveugle
+        const merged = fusionnerDonnees(S, remote);
+        appliquerEtatFusionne(merged);
         setSyncStatus('online','Synchronisé ✓');
-        ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive})[currentPage]();
-      }else{
+        await initAuth(); // vérifie session → cache ou affiche l'écran de login
+        rafraichirPageCourante();
+        // Pousser la fusion vers Firebase pour que tous les appareils en bénéficient
         await saveToFirebase(S);
+      }else{
+        // Aucune donnée cloud → premier appareil, on pousse le local
+        await initAuth();
+        await saveToFirebase(S);
+        setSyncStatus('online','Synchronisé ✓');
       }
       // Activer la sync temps réel après le chargement initial
       activerListenerTempsReel();
     }else{
+      await initAuth(); // session locale
       setSyncStatus('offline','Mode hors ligne');
     }
   }else{
+    await initAuth(); // pas de Firebase, session locale
     setSyncStatus('offline','Local uniquement');
   }
 }
@@ -6812,45 +6865,94 @@ function connexionEmail(){
     if(errEl){errEl.textContent='Veuillez remplir tous les champs.';errEl.style.display='block';}
     return;
   }
-  const users=S.utilisateurs||[];
-  // Chercher par email + mot de passe (ou PIN pour compatibilité)
-  const u=users.find(u=>{
-    if(u.actif===false) return false;
-    const emailMatch=(u.email||'').toLowerCase()===email;
-    if(!emailMatch) return false;
-    const pw=String(u.password||'');
-    const pin=String(u.pin||'');
-    return pw===password||pin===password;
-  });
+
+  // ── Trouver l'utilisateur dans toutes les sources disponibles ──
+  function _trouverUser(liste){
+    return (liste||[]).find(u=>{
+      if(u.actif===false) return false;
+      if((u.email||'').toLowerCase()!==email) return false;
+      return String(u.password||'')===password||String(u.pin||'')===password;
+    });
+  }
+
+  // 1. S.utilisateurs (localStorage)
+  let u=_trouverUser(S.utilisateurs);
+  // 2. defaultData intégré (compte admin de secours)
+  if(!u) u=_trouverUser(defaultData.utilisateurs);
+
   if(!u){
-    // Vérifier si l'email existe mais le mot de passe est faux
-    const emailExiste=users.some(u=>u.actif!==false&&(u.email||'').toLowerCase()===email);
-    const msg=emailExiste?"Mot de passe incorrect. Réessayez.":"Email inconnu. Contactez l'administrateur.";
+    // Pas trouvé localement → peut-être que les utilisateurs ne sont pas encore sync
+    // On affiche un message adapté
+    const tousUsers=[...(S.utilisateurs||[]),...(defaultData.utilisateurs||[])];
+    const emailExiste=tousUsers.some(x=>x.actif!==false&&(x.email||'').toLowerCase()===email);
+    if(emailExiste){
+      if(errEl){errEl.textContent='Mot de passe incorrect. Réessayez.';errEl.style.display='block';}
+      const pwEl=document.getElementById('login-password');
+      if(pwEl){pwEl.value='';pwEl.focus();}
+    } else {
+      // Email inconnu localement → tenter Firebase en arrière-plan
+      if(errEl){errEl.textContent='Vérification en cours...';errEl.style.display='block';}
+      const btnLogin=document.querySelector('.login-btn');
+      if(btnLogin){btnLogin.disabled=true;}
+      _connexionViaFirebase(email, password, errEl, btnLogin);
+      return;
+    }
+    setTimeout(()=>{if(errEl)errEl.style.display='none';},4000);
+    return;
+  }
+
+  _ouvrirSession(u);
+}
+
+async function _connexionViaFirebase(email, password, errEl, btnLogin){
+  let u=null;
+  try{
+    if(fbReady && db){
+      const fbPromise=db.ref('christmedia/data/utilisateurs').once('value');
+      const snap=await Promise.race([fbPromise, new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),5000))]);
+      const fbUsers=snap.val();
+      if(Array.isArray(fbUsers)&&fbUsers.length>0){
+        S.utilisateurs=fbUsers; saveLocal(S);
+        u=(fbUsers||[]).find(x=>{
+          if(x.actif===false) return false;
+          if((x.email||'').toLowerCase()!==email) return false;
+          return String(x.password||'')===password||String(x.pin||'')===password;
+        });
+      }
+    }
+  }catch(e){console.warn('Firebase login:',e.message);}
+  if(btnLogin){btnLogin.disabled=false;}
+  if(!u){
+    const msg = (S.utilisateurs&&S.utilisateurs.some(x=>(x.email||'').toLowerCase()===email))
+      ? 'Mot de passe incorrect. Réessayez.'
+      : "Email inconnu. Contactez l'administrateur.";
     if(errEl){errEl.textContent=msg;errEl.style.display='block';}
     const pwEl=document.getElementById('login-password');
     if(pwEl){pwEl.value='';pwEl.focus();}
-    setTimeout(()=>{if(errEl)errEl.style.display='none';},3500);
+    setTimeout(()=>{if(errEl)errEl.style.display='none';},4000);
     return;
   }
-  // Connexion réussie
+  _ouvrirSession(u);
+}
+
+function _ouvrirSession(u){
+  const errEl=document.getElementById('login-err');
+  const email=(u.email||'').toLowerCase();
   localStorage.setItem('cm_last_email',email);
   if(errEl)errEl.style.display='none';
-  // Déterminer la boutique active : vendeur/caissier → sa boutique, admin → boutique_active globale
-  let boutiqueActive = S.boutique_active || 1;
-  if(u.role !== 'admin' && u.boutique_id) boutiqueActive = u.boutique_id;
+  let boutiqueActive=S.boutique_active||1;
+  if(u.role!=='admin'&&u.boutique_id) boutiqueActive=u.boutique_id;
   S.session={uid:u.id,role:u.role,nom:u.nom,emoji:u.emoji||'👤',email:u.email,boutique_id:u.boutique_id||null,boutique_active:boutiqueActive};
-  // Enregistrer dans l'historique des connexions
-  enregistrerConnexion(u, 'connexion');
+  saveLocal(S);
+  enregistrerConnexion(u,'connexion');
   document.getElementById('login-screen').style.display='none';
   majBadgeUtilisateur();
   appliquerAcces(u.role);
   majBoutiqueUI();
   toast(`✅ Bienvenue ${u.nom} !`);
-  addAudit('LOGIN','Connexion','Connexion de '+u.nom+' ('+u.role+') depuis '+navigator.userAgent.substring(0,50), null, null);
-  // Démarrer la présence en temps réel
-  setTimeout(initPresence, 1000);
-  // Vérifier sauvegarde Drive auto
-  if(u.role === 'admin') setTimeout(checkGdriveAutoBackup, 3000);
+  addAudit('LOGIN','Connexion','Connexion de '+u.nom+' ('+u.role+') depuis '+navigator.userAgent.substring(0,50),null,null);
+  setTimeout(initPresence,1000);
+  if(u.role==='admin') setTimeout(checkGdriveAutoBackup,3000);
   if(!S.ventes)S.ventes=[];
   if(!S.stock)S.stock=[];
   if(!S.achats)S.achats=[];
@@ -7015,10 +7117,19 @@ function doLogout(){
 
 // Remplacer initAuth
 async function initAuth(){
-  // Afficher login si pas de session
-  if(!S.session||!S.session.uid){
+  // Vérifier la session en mémoire ET en localStorage (robustesse)
+  const sessionLocale = (() => {
+    try {
+      const saved = localStorage.getItem('christmedia_v2');
+      if(saved) return JSON.parse(saved).session || null;
+    } catch(e) {}
+    return null;
+  })();
+  const sess = (S.session && S.session.uid) ? S.session : sessionLocale;
+  if(!sess || !sess.uid){
     afficherLoginScreen();
   }else{
+    if(!S.session || !S.session.uid) S.session = sess; // restaurer si perdu
     document.getElementById('login-screen').style.display='none';
     majBadgeUtilisateur();
     appliquerAcces(S.session.role);
