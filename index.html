@@ -836,6 +836,44 @@ body.dark th{background:var(--surface3)}
 /* ─── RACCOURCIS CLAVIER ─── */
 .kbd{display:inline-flex;align-items:center;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;padding:1px 5px;font-size:10px;font-family:'DM Mono',monospace;color:var(--text2)}
 
+
+/* ─── MODULES DG ─── */
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi-val{font-size:26px;font-weight:800;letter-spacing:-1px;margin:6px 0 2px}
+.kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text3)}
+.kpi-trend{font-size:11px;font-weight:600;padding:2px 7px;border-radius:20px;display:inline-block;margin-top:4px}
+.kpi-trend.up{background:var(--green-bg);color:var(--green)}
+.kpi-trend.down{background:var(--red-bg);color:var(--red)}
+.kpi-trend.flat{background:var(--amber-bg);color:var(--amber)}
+.kpi-bar{position:absolute;bottom:0;left:0;height:3px;background:linear-gradient(90deg,var(--navy),var(--navy2));border-radius:0 0 var(--r) var(--r)}
+.comptab{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.comptab button{padding:5px 14px;border:1px solid var(--border2);background:var(--surface);border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--text2);transition:all .15s}
+.comptab button.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.rh-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s}
+.rh-card:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.rh-avatar{width:44px;height:44px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.rh-info{flex:1}
+.rh-name{font-weight:600;font-size:14px}
+.rh-role{font-size:11px;color:var(--text3);margin-top:1px}
+.rh-salary{font-weight:700;color:var(--green);font-size:15px}
+.score-bar{height:6px;border-radius:3px;background:var(--surface2);overflow:hidden;margin-top:4px}
+.score-fill{height:100%;border-radius:3px;transition:width .5s}
+.perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:12px}
+.perm-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:var(--rs);font-size:12px;cursor:pointer;user-select:none;transition:all .15s}
+.perm-item.on{background:var(--navy-bg);color:var(--navy)}
+.perm-item input[type=checkbox]{accent-color:var(--navy);cursor:pointer}
+.journal-line{display:grid;grid-template-columns:80px 60px 1fr 110px 100px 100px;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;align-items:center}
+.journal-line:hover{background:var(--surface2)}
+.journal-header{font-weight:600;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;background:var(--surface2)}
+.debit{color:var(--red);font-weight:600;text-align:right}
+.credit{color:var(--green);font-weight:600;text-align:right}
+.bilan-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+.bilan-title{padding:12px 16px;background:var(--navy);color:#fff;font-weight:600;font-size:13px;display:flex;justify-content:space-between}
+.bilan-row{display:flex;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--border);font-size:13px}
+.bilan-row:last-child{border-bottom:none}
+.bilan-row.total{font-weight:700;background:var(--surface2)}
+.bilan-row.highlight{background:var(--navy-bg);font-weight:600;color:var(--navy)}
+
 </style>
 </head>
 <body>
@@ -941,6 +979,23 @@ body.dark th{background:var(--surface3)}
     <div class="ni" data-page="agenda" onclick="nav(this,'agenda')">
       <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M1 7h14M5 1v4M11 1v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="5" cy="10.5" r="1" fill="currentColor"/><circle cx="8" cy="10.5" r="1" fill="currentColor" opacity=".4"/><circle cx="11" cy="10.5" r="1" fill="currentColor" opacity=".4"/></svg>
       Opérations suivantes
+    </div>
+    <div class="nav-sec admin-only">Direction</div>
+    <div class="ni admin-only" data-page="kpis" onclick="nav(this,'kpis')">
+      <svg viewBox="0 0 16 16" fill="none"><polyline points="1,12 5,7 8,9 12,4 15,6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="11,4 15,4 15,8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      KPIs & Rentabilité
+    </div>
+    <div class="ni admin-only" data-page="comptabilite" onclick="nav(this,'comptabilite')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h6M5 11h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      Comptabilité
+    </div>
+    <div class="ni admin-only" data-page="rh" onclick="nav(this,'rh')">
+      <svg viewBox="0 0 16 16" fill="none"><circle cx="6" cy="4" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M1 13c0-3 2-5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M12 8.5v1.5l1 1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      RH & Salaires
+    </div>
+    <div class="ni admin-only" data-page="fourni_avance" onclick="nav(this,'fourni_avance')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="5" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M4 5V4a2 2 0 014 0v1" stroke="currentColor" stroke-width="1.5"/><circle cx="13" cy="5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M13 4v1.5l1 .5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Fournisseurs Pro
     </div>
     <div class="nav-sec">Système</div>
     <div class="ni" onclick="ouvrirCaisseRapide()" title="Mode caisse rapide — plein écran">
@@ -1407,6 +1462,9 @@ const defaultData={
   revenus:[],
   charges:[],
   employes:[],
+  salaires:[],
+  avances_employe:[],
+  conges:[],
   services:[
     {id:1,nom:'Impression A4 N&B',desc:'Impression noir et blanc format A4',prix:100,cat:'Impression'},
     {id:2,nom:'Impression A4 Couleur',desc:'Impression couleur format A4',prix:200,cat:'Impression'},
@@ -1583,7 +1641,7 @@ async function loadFromFirebase(){
 const FB_COLLECTIONS=['ventes','achats','stock','clients','fournisseurs',
   'depenses','revenus','charges','comptes','transferts','dettes',
   'services','devis','planning','agenda','modeles','limites',
-  'historique','historique_prix','objectifs'];
+  'historique','historique_prix','objectifs','employes','salaires','avances_employe','conges'];
 
 async function saveToFirebase(data){
   if(!fbReady||!db)return false;
@@ -1659,7 +1717,7 @@ function activerListenerTempsReel(){
           inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,
           comptes:rComptes,devis:rDevis,planning:rPlanning,
           calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,
-          limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive})[currentPage]();
+          limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive,rh:rRH,comptabilite:rComptabilite,kpis:rKPIs,fourni_avance:rFourniAvance})[currentPage]();
       }catch(e){}
       toast('🔄 Données mises à jour',1500);
     } else if(remoteVer === localVer && remoteVer > 0){
@@ -2064,7 +2122,7 @@ function toast(msg,dur=2200){
 }
 
 // ─── NAVIGATION ───
-const titles={dashboard:'Tableau de bord',objectifs:'Objectifs & KPIs',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres',dettes:'Gestion des dettes',flux:'Flux financier',limites:'Limites de dépenses',modeles:"Modèles d'opération",agenda:'Opérations suivantes',journal:'Journal privé',caisse:'Rapport de caisse',stats:'Statistiques vendeurs',promos:'Promotions & Réductions',commandes:'Commandes fournisseurs',depots:'Stock multi-dépôt',fidelite:'Programme de fidélité',audit:"Journal d'audit",live:'🔴 Live — Ventes en temps réel'};
+const titles={dashboard:'Tableau de bord',objectifs:'Objectifs & KPIs',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres',dettes:'Gestion des dettes',flux:'Flux financier',limites:'Limites de dépenses',modeles:"Modèles d'opération",agenda:'Opérations suivantes',journal:'Journal privé',caisse:'Rapport de caisse',stats:'Statistiques vendeurs',promos:'Promotions & Réductions',commandes:'Commandes fournisseurs',depots:'Stock multi-dépôt',fidelite:'Programme de fidélité',audit:"Journal d'audit",live:'🔴 Live — Ventes en temps réel',rh:'RH & Salaires',comptabilite:'Comptabilité & Bilan',kpis:'KPIs & Rentabilité',fourni_avance:'Fournisseurs Pro'};
 const actionsMap={
   dashboard:()=>'<button class="btn btn-success" onclick="nav(document.querySelector(\'[data-page=vente]\'),\'vente\')">+ Vente</button>',
   objectifs:()=>'<button class="btn btn-primary" onclick="editObjectifs()">⚙️ Modifier objectifs</button>',
@@ -2092,7 +2150,11 @@ const actionsMap={
   fidelite:()=>'<button class="btn" onclick="nav(document.querySelector(\"[data-page=parametres]\"),\"parametres\")">⚙️ Configurer</button>',
   audit:()=>'<button class="btn btn-danger btn-sm" onclick="effacerAudit()">🗑️ Effacer</button>',
   live:()=>'<div style="display:flex;align-items:center;gap:6px"><span id="live-status-dot" style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse .8s infinite alternate"></span><span id="live-status-label" style="font-size:12px;color:var(--text2)">Connecté</span></div>'
-};
+,
+  rh:()=>'<button class="btn btn-primary" onclick="ouvrirModalNouvelEmploye()">+ Employé</button><button class="btn" onclick="ouvrirModalSalaire()" style="margin-left:6px">💰 Payer salaire</button>',
+  comptabilite:()=>'<button class="btn" onclick="exportJournal()">📥 Exporter journal</button>',
+  kpis:()=>'<select id="kpi-period" onchange="rKPIs()" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--rs);font-family:inherit;font-size:13px;background:var(--surface)"><option value="mois">Ce mois</option><option value="trim">Ce trimestre</option><option value="annee">Cette année</option><option value="tout">Tout</option></select>',
+  fourni_avance:()=>'<button class="btn btn-primary" onclick="ouvrirModalEvalFourn()">⭐ Évaluer</button>'};
 
 let currentPage='dashboard';
 function nav(el,page){
@@ -6781,7 +6843,7 @@ function partagerWhatsApp(id, type){
   if(type==='facture'||type==='recu'){
     const v=S.ventes.find(v=>v.id==id);if(!v)return;
     const lignes=v.lignes||[{aid:v.aid,qte:v.qte,pu:v.pu,mt:v.mt}];
-    const detail=lignes.map(l=>{const a=ga(l.aid);return`- ${a?a.nom:'Article'} x${l.qte} = ${F(l.mt)}`;}).join('\n');
+    const detail=lignes.map(l=>{const a=ga(l.aid);return`- ${a?a.nom:'Article'} x${l.qte} = ${F(l.mt)}`;}).join(String.fromCharCode(10));
     texte=`🧾 *REÇU - ${S.parametres?.nom||'Christ Media'}*\n\nClient: ${v.client||'—'}\nDate: ${v.date}\n\n${detail}\n\n💰 *Total: ${F(v.mt)}*\nMode: ${v.mode}\nStatut: ${v.statut}\n\nMerci pour votre confiance ! 🙏`;
   }else if(type==='devis'){
     const d=S.devis.find(d=>d.id==id);if(!d)return;
@@ -7050,7 +7112,7 @@ const PERMISSIONS = {
     pages: ['dashboard','objectifs','transactions','vente','services','achats','stock','clients',
             'fournisseurs','depenses','tresorerie','revenus','rapports','inventaire','historique',
             'comptes','devis','planning','calculatrice','workspace','parametres',
-            'dettes','flux','limites','modeles','agenda','journal','caisse','stats','promos','commandes','depots','fidelite','audit','live'],
+            'dettes','flux','limites','modeles','agenda','journal','caisse','stats','promos','commandes','depots','fidelite','audit','live','rh','comptabilite','kpis','fourni_avance'],
     label: '👑 Administrateur',
     couleur: '#f5c060'
   },
@@ -12723,6 +12785,1022 @@ if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded', initCalcFloat);
 } else {
   setTimeout(initCalcFloat, 50);
+}
+
+
+
+// ═══════════════════════════════════════════════════════════════════
+// MODULE 1 — KPIs & RENTABILITÉ
+// ═══════════════════════════════════════════════════════════════════
+function rKPIs(){
+  const bid = getBid();
+  const sel = (document.getElementById('kpi-period')||{}).value || 'mois';
+  const today = D();
+  const now = new Date();
+  const curM = today.slice(0,7);
+  const curY = today.slice(0,4);
+
+  // Définir la période
+  let dateMin = '';
+  if(sel==='mois') dateMin = curM+'-01';
+  else if(sel==='trim'){
+    const q = Math.floor(now.getMonth()/3);
+    dateMin = curY+'-'+(String(q*3+1).padStart(2,'0'))+'-01';
+  }
+  else if(sel==='annee') dateMin = curY+'-01-01';
+
+  const ventes = getVentesBoutique(bid).filter(v=>v.statut==='Payé'&&(!dateMin||v.date>=dateMin));
+  const achats = getAchatsBoutique(bid).filter(a=>(!dateMin||a.date>=dateMin));
+  const depenses = getDepensesBoutique(bid).filter(d=>(!dateMin||d.date>=dateMin));
+  const vPrev = getVentesBoutique(bid).filter(v=>{
+    if(v.statut!=='Payé') return false;
+    if(sel==='mois'){
+      const pm = new Date(now.getFullYear(),now.getMonth()-1,1);
+      const pmStr = pm.getFullYear()+'-'+(String(pm.getMonth()+1).padStart(2,'0'));
+      return v.date&&v.date.startsWith(pmStr);
+    }
+    return false;
+  });
+
+  const ca = ventes.reduce((s,v)=>s+v.mt,0);
+  const caPrev = vPrev.reduce((s,v)=>s+v.mt,0);
+  const totalAchats = achats.reduce((s,a)=>s+a.mt,0);
+  const totalDep = depenses.reduce((s,d)=>s+d.mt,0);
+  const margeBrute = ca - totalAchats;
+  const resultat = margeBrute - totalDep;
+  const txMarge = ca>0 ? Math.round(margeBrute/ca*100) : 0;
+  const txResultat = ca>0 ? Math.round(resultat/ca*100) : 0;
+  const caTrend = caPrev>0 ? Math.round((ca-caPrev)/caPrev*100) : 0;
+
+  // Rentabilité par catégorie
+  const catMap = {};
+  ventes.forEach(v=>{
+    const lignes = v.lignes||[{aid:v.aid,qte:v.qte,pu:v.pu,mt:v.mt}];
+    lignes.forEach(l=>{
+      const art = ga(l.aid);
+      const cat = art ? art.cat : 'Autre';
+      if(!catMap[cat]) catMap[cat]={ca:0,cout:0,nb:0};
+      catMap[cat].ca += l.mt||0;
+      catMap[cat].cout += (art?art.pa:0)*(l.qte||1);
+      catMap[cat].nb++;
+    });
+  });
+  const cats = Object.entries(catMap).sort((a,b)=>b[1].ca-a[1].ca);
+  const maxCa = cats.length ? cats[0][1].ca : 1;
+
+  // Top articles
+  const artMap = {};
+  ventes.forEach(v=>{
+    const lignes = v.lignes||[{aid:v.aid,qte:v.qte||1,pu:v.pu,mt:v.mt}];
+    lignes.forEach(l=>{
+      if(!l.aid) return;
+      if(!artMap[l.aid]) artMap[l.aid]={ca:0,qte:0,marge:0};
+      const art = ga(l.aid);
+      artMap[l.aid].ca += l.mt||0;
+      artMap[l.aid].qte += l.qte||1;
+      artMap[l.aid].marge += (l.mt||0) - (art?art.pa:0)*(l.qte||1);
+    });
+  });
+  const topArts = Object.entries(artMap).sort((a,b)=>b[1].ca-a[1].ca).slice(0,8);
+
+  // Évolution CA sur 6 mois
+  const mois6 = [];
+  for(let i=5;i>=0;i--){
+    const d = new Date(now.getFullYear(),now.getMonth()-i,1);
+    const mStr = d.getFullYear()+'-'+(String(d.getMonth()+1).padStart(2,'0'));
+    const mLabel = d.toLocaleDateString('fr-FR',{month:'short',year:'2-digit'});
+    const mCA = getVentesBoutique(bid).filter(v=>v.statut==='Payé'&&v.date&&v.date.startsWith(mStr)).reduce((s,v)=>s+v.mt,0);
+    mois6.push({label:mLabel,ca:mCA});
+  }
+  const maxM = Math.max(...mois6.map(m=>m.ca),1);
+
+  const trendClass = caTrend>0?'up':caTrend<0?'down':'flat';
+  const trendIcon = caTrend>0?'↑':caTrend<0?'↓':'→';
+
+  document.getElementById('content').innerHTML=`
+  <div class="g4" style="margin-bottom:16px">
+    <div class="kpi-card">
+      <div class="kpi-label">Chiffre d'affaires</div>
+      <div class="kpi-val" style="color:var(--navy)">${F(ca)}</div>
+      <span class="kpi-trend ${trendClass}">${trendIcon} ${Math.abs(caTrend)}% vs mois préc.</span>
+      <div class="kpi-bar" style="width:${Math.min(100,Math.max(5,txMarge))}%"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Marge brute</div>
+      <div class="kpi-val" style="color:${margeBrute>=0?'var(--green)':'var(--red)'}">${F(margeBrute)}</div>
+      <span class="kpi-trend ${txMarge>=30?'up':txMarge>=15?'flat':'down'}">${txMarge}% du CA</span>
+      <div class="kpi-bar" style="width:${Math.min(100,txMarge)}%;background:linear-gradient(90deg,var(--green),var(--teal))"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Résultat net</div>
+      <div class="kpi-val" style="color:${resultat>=0?'var(--green)':'var(--red)'}">${F(resultat)}</div>
+      <span class="kpi-trend ${txResultat>=10?'up':txResultat>=0?'flat':'down'}">${txResultat}% net</span>
+      <div class="kpi-bar" style="width:${Math.min(100,Math.max(0,txResultat))}%;background:linear-gradient(90deg,var(--teal),var(--navy))"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Charges totales</div>
+      <div class="kpi-val" style="color:var(--red)">${F(totalAchats+totalDep)}</div>
+      <span class="kpi-trend flat">Achats + Dépenses</span>
+      <div class="kpi-bar" style="width:${ca>0?Math.min(100,Math.round((totalAchats+totalDep)/ca*100)):0}%;background:linear-gradient(90deg,var(--red),var(--amber))"></div>
+    </div>
+  </div>
+
+  <div class="g2" style="margin-bottom:16px">
+    <!-- Évolution CA -->
+    <div class="card">
+      <p class="st">📈 Évolution CA — 6 derniers mois</p>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:120px;padding-top:8px">
+        ${mois6.map(m=>{
+          const pct = Math.round(m.ca/maxM*100);
+          const isCur = m.label===mois6[5].label;
+          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="font-size:9px;color:var(--text3);white-space:nowrap">${m.ca>0?F(m.ca):''}</div>
+            <div style="flex:1;width:100%;display:flex;align-items:flex-end">
+              <div style="width:100%;height:${pct||2}%;background:${isCur?'var(--navy)':'var(--navy-light)'};border-radius:4px 4px 0 0;transition:height .4s;min-height:3px"></div>
+            </div>
+            <div style="font-size:10px;color:${isCur?'var(--navy)':'var(--text3)'};font-weight:${isCur?700:400}">${m.label}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- Rentabilité par catégorie -->
+    <div class="card">
+      <p class="st">🎯 Rentabilité par catégorie</p>
+      ${cats.length===0?'<div class="empty"><p>Aucune vente</p></div>':
+        cats.map(([cat,d])=>{
+          const marge = d.ca - d.cout;
+          const tx = d.ca>0?Math.round(marge/d.ca*100):0;
+          const pct = Math.round(d.ca/maxCa*100);
+          return `<div style="margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+              <span style="font-size:12px;font-weight:600">${cat}</span>
+              <span style="font-size:11px;color:var(--text3)">${F(d.ca)} — marge ${tx}%</span>
+            </div>
+            <div class="score-bar"><div class="score-fill" style="width:${pct}%;background:${tx>=30?'var(--green)':tx>=15?'var(--amber)':'var(--red)'}"></div></div>
+          </div>`;
+        }).join('')}
+    </div>
+  </div>
+
+  <!-- Top articles -->
+  <div class="card">
+    <p class="st">🏆 Top articles — CA & Marge</p>
+    ${topArts.length===0?'<div class="empty"><p>Aucune vente</p></div>':`
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>#</th><th>Article</th><th>Qté vendue</th><th>CA généré</th><th>Marge</th><th>% Marge</th></tr></thead>
+      <tbody>
+        ${topArts.map(([aid,d],i)=>{
+          const art = ga(Number(aid));
+          const tx = d.ca>0?Math.round(d.marge/d.ca*100):0;
+          return `<tr>
+            <td style="color:var(--text3);font-size:11px">${i+1}</td>
+            <td class="tdm">${art?art.nom:'Article supprimé'}</td>
+            <td>${d.qte}</td>
+            <td style="font-weight:600">${F(d.ca)}</td>
+            <td style="color:${d.marge>=0?'var(--green)':'var(--red)'};font-weight:600">${F(d.marge)}</td>
+            <td><span class="kpi-trend ${tx>=30?'up':tx>=15?'flat':'down'}" style="font-size:10px;padding:1px 6px">${tx}%</span></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table></div>`}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MODULE 2 — COMPTABILITÉ & BILAN
+// ═══════════════════════════════════════════════════════════════════
+let comptaTab = 'journal';
+function rComptabilite(){
+  const tabs = [{k:'journal',l:'📒 Journal'},{k:'resultat',l:'📊 Compte de résultat'},{k:'bilan',l:'⚖️ Bilan simplifié'},{k:'tresoEtat',l:'💧 État de trésorerie'}];
+  document.getElementById('content').innerHTML=`
+  <div class="comptab">
+    ${tabs.map(t=>`<button class="${comptaTab===t.k?'active':''}" onclick="comptaTab='${t.k}';rComptabilite()">${t.l}</button>`).join('')}
+  </div>
+  <div id="compta-body"></div>`;
+  if(comptaTab==='journal') renderJournal();
+  else if(comptaTab==='resultat') renderResultat();
+  else if(comptaTab==='bilan') renderBilan();
+  else if(comptaTab==='tresoEtat') renderTresoEtat();
+}
+
+function renderJournal(){
+  const bid = getBid();
+  const today = D();
+  const curM = today.slice(0,7);
+  // Construire les écritures du mois courant
+  const ecritures = [];
+  getVentesBoutique(bid).filter(v=>v.date&&v.date.startsWith(curM)).forEach(v=>{
+    const lignes=v.lignes||[{aid:v.aid,mt:v.mt}];
+    const desc = lignes.map(l=>{const a=ga(l.aid);return a?a.nom:'Vente'}).join(', ');
+    if(v.statut==='Payé'){
+      ecritures.push({date:v.date,heure:v.heure||'',num:'531',libelle:'Caisse/Banque',debit:v.mt,credit:0,ref:'V'+v.id});
+      ecritures.push({date:v.date,heure:v.heure||'',num:'701',libelle:'Ventes — '+desc,debit:0,credit:v.mt,ref:'V'+v.id});
+    } else {
+      ecritures.push({date:v.date,heure:v.heure||'',num:'411',libelle:'Client — '+v.client,debit:v.mt,credit:0,ref:'V'+v.id});
+      ecritures.push({date:v.date,heure:v.heure||'',num:'701',libelle:'Ventes crédit — '+desc,debit:0,credit:v.mt,ref:'V'+v.id});
+    }
+  });
+  getAchatsBoutique(bid).filter(a=>a.date&&a.date.startsWith(curM)).forEach(a=>{
+    const art=ga(a.aid);
+    ecritures.push({date:a.date,heure:'',num:'601',libelle:'Achats — '+(art?art.nom:'?'),debit:a.mt,credit:0,ref:'A'+a.id});
+    ecritures.push({date:a.date,heure:'',num:'401',libelle:'Fournisseur — '+(gf(a.fid)?gf(a.fid).nom:'?'),debit:0,credit:a.mt,ref:'A'+a.id});
+  });
+  getDepensesBoutique(bid).filter(d=>d.date&&d.date.startsWith(curM)).forEach(d=>{
+    ecritures.push({date:d.date,heure:'',num:'627',libelle:'Dépense — '+(d.cat||d.four||'?'),debit:d.mt,credit:0,ref:'D'+d.id});
+    ecritures.push({date:d.date,heure:'',num:'531',libelle:'Sortie caisse',debit:0,credit:d.mt,ref:'D'+d.id});
+  });
+  (S.salaires||[]).filter(s=>s.date&&s.date.startsWith(curM)).forEach(s=>{
+    const emp = (S.employes||[]).find(e=>e.id==s.emp_id);
+    ecritures.push({date:s.date,heure:'',num:'641',libelle:'Salaire — '+(emp?emp.nom:'Employé'),debit:s.montant,credit:0,ref:'S'+s.id});
+    ecritures.push({date:s.date,heure:'',num:'531',libelle:'Règlement salaire',debit:0,credit:s.montant,ref:'S'+s.id});
+  });
+  ecritures.sort((a,b)=>a.date.localeCompare(b.date)||a.ref.localeCompare(b.ref));
+  const totalD = ecritures.reduce((s,e)=>s+e.debit,0);
+  const totalC = ecritures.reduce((s,e)=>s+e.credit,0);
+
+  document.getElementById('compta-body').innerHTML=`
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <span style="font-size:12px;color:var(--text3)">${ecritures.length} écritures — ${new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</span>
+    <span style="font-size:12px">Équilibre : ${Math.abs(totalD-totalC)<1?'<span style="color:var(--green);font-weight:700">✅ Équilibré</span>':'<span style="color:var(--red);font-weight:700">⚠️ Déséquilibré</span>'}</span>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="journal-line journal-header">
+      <span>Date</span><span>Heure</span><span>Compte — Libellé</span><span>Réf.</span><span class="debit">Débit</span><span class="credit">Crédit</span>
+    </div>
+    ${ecritures.length===0?'<div style="padding:20px;text-align:center;color:var(--text3)">Aucune écriture ce mois</div>':
+      ecritures.map(e=>`<div class="journal-line">
+        <span style="font-family:'DM Mono',monospace;font-size:11px">${e.date}</span>
+        <span style="font-size:11px;color:var(--text3)">${e.heure}</span>
+        <span><span style="font-weight:600;color:var(--navy);margin-right:6px">${e.num}</span>${e.libelle}</span>
+        <span style="font-size:10px;color:var(--text3)">${e.ref}</span>
+        <span class="debit">${e.debit>0?F(e.debit):''}</span>
+        <span class="credit">${e.credit>0?F(e.credit):''}</span>
+      </div>`).join('')}
+    <div class="journal-line" style="background:var(--navy-bg);font-weight:700">
+      <span></span><span></span><span style="color:var(--navy)">TOTAUX</span><span></span>
+      <span class="debit">${F(totalD)}</span><span class="credit">${F(totalC)}</span>
+    </div>
+  </div>`;
+}
+
+function renderResultat(){
+  const bid = getBid();
+  const today = D(); const curY = today.slice(0,4);
+  const ventes = getVentesBoutique(bid).filter(v=>v.statut==='Payé'&&v.date&&v.date.startsWith(curY));
+  const vCredit = getVentesBoutique(bid).filter(v=>v.statut==='Non payé'&&v.date&&v.date.startsWith(curY));
+  const svcs = (S.ventes_services||[]).filter(v=>v.statut==='Payé'&&v.date&&v.date.startsWith(curY));
+  const achats = getAchatsBoutique(bid).filter(a=>a.date&&a.date.startsWith(curY));
+  const deps = getDepensesBoutique(bid).filter(d=>d.date&&d.date.startsWith(curY));
+  const revs = (S.revenus||[]).filter(r=>r.date&&r.date.startsWith(curY));
+  const sals = (S.salaires||[]).filter(s=>s.date&&s.date.startsWith(curY));
+  const avs = (S.avances_employe||[]).filter(a=>a.date&&a.date.startsWith(curY));
+
+  const caVentes = ventes.reduce((s,v)=>s+v.mt,0);
+  const caSvcs = svcs.reduce((s,v)=>s+v.mt,0);
+  const caCredit = vCredit.reduce((s,v)=>s+v.mt,0);
+  const totalRevs = revs.reduce((s,r)=>s+r.mt,0);
+  const totalCA = caVentes + caSvcs + totalRevs;
+  const totalAchats = achats.reduce((s,a)=>s+a.mt,0);
+  const margeBrute = totalCA - totalAchats;
+  const totalDeps = deps.reduce((s,d)=>s+d.mt,0);
+  const totalSals = sals.reduce((s,s2)=>s+s2.montant,0);
+  const totalAvs = avs.reduce((s,a)=>s+a.montant,0);
+  const totalCharges = totalDeps + totalSals + totalAvs;
+  const resultatExploit = margeBrute - totalCharges;
+  const txMarge = totalCA>0?Math.round(margeBrute/totalCA*100):0;
+
+  const row=(label,val,cls='',indent=false)=>`<div class="bilan-row ${cls}">
+    <span style="padding-left:${indent?'20px':'0'}">${label}</span>
+    <span style="font-family:'DM Mono',monospace;${val<0?'color:var(--red)':''}">${F(Math.abs(val))}${val<0?' (perte)':''}</span>
+  </div>`;
+
+  document.getElementById('compta-body').innerHTML=`
+  <div style="max-width:640px">
+    <div class="bilan-section">
+      <div class="bilan-title"><span>📥 PRODUITS — Année ${curY}</span><span>${F(totalCA)}</span></div>
+      ${row('Ventes marchandises',caVentes,'',true)}
+      ${row('Services & prestations',caSvcs,'',true)}
+      ${row('Créances clients (non encaissé)',caCredit,'',true)}
+      ${row('Autres revenus',totalRevs,'',true)}
+      ${row('TOTAL PRODUITS',totalCA,'total')}
+    </div>
+    <div class="bilan-section">
+      <div class="bilan-title"><span>📤 CHARGES</span><span>${F(totalAchats+totalCharges)}</span></div>
+      ${row('Achats de marchandises',totalAchats,'',true)}
+      ${row('MARGE BRUTE',margeBrute,'highlight')}
+      ${row('Dépenses d\'exploitation',totalDeps,'',true)}
+      ${row('Salaires versés',totalSals,'',true)}
+      ${row('Avances sur salaires',totalAvs,'',true)}
+      ${row('TOTAL CHARGES',totalCharges,'total')}
+    </div>
+    <div class="bilan-section">
+      <div class="bilan-title ${resultatExploit>=0?'':'background:var(--red-bg);color:var(--red)'}" style="${resultatExploit<0?'background:var(--red);':''}">
+        <span>${resultatExploit>=0?'✅':'❌'} RÉSULTAT D\'EXPLOITATION</span>
+        <span>${F(Math.abs(resultatExploit))} ${resultatExploit<0?'(perte)':'(bénéfice)'}</span>
+      </div>
+      ${row('Taux de marge brute',txMarge,'highlight')}
+    </div>
+  </div>`;
+}
+
+function renderBilan(){
+  const bid = getBid();
+  const stock = getStockBoutique(bid);
+  const comptes = S.comptes||[];
+  const dettesC = (S.dettesPerso||[]).filter(d=>d.type==='client'||!d.type);
+  const dettesF = (S.dettesAchats||[]);
+  const valStock = stock.reduce((s,a)=>(s+(a.si||0)*(a.pa||0)),0);
+  const totalCreances = dettesC.filter(d=>d.statut!=='Soldé').reduce((s,d)=>s+(d.montant||0),0);
+  const totalCaisse = comptes.reduce((s,c)=>(s+(c.solde||0)),0);
+  const totalActif = valStock + totalCreances + totalCaisse;
+  const totalDettesF = dettesF.filter(d=>d.statut!=='Soldé').reduce((s,d)=>s+(d.montant||0),0);
+  const totalSalsDus = (S.employes||[]).reduce((s,e)=>{
+    const salBase = e.salaire||0;
+    const dejaPaye = (S.salaires||[]).filter(s2=>s2.emp_id===e.id&&s2.date&&s2.date.startsWith(D().slice(0,7))).reduce((t,s2)=>t+s2.montant,0);
+    return s + Math.max(0,salBase-dejaPaye);
+  },0);
+  const totalPassif = totalDettesF + totalSalsDus;
+  const capitaux = totalActif - totalPassif;
+
+  const row=(label,val,cls='',indent=false)=>`<div class="bilan-row ${cls}">
+    <span style="padding-left:${indent?'20px':'0'}">${label}</span>
+    <span style="font-family:'DM Mono',monospace">${F(val)}</span>
+  </div>`;
+
+  document.getElementById('compta-body').innerHTML=`
+  <div class="g2" style="max-width:900px">
+    <div>
+      <div class="bilan-section">
+        <div class="bilan-title"><span>🏦 ACTIF</span><span>${F(totalActif)}</span></div>
+        ${row('Valeur du stock',valStock,'',true)}
+        ${row('Créances clients',totalCreances,'',true)}
+        ${row('Trésorerie (caisses & comptes)',totalCaisse,'',true)}
+        ${row('TOTAL ACTIF',totalActif,'total')}
+      </div>
+    </div>
+    <div>
+      <div class="bilan-section">
+        <div class="bilan-title"><span>📋 PASSIF</span><span>${F(totalPassif)}</span></div>
+        ${row('Dettes fournisseurs',totalDettesF,'',true)}
+        ${row('Salaires à payer (mois en cours)',totalSalsDus,'',true)}
+        ${row('TOTAL PASSIF',totalPassif,'total')}
+      </div>
+      <div class="bilan-section">
+        <div class="bilan-title ${capitaux>=0?'':'background:var(--red)'}">
+          <span>${capitaux>=0?'✅':'⚠️'} CAPITAUX PROPRES</span><span>${F(capitaux)}</span>
+        </div>
+        ${row('Actif − Passif',capitaux,'highlight')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderTresoEtat(){
+  const bid = getBid();
+  const today = D(); const curM = today.slice(0,7);
+  const encaissements = getVentesBoutique(bid).filter(v=>v.statut==='Payé'&&v.date&&v.date.startsWith(curM));
+  const decaissements = [
+    ...getAchatsBoutique(bid).filter(a=>a.date&&a.date.startsWith(curM)).map(a=>({...a,_type:'Achat',_desc:(ga(a.aid)||{}).nom||'?'})),
+    ...getDepensesBoutique(bid).filter(d=>d.date&&d.date.startsWith(curM)).map(d=>({...d,_type:'Depense',_desc:d.cat||d.four||'?'})),
+    ...(S.salaires||[]).filter(s=>s.date&&s.date.startsWith(curM)).map(s=>({...s,_type:'Salaire',_desc:((S.employes||[]).find(e=>e.id==s.emp_id)||{}).nom||'?'})),
+  ].sort((a,b)=>a.date.localeCompare(b.date));
+  const totalEnc = encaissements.reduce((s,v)=>s+v.mt,0);
+  const totalDec = decaissements.reduce((s,d)=>s+d.mt,0);
+  const flux = totalEnc - totalDec;
+
+  document.getElementById('compta-body').innerHTML=`
+  <div class="g2">
+    <div class="bilan-section">
+      <div class="bilan-title" style="background:var(--green)"><span>💚 ENCAISSEMENTS</span><span>${F(totalEnc)}</span></div>
+      ${encaissements.slice().reverse().slice(0,15).map(v=>{
+        const lignes=v.lignes||[{aid:v.aid}];
+        const desc=lignes.map(l=>(ga(l.aid)||{}).nom||'?').join(', ');
+        return `<div class="bilan-row"><span>${v.date} ${v.heure?'à '+v.heure:''} — ${desc}</span><span style="color:var(--green);font-weight:600">+${F(v.mt)}</span></div>`;
+      }).join('')}
+    </div>
+    <div class="bilan-section">
+      <div class="bilan-title" style="background:var(--red)"><span>❤️ DÉCAISSEMENTS</span><span>${F(totalDec)}</span></div>
+      ${decaissements.slice(0,15).map(d=>`<div class="bilan-row"><span>${d.date} — ${d._type} : ${d._desc}</span><span style="color:var(--red);font-weight:600">−${F(d.mt||d.montant||0)}</span></div>`).join('')}
+    </div>
+  </div>
+  <div class="bilan-section" style="margin-top:0">
+    <div class="bilan-title ${flux>=0?'':'background:var(--red)'}" style="${flux>=0?'background:var(--teal)':''}">
+      <span>💧 FLUX NET DE TRÉSORERIE</span>
+      <span>${flux>=0?'+':''}${F(flux)}</span>
+    </div>
+  </div>`;
+}
+
+function exportJournal(){
+  const bid = getBid();
+  const curM = D().slice(0,7);
+  const sep = ',';
+  const q = s => '"' + String(s||'').replace(/"/g,'""') + '"';
+  const rows = [['Date','Heure','N Cpte','Libelle','Ref','Debit','Credit']];
+  getVentesBoutique(bid).filter(v=>v.date&&v.date.startsWith(curM)).forEach(v=>{
+    const lignes=v.lignes||[{aid:v.aid}];
+    const desc=lignes.map(l=>(ga(l.aid)||{}).nom||'Vente').join(' + ');
+    if(v.statut==='Paye'){
+      rows.push([v.date,v.heure||'','531','Caisse - '+desc,'V'+v.id,v.mt,0]);
+      rows.push([v.date,v.heure||'','701','Ventes - '+desc,'V'+v.id,0,v.mt]);
+    }
+  });
+  getAchatsBoutique(bid).filter(a=>a.date&&a.date.startsWith(curM)).forEach(a=>{
+    const art=ga(a.aid);
+    rows.push([a.date,'','601','Achats - '+(art?art.nom:'?'),'A'+a.id,a.mt,0]);
+    rows.push([a.date,'','401','Fournisseur - '+(gf(a.fid)?gf(a.fid).nom:'?'),'A'+a.id,0,a.mt]);
+  });
+  getDepensesBoutique(bid).filter(d=>d.date&&d.date.startsWith(curM)).forEach(d=>{
+    rows.push([d.date,'','627','Depense - '+(d.cat||d.four||'?'),'D'+d.id,d.mt,0]);
+    rows.push([d.date,'','531','Sortie caisse','D'+d.id,0,d.mt]);
+  });
+  const csv = rows.map(r=>r.map(q).join(sep)).join('\n');
+  const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download='journal_'+curM+'.csv'; a.click();
+  URL.revokeObjectURL(url);
+  toast('Journal exporte');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MODULE 3 — RH & SALAIRES
+// ═══════════════════════════════════════════════════════════════════
+let rhTab = 'employes';
+function rRH(){
+  if(!S.employes) S.employes=[];
+  if(!S.salaires) S.salaires=[];
+  if(!S.avances_employe) S.avances_employe=[];
+  if(!S.conges) S.conges=[];
+  const tabs=[{k:'employes',l:'👥 Employés'},{k:'salaires',l:'💰 Paie'},{k:'avances',l:'💳 Avances'},{k:'conges',l:'🏖️ Congés'},{k:'restrictions',l:'🔒 Restrictions'}];
+  document.getElementById('content').innerHTML=`
+  <div class="comptab">
+    ${tabs.map(t=>`<button class="${rhTab===t.k?'active':''}" onclick="rhTab='${t.k}';rRH()">${t.l}</button>`).join('')}
+  </div>
+  <div id="rh-body"></div>`;
+  if(rhTab==='employes') renderEmployes();
+  else if(rhTab==='salaires') renderSalaires();
+  else if(rhTab==='avances') renderAvances();
+  else if(rhTab==='conges') renderConges();
+  else if(rhTab==='restrictions') renderRestrictions();
+}
+
+function renderEmployes(){
+  const emps = S.employes||[];
+  const today = D(); const curM = today.slice(0,7);
+  document.getElementById('rh-body').innerHTML=`
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <span style="font-size:13px;color:var(--text2)"><b>${emps.length}</b> employé(s)</span>
+    <button class="btn btn-primary" onclick="ouvrirModalNouvelEmploye()">+ Nouvel employé</button>
+  </div>
+  ${emps.length===0?'<div class="empty"><p>Aucun employé enregistré</p><small>Ajoutez votre premier employé</small></div>':`
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
+    ${emps.map(e=>{
+      const salBase = e.salaire||0;
+      const dejaPaye = (S.salaires||[]).filter(s=>s.emp_id===e.id&&s.date&&s.date.startsWith(curM)).reduce((t,s)=>t+s.montant,0);
+      const resteAPayer = Math.max(0, salBase-dejaPaye);
+      const avDuMois = (S.avances_employe||[]).filter(a=>a.emp_id===e.id&&a.date&&a.date.startsWith(curM)).reduce((t,a)=>t+a.montant,0);
+      const congesEnCours = (S.conges||[]).filter(cg=>cg.emp_id===e.id&&cg.date_fin>=today&&cg.date_debut<=today).length;
+      return `<div class="rh-card" onclick="ouvrirFicheEmploye(${e.id})">
+        <div class="rh-avatar">${e.emoji||'👤'}</div>
+        <div class="rh-info">
+          <div class="rh-name">${e.nom}</div>
+          <div class="rh-role">${e.poste||'Employé'} · Depuis ${e.date_embauche||'?'}</div>
+          <div style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">
+            ${congesEnCours?'<span class="badge" style="background:var(--amber-bg);color:var(--amber);font-size:9px">🏖️ En congé</span>':''}
+            ${avDuMois>0?'<span class="badge" style="background:var(--purple-bg);color:var(--purple);font-size:9px">💳 Avance: '+F(avDuMois)+'</span>':''}
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="rh-salary">${F(salBase)}</div>
+          <div style="font-size:10px;color:${resteAPayer>0?'var(--amber)':'var(--green)'};">${resteAPayer>0?'Reste: '+F(resteAPayer):'✅ Payé'}</div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`}`;
+}
+
+function renderSalaires(){
+  const today = D(); const curM = today.slice(0,7);
+  const sals = (S.salaires||[]).filter(s=>s.date&&s.date.startsWith(curM));
+  const totalPaye = sals.reduce((s,s2)=>s+s2.montant,0);
+  const totalMasse = (S.employes||[]).reduce((s,e)=>s+(e.salaire||0),0);
+  document.getElementById('rh-body').innerHTML=`
+  <div class="g3" style="margin-bottom:16px">
+    <div class="kpi-card"><div class="kpi-label">Masse salariale</div><div class="kpi-val" style="color:var(--navy)">${F(totalMasse)}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Payé ce mois</div><div class="kpi-val" style="color:var(--green)">${F(totalPaye)}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Reste à payer</div><div class="kpi-val" style="color:var(--amber)">${F(Math.max(0,totalMasse-totalPaye))}</div></div>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:12px 16px;background:var(--surface2);font-weight:600;font-size:12px;display:flex;justify-content:space-between">
+      <span>Bulletins — ${new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</span>
+      <button class="btn btn-sm btn-primary" onclick="ouvrirModalSalaire()">+ Paiement</button>
+    </div>
+    ${(S.employes||[]).length===0?'<div style="padding:20px;text-align:center;color:var(--text3)">Aucun employé</div>':`
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Employé</th><th>Salaire base</th><th>Avances</th><th>Net à payer</th><th>Payé</th><th>Statut</th><th></th></tr></thead>
+      <tbody>
+        ${(S.employes||[]).map(e=>{
+          const salBase=e.salaire||0;
+          const avDuMois=(S.avances_employe||[]).filter(a=>a.emp_id===e.id&&a.date&&a.date.startsWith(curM)).reduce((t,a)=>t+a.montant,0);
+          const netAPayer=Math.max(0,salBase-avDuMois);
+          const dejaPaye=sals.filter(s=>s.emp_id===e.id).reduce((t,s)=>t+s.montant,0);
+          const estSolde=dejaPaye>=netAPayer&&netAPayer>0;
+          return `<tr>
+            <td><div style="font-weight:600">${e.emoji||'👤'} ${e.nom}</div><div style="font-size:10px;color:var(--text3)">${e.poste||'Employé'}</div></td>
+            <td>${F(salBase)}</td>
+            <td style="color:var(--purple)">${avDuMois>0?'-'+F(avDuMois):'—'}</td>
+            <td style="font-weight:700">${F(netAPayer)}</td>
+            <td style="color:var(--green)">${dejaPaye>0?F(dejaPaye):'—'}</td>
+            <td>${estSolde?'<span class="badge bg">✅ Soldé</span>':netAPayer===0?'<span class="badge">Pas de salaire</span>':'<span class="badge ba">⏳ En attente</span>'}</td>
+            <td><button class="btn btn-sm btn-success" onclick="ouvrirModalSalaire(${e.id})">Payer</button></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table></div>`}
+  </div>`;
+}
+
+function renderAvances(){
+  const avances = S.avances_employe||[];
+  document.getElementById('rh-body').innerHTML=`
+  <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+    <span style="font-size:13px;color:var(--text2)">Total avances non remboursées : <b>${F(avances.filter(a=>!a.rembourse).reduce((s,a)=>s+a.montant,0))}</b></span>
+    <button class="btn btn-primary" onclick="ouvrirModalAvance()">+ Avance</button>
+  </div>
+  ${avances.length===0?'<div class="empty"><p>Aucune avance enregistrée</p></div>':`
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Date</th><th>Employé</th><th>Montant</th><th>Motif</th><th>Statut</th><th></th></tr></thead>
+    <tbody>
+      ${avances.slice().reverse().map(a=>{
+        const emp=(S.employes||[]).find(e=>e.id==a.emp_id);
+        return `<tr>
+          <td style="font-size:11px">${a.date}</td>
+          <td>${emp?emp.emoji+' '+emp.nom:'?'}</td>
+          <td style="font-weight:600;color:var(--purple)">${F(a.montant)}</td>
+          <td style="font-size:12px">${a.motif||'—'}</td>
+          <td>${a.rembourse?'<span class="badge bg">Remboursé</span>':'<span class="badge ba">En cours</span>'}</td>
+          <td>${!a.rembourse?`<button class="btn btn-sm" onclick="rembourserAvance(${a.id})">✓</button>`:''}</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table></div>`}`;
+}
+
+function renderConges(){
+  const conges = S.conges||[];
+  const today = D();
+  document.getElementById('rh-body').innerHTML=`
+  <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+    <span style="font-size:13px;color:var(--text2)">${conges.filter(cg=>cg.date_debut<=today&&cg.date_fin>=today).length} en congé actuellement</span>
+    <button class="btn btn-primary" onclick="ouvrirModalConge()">+ Congé</button>
+  </div>
+  ${conges.length===0?'<div class="empty"><p>Aucun congé enregistré</p></div>':`
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Employé</th><th>Début</th><th>Fin</th><th>Type</th><th>Jours</th><th>Statut</th></tr></thead>
+    <tbody>
+      ${conges.slice().reverse().map(cg=>{
+        const emp=(S.employes||[]).find(e=>e.id==cg.emp_id);
+        const jours=Math.round((new Date(cg.date_fin)-new Date(cg.date_debut))/86400000)+1;
+        const statut=cg.date_fin<today?'Terminé':cg.date_debut<=today?'En cours':'A venir';
+        return `<tr>
+          <td>${emp?emp.emoji+' '+emp.nom:'?'}</td>
+          <td>${cg.date_debut}</td><td>${cg.date_fin}</td>
+          <td>${cg.type||'Conge annuel'}</td>
+          <td>${jours}j</td>
+          <td><span class="badge ${statut==='En cours'?'bg':statut==='A venir'?'bt':''}">${statut}</span></td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table></div>`}`;
+}
+
+function renderRestrictions(){
+  const allPages=[
+    {k:'dashboard',l:'Tableau de bord'},{k:'transactions',l:'Transactions'},{k:'vente',l:'Ventes'},
+    {k:'services',l:'Services'},{k:'achats',l:'Achats'},{k:'stock',l:'Stock'},
+    {k:'clients',l:'Clients'},{k:'fournisseurs',l:'Fournisseurs'},{k:'depenses',l:'Depenses'},
+    {k:'tresorerie',l:'Tresorerie'},{k:'revenus',l:'Revenus'},{k:'rapports',l:'Rapports'},
+    {k:'dettes',l:'Dettes'},{k:'agenda',l:'Agenda'},{k:'caisse',l:'Caisse'},
+    {k:'stats',l:'Statistiques'},{k:'commandes',l:'Commandes'},{k:'fidelite',l:'Fidelite'},
+    {k:'journal',l:'Journal prive'},{k:'planning',l:'Planning'},{k:'promos',l:'Promotions'},
+    {k:'depots',l:'Depots'},{k:'live',l:'Live ventes'},
+  ];
+  const roles=['caissier','vendeur'];
+  const saved=(S.parametres&&S.parametres.permissions_custom)||{};
+  document.getElementById('rh-body').innerHTML=`
+  <div class="card" style="margin-bottom:12px;background:var(--amber-bg);border-color:var(--amber-light)">
+    <p style="font-size:12px;color:var(--amber)">⚠️ Ces restrictions s'appliquent aux caissiers et vendeurs. L'admin a toujours accès à tout.</p>
+  </div>
+  ${roles.map(role=>{
+    const label=role==='caissier'?'💰 Caissier':'🛒 Vendeur';
+    const currentPages=saved[role]||PERMISSIONS[role].pages;
+    return `<div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <p class="st">${label}</p>
+        <button class="btn btn-sm btn-primary" onclick="sauvegarderRestrictions('${role}')">💾 Sauvegarder</button>
+      </div>
+      <div class="perm-grid" id="perm-${role}">
+        ${allPages.map(p=>{
+          const checked=currentPages.includes(p.k);
+          return `<label class="perm-item ${checked?'on':''}" onclick="this.classList.toggle('on')">
+            <input type="checkbox" name="perm_${role}" value="${p.k}" ${checked?'checked':''} style="pointer-events:none">
+            ${p.l}
+          </label>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('')}`;
+}
+
+function sauvegarderRestrictions(role){
+  const checks=document.querySelectorAll(`input[name="perm_${role}"]:checked`);
+  const pages=Array.from(checks).map(c=>c.value);
+  if(!S.parametres) S.parametres={};
+  if(!S.parametres.permissions_custom) S.parametres.permissions_custom={};
+  S.parametres.permissions_custom[role]=pages;
+  PERMISSIONS[role].pages=pages;
+  saveData();
+  toast('✅ Restrictions '+role+' sauvegardées');
+}
+
+function ouvrirModalNouvelEmploye(id){
+  if(!S.employes) S.employes=[];
+  const emp=id?(S.employes.find(e=>e.id==id)):null;
+  const emojis=['👤','👨‍💼','👩‍💼','👨‍🔧','👩‍🔧','🧑‍💻','👨‍🍳','👩‍🍳'];
+  ouvrirModal((emp?'Modifier':'Nouvel')+" employé",`
+  <div class="form-grid">
+    <div class="form-group"><label>Nom complet</label><input id="emp-nom" class="finput" value="${emp?emp.nom:''}" placeholder="Prenom Nom"></div>
+    <div class="form-group"><label>Poste</label><input id="emp-poste" class="finput" value="${emp?emp.poste||'':''}" placeholder="ex: Vendeur..."></div>
+    <div class="form-group"><label>Telephone</label><input id="emp-tel" class="finput" value="${emp?emp.tel||'':''}" placeholder="90 00 00 00"></div>
+    <div class="form-group"><label>Date d'embauche</label><input id="emp-embauche" class="finput" type="date" value="${emp?emp.date_embauche||D():D()}"></div>
+    <div class="form-group"><label>Salaire mensuel (FCFA)</label><input id="emp-salaire" class="finput" type="number" value="${emp?emp.salaire||0:0}" min="0"></div>
+    <div class="form-group"><label>Role dans l'app</label>
+      <select id="emp-role" class="finput">
+        <option value="vendeur" ${emp&&emp.app_role==='vendeur'?'selected':''}>Vendeur</option>
+        <option value="caissier" ${emp&&emp.app_role==='caissier'?'selected':''}>Caissier</option>
+      </select>
+    </div>
+    <div class="form-group" style="grid-column:1/-1"><label>Avatar</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${emojis.map(em=>`<button onclick="document.getElementById('emp-emoji').value='${em}';document.querySelectorAll('.emoji-btn').forEach(b=>b.style.background='');this.style.background='var(--navy-bg)'" class="emoji-btn" style="font-size:22px;background:${emp&&emp.emoji===em?'var(--navy-bg)':'var(--surface2)'};border:1px solid var(--border);border-radius:8px;padding:4px 8px;cursor:pointer">${em}</button>`).join('')}
+        <input id="emp-emoji" type="hidden" value="${emp?emp.emoji||'👤':'👤'}">
+      </div>
+    </div>
+    <div class="form-group" style="grid-column:1/-1"><label>Notes</label>
+      <textarea id="emp-notes" class="finput" rows="2" placeholder="Informations...">${emp?emp.notes||'':''}</textarea>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+    ${emp?`<button class="btn btn-danger btn-sm" onclick="supprimerEmploye(${emp.id})">🗑️ Supprimer</button>`:''}
+    <button class="btn" onclick="closeModal()">Annuler</button>
+    <button class="btn btn-primary" onclick="sauvegarderEmploye(${emp?emp.id:'null'})">✅ Sauvegarder</button>
+  </div>`);
+}
+
+function ouvrirFicheEmploye(id){ ouvrirModalNouvelEmploye(id); }
+
+function sauvegarderEmploye(id){
+  const nom=(document.getElementById('emp-nom').value||'').trim();
+  if(!nom){toast('Nom requis');return;}
+  if(!S.employes) S.employes=[];
+  const data={nom,poste:document.getElementById('emp-poste').value.trim(),tel:document.getElementById('emp-tel').value.trim(),date_embauche:document.getElementById('emp-embauche').value,salaire:Number(document.getElementById('emp-salaire').value)||0,app_role:document.getElementById('emp-role').value,emoji:document.getElementById('emp-emoji').value||'👤',notes:document.getElementById('emp-notes').value.trim()};
+  if(id&&id!=='null'){const emp=S.employes.find(e=>e.id==id);if(emp)Object.assign(emp,data);}
+  else{data.id=genId();S.employes.push(data);}
+  saveData();closeModal();toast('✅ Employé sauvegardé');rhTab='employes';rRH();
+}
+
+function supprimerEmploye(id){
+  if(!confirm('Supprimer cet employé ?'))return;
+  S.employes=(S.employes||[]).filter(e=>e.id!=id);
+  saveData();closeModal();toast('Employé supprimé');rRH();
+}
+
+function ouvrirModalSalaire(empId){
+  const emps=S.employes||[];
+  if(emps.length===0){toast('Aucun employé');return;}
+  const today=D();const curM=today.slice(0,7);
+  ouvrirModal('💰 Paiement de salaire',`
+  <div class="form-grid">
+    <div class="form-group"><label>Employé</label>
+      <select id="sal-emp" class="finput" onchange="majMontantSalaire()">
+        ${emps.map(e=>{const base=e.salaire||0;const av=(S.avances_employe||[]).filter(a=>a.emp_id===e.id&&a.date&&a.date.startsWith(curM)).reduce((t,a)=>t+a.montant,0);const net=Math.max(0,base-av);return `<option value="${e.id}" ${empId==e.id?'selected':''}>${e.emoji||'👤'} ${e.nom} — Net: ${F(net)}</option>`;}).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Date</label><input id="sal-date" class="finput" type="date" value="${today}"></div>
+    <div class="form-group"><label>Montant (FCFA)</label><input id="sal-montant" class="finput" type="number" min="0"></div>
+    <div class="form-group"><label>Compte débité</label>
+      <select id="sal-compte" class="finput">${(S.comptes||[]).map(cp=>`<option value="${cp.id}">${cp.nom}</option>`).join('')}</select>
+    </div>
+    <div class="form-group" style="grid-column:1/-1"><label>Note</label><input id="sal-note" class="finput" placeholder="ex: Salaire juin 2026"></div>
+  </div>
+  <div style="text-align:right;margin-top:16px">
+    <button class="btn" onclick="closeModal()">Annuler</button>
+    <button class="btn btn-success" style="margin-left:8px" onclick="validerSalaire()">✅ Valider</button>
+  </div>`);
+  setTimeout(()=>majMontantSalaire(),100);
+}
+
+function majMontantSalaire(){
+  const empId=Number((document.getElementById('sal-emp')||{}).value);
+  const emp=(S.employes||[]).find(e=>e.id===empId);
+  if(!emp)return;
+  const curM=D().slice(0,7);
+  const av=(S.avances_employe||[]).filter(a=>a.emp_id===empId&&a.date&&a.date.startsWith(curM)).reduce((t,a)=>t+a.montant,0);
+  const el=document.getElementById('sal-montant');
+  if(el)el.value=Math.max(0,(emp.salaire||0)-av);
+}
+
+function validerSalaire(){
+  const empId=Number(document.getElementById('sal-emp').value);
+  const montant=Number(document.getElementById('sal-montant').value)||0;
+  const date=document.getElementById('sal-date').value;
+  const cid=Number(document.getElementById('sal-compte').value)||null;
+  const note=document.getElementById('sal-note').value.trim();
+  if(!empId||montant<=0){toast('Verifiez les champs');return;}
+  if(!S.salaires)S.salaires=[];
+  const emp=(S.employes||[]).find(e=>e.id===empId);
+  S.salaires.push({id:genId(),emp_id:empId,montant,date,cid,note,heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});
+  if(cid)try{debiterCompte(cid,montant);}catch(e){}
+  saveData();closeModal();
+  toast('✅ Salaire de '+F(montant)+' versé à '+(emp?emp.nom:'?'));
+  rRH();
+}
+
+function ouvrirModalAvance(){
+  const emps=S.employes||[];
+  if(emps.length===0){toast('Aucun employé');return;}
+  ouvrirModal('💳 Avance sur salaire',`
+  <div class="form-grid">
+    <div class="form-group"><label>Employé</label>
+      <select id="av-emp" class="finput">${emps.map(e=>`<option value="${e.id}">${e.emoji||'👤'} ${e.nom}</option>`).join('')}</select>
+    </div>
+    <div class="form-group"><label>Date</label><input id="av-date" class="finput" type="date" value="${D()}"></div>
+    <div class="form-group"><label>Montant (FCFA)</label><input id="av-montant" class="finput" type="number" min="0" placeholder="0"></div>
+    <div class="form-group"><label>Motif</label><input id="av-motif" class="finput" placeholder="Raison..."></div>
+  </div>
+  <div style="text-align:right;margin-top:16px">
+    <button class="btn" onclick="closeModal()">Annuler</button>
+    <button class="btn btn-primary" style="margin-left:8px" onclick="validerAvance()">✅ Enregistrer</button>
+  </div>`);
+}
+
+function validerAvance(){
+  const empId=Number(document.getElementById('av-emp').value);
+  const montant=Number(document.getElementById('av-montant').value)||0;
+  const date=document.getElementById('av-date').value;
+  const motif=document.getElementById('av-motif').value.trim();
+  if(!empId||montant<=0){toast('Verifiez les champs');return;}
+  if(!S.avances_employe)S.avances_employe=[];
+  S.avances_employe.push({id:genId(),emp_id:empId,montant,date,motif,rembourse:false});
+  saveData();closeModal();
+  const emp=(S.employes||[]).find(e=>e.id===empId);
+  toast('✅ Avance de '+F(montant)+' pour '+(emp?emp.nom:'?'));
+  rRH();
+}
+
+function rembourserAvance(id){
+  const av=(S.avances_employe||[]).find(a=>a.id==id);
+  if(av){av.rembourse=true;saveData();toast('✅ Avance remboursée');rRH();}
+}
+
+function ouvrirModalConge(){
+  const emps=S.employes||[];
+  if(emps.length===0){toast('Aucun employé');return;}
+  ouvrirModal('🏖️ Enregistrer un congé',`
+  <div class="form-grid">
+    <div class="form-group"><label>Employé</label>
+      <select id="cg-emp" class="finput">${emps.map(e=>`<option value="${e.id}">${e.emoji||'👤'} ${e.nom}</option>`).join('')}</select>
+    </div>
+    <div class="form-group"><label>Type</label>
+      <select id="cg-type" class="finput"><option>Conge annuel</option><option>Conge maladie</option><option>Conge maternite</option><option>Conge sans solde</option><option>Autre</option></select>
+    </div>
+    <div class="form-group"><label>Début</label><input id="cg-debut" class="finput" type="date" value="${D()}"></div>
+    <div class="form-group"><label>Fin</label><input id="cg-fin" class="finput" type="date" value="${D()}"></div>
+    <div class="form-group" style="grid-column:1/-1"><label>Note</label><input id="cg-note" class="finput" placeholder="Details..."></div>
+  </div>
+  <div style="text-align:right;margin-top:16px">
+    <button class="btn" onclick="closeModal()">Annuler</button>
+    <button class="btn btn-primary" style="margin-left:8px" onclick="validerConge()">✅ Enregistrer</button>
+  </div>`);
+}
+
+function validerConge(){
+  const empId=Number(document.getElementById('cg-emp').value);
+  const type=document.getElementById('cg-type').value;
+  const debut=document.getElementById('cg-debut').value;
+  const fin=document.getElementById('cg-fin').value;
+  const note=document.getElementById('cg-note').value.trim();
+  if(!empId||!debut||!fin||debut>fin){toast('Verifiez les dates');return;}
+  if(!S.conges)S.conges=[];
+  S.conges.push({id:genId(),emp_id:empId,type,date_debut:debut,date_fin:fin,note});
+  saveData();closeModal();
+  const emp=(S.employes||[]).find(e=>e.id===empId);
+  toast('✅ Conge pour '+(emp?emp.nom:'?'));
+  rRH();
+}
+
+function rFourniAvance(){
+  const tabs=[{k:'overview',l:'📊 Vue d\'ensemble'},{k:'historique',l:'📋 Historique commandes'},{k:'evaluation',l:'⭐ Évaluations'},{k:'delais',l:'⏱️ Délais & Paiements'}];
+  document.getElementById('content').innerHTML=`
+  <div class="comptab">
+    ${tabs.map(t=>`<button class="${fourniTab===t.k?'active':''}" onclick="fourniTab='${t.k}';rFourniAvance()">${t.l}</button>`).join('')}
+  </div>
+  <div id="fourni-body"></div>`;
+  if(fourniTab==='overview') renderFourniOverview();
+  else if(fourniTab==='historique') renderFourniHistorique();
+  else if(fourniTab==='evaluation') renderFourniEval();
+  else if(fourniTab==='delais') renderFourniDelais();
+}
+
+function renderFourniOverview(){
+  const bid = getBid();
+  const fournisseurs = S.fournisseurs||[];
+  const achats = getAchatsBoutique(bid);
+  const today = D(); const curY = today.slice(0,4);
+
+  const fourniStats = fournisseurs.map(f=>{
+    const ach = achats.filter(a=>a.fid==f.id);
+    const achYear = ach.filter(a=>a.date&&a.date.startsWith(curY));
+    const total = ach.reduce((s,a)=>s+a.mt,0);
+    const totalYear = achYear.reduce((s,a)=>s+a.mt,0);
+    const dernier = ach.sort((a,b)=>b.date.localeCompare(a.date))[0];
+    const evals = (S.fourni_evals||[]).filter(e=>e.fid==f.id);
+    const score = evals.length ? Math.round(evals.reduce((s,e)=>s+e.score,0)/evals.length*10)/10 : null;
+    const dettes = (S.dettesAchats||[]).filter(d=>d.fid==f.id&&d.statut!=='Soldé').reduce((s,d)=>s+(d.montant||0),0);
+    return {...f, total, totalYear, dernier, score, dettes, nbCommandes:ach.length};
+  }).sort((a,b)=>b.totalYear-a.totalYear);
+
+  const totalAchatsBid = achats.filter(a=>a.date&&a.date.startsWith(curY)).reduce((s,a)=>s+a.mt,0);
+
+  document.getElementById('fourni-body').innerHTML=`
+  ${fourniStats.length===0?'<div class="empty"><p>Aucun fournisseur</p></div>':`
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Fournisseur</th><th>Commandes</th><th>Total cette année</th><th>Part du budget</th><th>Dettes</th><th>Score</th><th>Dernier achat</th></tr></thead>
+    <tbody>
+      ${fourniStats.map(f=>{
+        const pct = totalAchatsBid>0 ? Math.round(f.totalYear/totalAchatsBid*100) : 0;
+        const scoreColor = f.score===null?'var(--text3)':f.score>=4?'var(--green)':f.score>=3?'var(--amber)':'var(--red)';
+        return `<tr>
+          <td><div style="font-weight:600">${f.nom}</div><div style="font-size:10px;color:var(--text3)">${f.tel||f.contact||'—'}</div></td>
+          <td>${f.nbCommandes}</td>
+          <td style="font-weight:600">${F(f.totalYear)}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="score-bar" style="width:80px"><div class="score-fill" style="width:${pct}%;background:var(--navy)"></div></div>
+              <span style="font-size:11px">${pct}%</span>
+            </div>
+          </td>
+          <td style="color:${f.dettes>0?'var(--red)':'var(--green)'};${f.dettes>0?'font-weight:600':''}">${f.dettes>0?F(f.dettes):'✅'}</td>
+          <td style="color:${scoreColor};font-weight:700">${f.score!==null?'★ '+f.score:'—'}</td>
+          <td style="font-size:11px;color:var(--text3)">${f.dernier?f.dernier.date:'Jamais'}</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table></div>`}`;
+}
+
+function renderFourniHistorique(){
+  const bid = getBid();
+  const achats = getAchatsBoutique(bid).slice().reverse();
+  document.getElementById('fourni-body').innerHTML=`
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Date</th><th>Fournisseur</th><th>Article</th><th>Qté</th><th>PU</th><th>Total</th><th>Mode</th><th>Statut</th></tr></thead>
+    <tbody>
+      ${achats.length===0?'<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text3)">Aucun achat</td></tr>':
+        achats.map(a=>{
+          const f=gf(a.fid); const art=ga(a.aid);
+          return `<tr>
+            <td style="font-size:11px">${a.date}</td>
+            <td>${f?f.nom:'?'}</td>
+            <td class="tdm">${art?art.nom:'?'}</td>
+            <td>${a.qte}</td>
+            <td>${F(a.pu)}</td>
+            <td style="font-weight:600">${F(a.mt)}</td>
+            <td><span class="badge bt" style="font-size:10px">${a.mode||'—'}</span></td>
+            <td>${a.statut==='À payer'?'<span class="badge ba">À payer</span>':'<span class="badge bg">Payé</span>'}</td>
+          </tr>`;
+        }).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+function renderFourniEval(){
+  const fournisseurs = S.fournisseurs||[];
+  const evals = S.fourni_evals||[];
+  document.getElementById('fourni-body').innerHTML=`
+  <div style="margin-bottom:12px;text-align:right">
+    <button class="btn btn-primary" onclick="ouvrirModalEvalFourn()">⭐ Nouvelle évaluation</button>
+  </div>
+  ${fournisseurs.length===0?'<div class="empty"><p>Aucun fournisseur</p></div>':`
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
+    ${fournisseurs.map(f=>{
+      const fevs = evals.filter(e=>e.fid==f.id);
+      const moy = fevs.length ? (fevs.reduce((s,e)=>s+e.score,0)/fevs.length).toFixed(1) : null;
+      const criteres = ['Qualité produits','Délais livraison','Prix compétitif','Relation commerciale'];
+      return `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div>
+            <div style="font-weight:700">${f.nom}</div>
+            <div style="font-size:11px;color:var(--text3)">${fevs.length} évaluation(s)</div>
+          </div>
+          <div style="font-size:24px;font-weight:800;color:${moy===null?'var(--text3)':moy>=4?'var(--green)':moy>=3?'var(--amber)':'var(--red)'}">${moy!==null?moy:'—'}</div>
+        </div>
+        ${moy!==null?`<div style="display:flex;gap:2px;margin-bottom:8px">
+          ${[1,2,3,4,5].map(i=>`<span style="font-size:16px;color:${i<=Math.round(moy)?'#f5c060':'var(--surface3)'}">★</span>`).join('')}
+        </div>`:''}
+        ${fevs.slice(-1).map(ev=>`
+          <div style="font-size:11px;color:var(--text3);font-style:italic;margin-top:4px">${ev.commentaire||''}</div>
+        `).join('')}
+        <button class="btn btn-sm" style="margin-top:8px;width:100%" onclick="ouvrirModalEvalFourn(${f.id})">+ Évaluer</button>
+      </div>`;
+    }).join('')}
+  </div>`}`;
+}
+
+function renderFourniDelais(){
+  const bid = getBid();
+  const today = D();
+  const dettes = (S.dettesAchats||[]).filter(d=>d.statut!=='Soldé');
+  const achats = getAchatsBoutique(bid).filter(a=>a.statut==='À payer');
+  const totalDu = dettes.reduce((s,d)=>s+(d.montant||0),0);
+  const enRetard = dettes.filter(d=>d.echeance&&d.echeance<today);
+  const totalRetard = enRetard.reduce((s,d)=>s+(d.montant||0),0);
+
+  document.getElementById('fourni-body').innerHTML=`
+  <div class="g3" style="margin-bottom:16px">
+    <div class="kpi-card"><div class="kpi-label">Total dû aux fournisseurs</div><div class="kpi-val" style="color:var(--red)">${F(totalDu)}</div></div>
+    <div class="kpi-card"><div class="kpi-label">En retard de paiement</div><div class="kpi-val" style="color:var(--amber)">${F(totalRetard)}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Nombre de factures</div><div class="kpi-val" style="color:var(--navy)">${dettes.length}</div></div>
+  </div>
+  ${dettes.length===0?'<div class="empty"><p>Aucune dette fournisseur en cours ✅</p></div>':`
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Fournisseur</th><th>Montant dû</th><th>Échéance</th><th>Jours restants</th><th>Statut</th></tr></thead>
+    <tbody>
+      ${dettes.sort((a,b)=>(a.echeance||'9999').localeCompare(b.echeance||'9999')).map(d=>{
+        const f=(S.fournisseurs||[]).find(f=>f.id==d.fid)||(S.fournisseurs||[]).find(f=>f.nom===d.fourn)||{nom:d.fourn||'?'};
+        const jours = d.echeance ? Math.round((new Date(d.echeance)-new Date(today))/86400000) : null;
+        const retard = jours!==null&&jours<0;
+        return `<tr style="${retard?'background:var(--red-bg)':''}">
+          <td style="font-weight:600">${f.nom}</td>
+          <td style="font-weight:700;color:var(--red)">${F(d.montant||0)}</td>
+          <td>${d.echeance||'—'}</td>
+          <td style="color:${jours===null?'var(--text3)':retard?'var(--red)':jours<=7?'var(--amber)':'var(--green)'}">
+            ${jours===null?'—':retard?Math.abs(jours)+'j de retard':jours===0?'Aujourd\'hui':jours+'j restants'}
+          </td>
+          <td>${retard?'<span class="badge br">⚠️ Retard</span>':jours!==null&&jours<=7?'<span class="badge ba">⚡ Urgent</span>':'<span class="badge bt">À venir</span>'}</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table></div>`}`;
+}
+
+function ouvrirModalEvalFourn(fid){
+  const fournisseurs = S.fournisseurs||[];
+  if(fournisseurs.length===0){toast('⚠️ Aucun fournisseur');return;}
+  ouvrirModal('⭐ Évaluer un fournisseur',`
+  <div class="form-grid">
+    <div class="form-group" style="grid-column:1/-1">
+      <label>Fournisseur</label>
+      <select id="eval-fid" class="finput">
+        ${fournisseurs.map(f=>`<option value="${f.id}" ${fid==f.id?'selected':''}>${f.nom}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group" style="grid-column:1/-1">
+      <label>Note globale</label>
+      <div style="display:flex;gap:8px;margin-top:4px" id="star-rating">
+        ${[1,2,3,4,5].map(i=>`<span onclick="setEvalScore(${i})" data-score="${i}" style="font-size:28px;cursor:pointer;color:var(--border2);transition:color .15s">★</span>`).join('')}
+      </div>
+      <input type="hidden" id="eval-score" value="0">
+    </div>
+    <div class="form-group" style="grid-column:1/-1">
+      <label>Commentaire</label>
+      <textarea id="eval-comment" class="finput" rows="3" placeholder="Qualité, ponctualité, prix..."></textarea>
+    </div>
+  </div>
+  <div style="text-align:right;margin-top:16px">
+    <button class="btn" onclick="closeModal()">Annuler</button>
+    <button class="btn btn-primary" style="margin-left:8px" onclick="validerEvalFourn()">✅ Enregistrer</button>
+  </div>`);
+}
+
+function setEvalScore(n){
+  document.getElementById('eval-score').value=n;
+  document.querySelectorAll('#star-rating span').forEach((s,i)=>{
+    s.style.color = i<n ? '#f5c060' : 'var(--border2)';
+  });
+}
+
+function validerEvalFourn(){
+  const fid=Number(document.getElementById('eval-fid').value);
+  const score=Number(document.getElementById('eval-score').value);
+  const commentaire=document.getElementById('eval-comment').value.trim();
+  if(!fid||score===0){toast('⚠️ Choisissez un fournisseur et une note');return;}
+  if(!S.fourni_evals) S.fourni_evals=[];
+  S.fourni_evals.push({id:genId(),fid,score,commentaire,date:D()});
+  saveData(); closeModal();
+  toast('✅ Évaluation enregistrée'); fourniTab='evaluation'; rFourniAvance();
 }
 
 // ─── DIAGNOSTIC LOGIN ───
