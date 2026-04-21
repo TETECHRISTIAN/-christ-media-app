@@ -631,8 +631,13 @@ body.dark th{background:var(--surface3)}
 
 /* ─── NOTIF ─── */
 .notif-badge{background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;position:absolute;top:-4px;right:-4px}
-.notif-panel{position:fixed;top:60px;right:16px;width:320px;max-height:400px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 8px 40px rgba(0,0,0,.2);z-index:150}
-.notif-item{padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;display:flex;gap:10px;align-items:flex-start}
+.notif-panel{position:fixed;top:60px;right:16px;width:340px;max-height:520px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 12px 48px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.08);z-index:500;animation:notifSlide .15s ease-out}
+@keyframes notifSlide{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.notif-item{padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;display:flex;gap:10px;align-items:center;transition:background .12s}
+.notif-item:hover{background:var(--surface2)}
+.notif-item:last-child{border-bottom:none}
+.notif-item-urgent{background:var(--red-bg)}
+.notif-item-urgent:hover{background:#f8d7d7}
 .notif-item:last-child{border-bottom:none}
 .notif-dot{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:4px}
 
@@ -5931,86 +5936,110 @@ function appliquerTheme(){
 function getNotifs(){
   const notifs=[];
   const today=D();
+  const curM=today.slice(0,7);
+  const bid=getBid();
+  const stockB=getStockBoutique(bid);
+  const ventesB=getVentesBoutique(bid);
+  const achatsB=getAchatsBoutique(bid);
 
-  // Stock bas / ruptures
-  S.stock.forEach(a=>{
-    if(sa(a)===0){
-      notifs.push({icon:'🔴',msg:`Rupture : ${a.nom}`,type:'stock',urgent:true});
-    } else if(sa(a)<=a.seuil){
-      notifs.push({icon:'⚠️',msg:`Stock bas : ${a.nom} (${sa(a)} restants)`,type:'stock',urgent:false});
+  // ── STOCK BAS / RUPTURES ──
+  stockB.forEach(a=>{
+    const dispo=sa(a);
+    if(dispo===0){
+      notifs.push({icon:'🔴',msg:`Rupture : ${a.nom}`,sub:'Stock épuisé',type:'stock',urgent:true,action:"nav(document.querySelector('[data-page=stock]'),'stock')"});
+    } else if(a.seuil>0 && dispo<=a.seuil){
+      notifs.push({icon:'⚠️',msg:`Stock bas : ${a.nom}`,sub:`${dispo} restant(s) — seuil ${a.seuil}`,type:'stock',urgent:false,action:"nav(document.querySelector('[data-page=stock]'),'stock')"});
     }
   });
 
-  // Ventes à percevoir
-  const aPercevoir=S.ventes.filter(v=>v.statut==='Non payé');
-  if(aPercevoir.length>0){
-    const total=aPercevoir.reduce((s,v)=>s+v.mt,0);
-    notifs.push({icon:'💰',msg:`${aPercevoir.length} vente(s) à percevoir : ${F(total)}`,type:'vente'});
+  // ── DETTES CLIENTS À RÉCLAMER ──
+  const ventesCredit=ventesB.filter(v=>v.statut==='Non payé');
+  if(ventesCredit.length>0){
+    const total=ventesCredit.reduce((s,v)=>s+v.mt,0);
+    notifs.push({icon:'💰',msg:`${ventesCredit.length} client(s) doivent payer`,sub:`Total à récupérer : ${F(total)}`,type:'client',urgent:total>50000,action:"nav(document.querySelector('[data-page=dettes]'),'dettes')"});
   }
-
-  // Achats à payer
-  const aPayerAchats=S.achats.filter(a=>a.statut==='À payer');
-  if(aPayerAchats.length>0){
-    const total=aPayerAchats.reduce((s,a)=>s+a.mt,0);
-    notifs.push({icon:'📦',msg:`${aPayerAchats.length} achat(s) à payer : ${F(total)}`,type:'achat'});
-  }
-
-  // Agenda en retard
-  if(S.agenda){
-    const retard=S.agenda.filter(a=>!a.fait&&a.date<today);
-    if(retard.length>0){
-      notifs.push({icon:'🚨',msg:`${retard.length} opération(s) en retard dans l'agenda`,type:'agenda',urgent:true});
-    }
-    // Agenda aujourd'hui
-    const aujd=S.agenda.filter(a=>!a.fait&&a.date===today);
-    aujd.forEach(op=>{
-      notifs.push({icon:'📅',msg:`Aujourd'hui : ${op.titre}${op.montant?` — ${F(op.montant)}`:''}`,type:'agenda',urgent:false});
+  // Dettes clients individuelles urgentes (>30 jours)
+  if(S.dettesPerso){
+    const vieilles=S.dettesPerso.filter(d=>d.statut!=='Soldé'&&d.echeance&&d.echeance<today);
+    vieilles.forEach(d=>{
+      const jours=Math.ceil((new Date()-new Date(d.echeance))/864e5);
+      notifs.push({icon:'🚨',msg:`Créance en retard : ${d.personne}`,sub:`${F(d.montant-(d.rembourse||0))} — ${jours}j de retard`,type:'client',urgent:true,action:"nav(document.querySelector('[data-page=dettes]'),'dettes')"});
+    });
+    const proches=S.dettesPerso.filter(d=>d.statut!=='Soldé'&&d.echeance&&d.echeance>=today&&Math.ceil((new Date(d.echeance)-new Date())/864e5)<=3);
+    proches.forEach(d=>{
+      const diff=Math.ceil((new Date(d.echeance)-new Date())/864e5);
+      notifs.push({icon:'⏰',msg:`Échéance proche : ${d.personne}`,sub:`${F(d.montant-(d.rembourse||0))} — dans ${diff}j`,type:'client',urgent:diff===0,action:"nav(document.querySelector('[data-page=dettes]'),'dettes')"});
     });
   }
 
-  // Dettes perso échéances proches
-  if(S.dettesPerso){
-    S.dettesPerso.filter(d=>d.statut!=='Soldé'&&d.echeance).forEach(d=>{
-      const diff=Math.ceil((new Date(d.echeance)-new Date())/864e5);
-      if(diff<0){
-        notifs.push({icon:'⏰',msg:`Échéance dépassée : ${d.typeDette==='emprunter'?'Remboursement':'Récupération'} — ${d.personne}`,type:'dette',urgent:true});
-      } else if(diff<=3){
-        notifs.push({icon:'⏰',msg:`Échéance dans ${diff}j : ${d.personne} — ${F(d.montant-(d.rembourse||0))} restants`,type:'dette',urgent:diff===0});
+  // ── DETTES FOURNISSEURS À PAYER ──
+  const achatsAPayer=achatsB.filter(a=>a.statut==='À payer');
+  if(achatsAPayer.length>0){
+    const total=achatsAPayer.reduce((s,a)=>s+a.mt,0);
+    notifs.push({icon:'📦',msg:`${achatsAPayer.length} achat(s) à régler`,sub:`Total dû : ${F(total)}`,type:'fourn',urgent:total>100000,action:"nav(document.querySelector('[data-page=achats]'),'achats')"});
+  }
+  if(S.dettesAchats){
+    const retard=S.dettesAchats.filter(d=>d.statut!=='Soldé'&&d.echeance&&d.echeance<today);
+    retard.forEach(d=>{
+      const jours=Math.ceil((new Date()-new Date(d.echeance))/864e5);
+      const f=(S.fournisseurs||[]).find(f=>f.id==d.fid);
+      notifs.push({icon:'🚨',msg:`Facture fournisseur en retard`,sub:`${f?f.nom:'?'} — ${F(d.montant)} — ${jours}j`,type:'fourn',urgent:true,action:"nav(document.querySelector('[data-page=fourni_avance]'),'fourni_avance')"});
+    });
+  }
+
+  // ── SALAIRES À VERSER ──
+  if(S.employes&&S.employes.length>0){
+    const nonPayes=S.employes.filter(e=>{
+      if(!e.salaire||e.salaire===0) return false;
+      const dejaPaye=(S.salaires||[]).filter(s=>s.emp_id===e.id&&s.date&&s.date.startsWith(curM)).reduce((t,s)=>t+s.montant,0);
+      return dejaPaye<e.salaire;
+    });
+    if(nonPayes.length>0){
+      const totalDu=nonPayes.reduce((s,e)=>{
+        const paye=(S.salaires||[]).filter(s=>s.emp_id===e.id&&s.date&&s.date.startsWith(curM)).reduce((t,s)=>t+s.montant,0);
+        return s+(e.salaire-paye);
+      },0);
+      notifs.push({icon:'👥',msg:`${nonPayes.length} salaire(s) en attente`,sub:`Mois en cours — ${F(totalDu)} à verser`,type:'rh',urgent:false,action:"nav(document.querySelector('[data-page=rh]'),'rh')"});
+    }
+  }
+
+  // ── OBJECTIFS NON ATTEINTS ──
+  if(S.objectifs&&S.objectifs.length>0){
+    const curY=today.slice(0,4);
+    S.objectifs.forEach(obj=>{
+      const caReel=ventesB.filter(v=>v.statut==='Payé'&&v.date&&v.date.startsWith(curM)).reduce((s,v)=>s+v.mt,0);
+      const cible=obj.caMensuel||obj.ca_mensuel||0;
+      if(cible>0){
+        const pct=Math.round(caReel/cible*100);
+        const joursRestants=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate()-new Date().getDate();
+        if(pct<70&&joursRestants<=10){
+          notifs.push({icon:'🎯',msg:`Objectif mensuel en danger`,sub:`${pct}% atteint — ${joursRestants}j restants`,type:'objectif',urgent:pct<50,action:"nav(document.querySelector('[data-page=objectifs]'),'objectifs')"});
+        } else if(pct>=100){
+          notifs.push({icon:'🏆',msg:`Objectif mensuel atteint !`,sub:`${F(caReel)} / ${F(cible)} — ${pct}%`,type:'objectif',urgent:false,action:"nav(document.querySelector('[data-page=objectifs]'),'objectifs')"});
+        }
       }
     });
   }
 
-  // Limites dépassées
+  // ── AGENDA / PLANNINGS ──
+  if(S.agenda){
+    const retard=S.agenda.filter(a=>!a.fait&&a.date<today);
+    if(retard.length>0) notifs.push({icon:'📅',msg:`${retard.length} tâche(s) en retard`,sub:'Agenda',type:'agenda',urgent:true,action:"nav(document.querySelector('[data-page=agenda]'),'agenda')"});
+    S.agenda.filter(a=>!a.fait&&a.date===today).forEach(op=>{
+      notifs.push({icon:'📅',msg:`Aujourd'hui : ${op.titre}`,sub:op.montant?F(op.montant):'',type:'agenda',urgent:false,action:"nav(document.querySelector('[data-page=agenda]'),'agenda')"});
+    });
+  }
+
+  // ── LIMITES DÉPASSÉES ──
   if(S.limites){
-    const curM=new Date().toISOString().slice(0,7);
     S.limites.forEach(l=>{
       const dep=S.depenses.filter(d=>d.date&&d.date.startsWith(curM)&&(l.cat==='Toutes'||d.cat===l.cat)).reduce((s,d)=>s+d.mt,0);
       const pct=Math.round(dep/l.montant*100);
-      if(pct>=100) notifs.push({icon:'🚨',msg:`Limite "${l.cat}" dépassée (${pct}%)`,type:'limite',urgent:true});
-      else if(pct>=80) notifs.push({icon:'⚠️',msg:`Limite "${l.cat}" à ${pct}%`,type:'limite',urgent:false});
+      if(pct>=100) notifs.push({icon:'🚨',msg:`Limite "${l.cat}" dépassée`,sub:`${pct}% du budget`,type:'limite',urgent:true,action:"nav(document.querySelector('[data-page=limites]'),'limites')"});
+      else if(pct>=80) notifs.push({icon:'⚠️',msg:`Limite "${l.cat}" à ${pct}%`,sub:`${F(dep)} / ${F(l.montant)}`,type:'limite',urgent:false,action:"nav(document.querySelector('[data-page=limites]'),'limites')"});
     });
   }
 
-  // Plannings en retard
-  if(S.plannings){
-    S.plannings.filter(p=>p.date<today&&p.statut!=='Terminé').forEach(p=>{
-      const jours=Math.ceil((new Date()-new Date(p.date))/864e5);
-      notifs.push({icon:'⏰',msg:`Tâche en retard (${jours}j) : ${p.titre}`,type:'planning',urgent:true});
-    });
-    S.plannings.filter(p=>p.date===today&&p.statut!=='Terminé').forEach(p=>{
-      notifs.push({icon:'📅',msg:`Échéance aujourd'hui : ${p.titre}`,type:'planning',urgent:true});
-    });
-    S.plannings.filter(p=>p.dateAlerte&&p.statut!=='Terminé').forEach(p=>{
-      const diffAlerte=Math.ceil((new Date(p.dateAlerte)-new Date())/864e5);
-      if(diffAlerte>=0&&diffAlerte<=0){
-        notifs.push({icon:'🔔',msg:`Rappel : ${p.titre} — échéance le ${p.date}`,type:'alerte'});
-      } else if(diffAlerte>0&&diffAlerte<=3){
-        notifs.push({icon:'🔔',msg:`Rappel dans ${diffAlerte}j : ${p.titre}`,type:'alerte'});
-      }
-    });
-  }
-
-  // Trier : urgents d'abord
   return notifs.sort((a,b)=>(b.urgent?1:0)-(a.urgent?1:0));
 }
 
@@ -6028,25 +6057,67 @@ function majNotifBadge(){
 
 function toggleNotifs(){
   const panel=document.getElementById('notif-panel');
-  if(!panel)return;
+  const btn=document.getElementById('notif-btn');
+  if(!panel) return;
   if(panel.style.display==='none'||!panel.style.display){
-    const notifs=getNotifs();
-    panel.innerHTML=`
-      <div style="padding:12px 16px;font-weight:600;font-size:13px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-        🔔 Notifications (${notifs.length})
-        <button onclick="document.getElementById('notif-panel').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px">✕</button>
-      </div>
-      ${notifs.length===0?'<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">✅ Aucune notification</div>':
-      notifs.map(n=>`<div class="notif-item${n.alerte?' notif-item-alerte':''}">
-        <div class="notif-dot" style="background:${n.urgent?'var(--red)':n.alerte?'var(--purple)':'var(--amber)'}"></div>
-        <div style="flex:1"><div style="font-size:12px">${n.icon} ${n.msg}</div>${n.priority&&n.priority!=='moyenne'?`<div style="font-size:10px;margin-top:2px;color:${n.priority==='haute'?'var(--red)':'var(--green)'};font-weight:600">Priorité ${n.priority}</div>`:''}</div>
-      </div>`).join('')}`;
+    renderNotifsPanel();
     panel.style.display='block';
-  }else{
+    // Position sous le bouton
+    if(btn){
+      const rect=btn.getBoundingClientRect();
+      panel.style.right=(window.innerWidth-rect.right)+'px';
+      panel.style.top=(rect.bottom+6)+'px';
+    }
+  } else {
     panel.style.display='none';
   }
 }
 
+function renderNotifsPanel(){
+  const panel=document.getElementById('notif-panel');
+  if(!panel) return;
+  const notifs=getNotifs();
+  const urgents=notifs.filter(n=>n.urgent);
+  const normaux=notifs.filter(n=>!n.urgent);
+
+  const typeLabel={stock:'📦 Stock',client:'💰 Clients',fourn:'🏭 Fournisseurs',rh:'👥 RH',objectif:'🎯 Objectifs',agenda:'📅 Agenda',limite:'💸 Limites',achat:'📦 Achats',dette:'⏰ Dettes',planning:'📋 Planning',alerte:'🔔 Alerte'};
+  const typeColor={stock:'var(--amber)',client:'var(--green)',fourn:'var(--purple)',rh:'var(--teal)',objectif:'var(--navy)',agenda:'var(--blue,#1565c0)',limite:'var(--red)',achat:'var(--purple)',dette:'var(--red)',planning:'var(--amber)',alerte:'var(--navy)'};
+
+  const renderNotif = n => `<div class="notif-item${n.urgent?' notif-item-urgent':''}" onclick="${n.action||''};document.getElementById('notif-panel').style.display='none'" style="cursor:${n.action?'pointer':'default'}">
+    <div style="width:34px;height:34px;border-radius:50%;background:${(typeColor[n.type]||'var(--navy)')}22;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${n.icon}</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.3">${n.msg}</div>
+      ${n.sub?`<div style="font-size:11px;color:var(--text3);margin-top:1px">${n.sub}</div>`:''}
+      <div style="font-size:10px;color:${typeColor[n.type]||'var(--navy)'};font-weight:600;margin-top:2px">${typeLabel[n.type]||''}</div>
+    </div>
+    ${n.action?'<div style="font-size:11px;color:var(--text3)">→</div>':''}
+  </div>`;
+
+  panel.innerHTML=`
+    <div style="padding:12px 16px;font-weight:700;font-size:13px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--navy);color:#fff;border-radius:var(--r) var(--r) 0 0">
+      <span>🔔 Notifications ${notifs.length>0?'<span style="background:rgba(255,255,255,.2);border-radius:10px;padding:1px 7px;font-size:11px">'+notifs.length+'</span>':''}</span>
+      <button onclick="document.getElementById('notif-panel').style.display='none'" style="background:rgba(255,255,255,.15);border:none;cursor:pointer;color:#fff;font-size:14px;border-radius:4px;padding:2px 6px">✕</button>
+    </div>
+    ${notifs.length===0?`
+    <div style="padding:30px 20px;text-align:center">
+      <div style="font-size:36px;margin-bottom:8px">✅</div>
+      <div style="font-weight:600;color:var(--text)">Tout est en ordre !</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px">Aucune alerte en cours</div>
+    </div>`:`
+    ${urgents.length>0?`
+    <div style="padding:6px 14px;background:var(--red-bg);border-bottom:1px solid var(--red-light)">
+      <span style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.5px">🚨 Urgent — ${urgents.length} alerte(s)</span>
+    </div>
+    ${urgents.map(renderNotif).join('')}`:''}
+    ${normaux.length>0?`
+    ${urgents.length>0?`<div style="padding:6px 14px;background:var(--surface2);border-bottom:1px solid var(--border)"><span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Informations — ${normaux.length}</span></div>`:''}
+    ${normaux.map(renderNotif).join('')}`:''}
+    <div style="padding:10px 16px;border-top:1px solid var(--border);text-align:center">
+      <button onclick="majNotifBadge();document.getElementById('notif-panel').style.display='none';nav(document.querySelector('[data-page=dashboard]'),'dashboard')" style="background:none;border:none;font-size:11px;color:var(--text3);cursor:pointer">Voir le tableau de bord complet →</button>
+    </div>`}`;
+}
+
+// Fermer notifs en cliquant ailleurs
 // Fermer notifs en cliquant ailleurs
 document.addEventListener('click',e=>{
   const panel=document.getElementById('notif-panel');
