@@ -1345,7 +1345,7 @@ body.dark th{background:var(--surface3)}
 // ─── UTILS ───
 const F=n=>{const dev=(S&&S.parametres&&S.parametres.devise)||'FCFA';return Math.round(n).toLocaleString('fr-FR')+' '+dev;};
 const N=n=>Math.round(n).toLocaleString('fr-FR');
-const D=()=>new Date().toISOString().split('T')[0];
+const D=()=>{const n=new Date();return n.getFullYear()+'-'+(String(n.getMonth()+1).padStart(2,'0'))+'-'+(String(n.getDate()).padStart(2,'0'));};
 const genId=()=>++S.nid;
 const genVersion=()=>{ S.version=Date.now(); }; // timestamp indépendant du compteur d'IDs
 
@@ -2170,7 +2170,7 @@ function rDashVendeur(){
   const emoji = session.emoji || '👤';
   const role = session.role || 'vendeur';
   const now = new Date();
-  const todayStr = now.toISOString().slice(0,10);
+  const todayStr = D();
   const curM = now.toISOString().slice(0,7);
   const heureLabel = now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
   const dateLabel = now.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
@@ -2326,11 +2326,12 @@ function rDashVendeur(){
           ? `<div class="empty"><p>Pas encore de vente</p><small>Lance-toi !</small></div>`
           : `<div class="tbl-wrap" style="max-height:260px;overflow-y:auto">
             <table>
-              <thead><tr><th>Article</th><th>Montant</th><th>Mode</th></tr></thead>
+              <thead><tr><th>Heure</th><th>Article</th><th>Montant</th><th>Mode</th></tr></thead>
               <tbody>
                 ${mesVentesAuj.slice().reverse().slice(0,10).map(v => {
                   const a = ga(v.aid);
                   return `<tr>
+                    <td style="font-size:11px;color:var(--text3);white-space:nowrap">${v.heure||'—'}</td>
                     <td class="tdm">${a?a.nom:'Article'}</td>
                     <td style="font-weight:600;color:var(--green)">${F(v.mt)}</td>
                     <td><span class="badge bb" style="font-size:10px">${v.mode||'—'}</span></td>
@@ -2379,7 +2380,7 @@ function rDash(){
   const depensesB = getDepensesBoutique(bid);
   // Mois courant et mois précédent
   const now=new Date();
-  const curM=now.toISOString().slice(0,7);
+  const curM=D().slice(0,7);
   const prevDate=new Date(now.getFullYear(),now.getMonth()-1,1);
   const prevM=prevDate.toISOString().slice(0,7);
   const ventesM=mois=>ventesB.filter(v=>v.statut==='Payé'&&v.date&&v.date.startsWith(mois)).reduce((s,v)=>s+v.mt,0);
@@ -2435,8 +2436,8 @@ function rDash(){
     <div class="g2">
       <div>
         <p class="st">Dernières ventes</p>
-        <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Article</th><th>Montant</th><th>Statut</th></tr></thead><tbody>
-          ${ventesB.slice().reverse().slice(0,6).map(v=>{const a=stockB.find(x=>x.id==v.aid)||ga(v.aid);return`<tr><td>${v.date}</td><td class="tdm">${a?a.nom:'?'}</td><td>${F(v.mt)}</td><td>${sb(v.statut)}</td></tr>`}).join('')}
+        <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Heure</th><th>Article</th><th>Montant</th><th>Statut</th></tr></thead><tbody>
+          ${ventesB.slice().reverse().slice(0,6).map(v=>{const a=stockB.find(x=>x.id==v.aid)||ga(v.aid);return`<tr><td>${v.date}</td><td style="font-size:11px;color:var(--text3)">${v.heure||'—'}</td><td class="tdm">${a?a.nom:'?'}</td><td>${F(v.mt)}</td><td>${sb(v.statut)}</td></tr>`}).join('')}
         </tbody></table></div>
       </div>
       <div>
@@ -2658,12 +2659,13 @@ function rVente(){
     <!-- HISTORIQUE VENTES -->
     <p class="st" style="margin-top:24px">Historique des ventes</p>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Date</th><th>Articles</th><th>Montant</th><th>Client</th><th>Compte</th><th>Statut</th><th></th></tr></thead>
+      <thead><tr><th>Date</th><th>Heure</th><th>Articles</th><th>Montant</th><th>Client</th><th>Compte</th><th>Statut</th><th></th></tr></thead>
       <tbody>${ventesB.slice().reverse().map(v=>{
         const lignes=v.lignes||[{aid:v.aid,qte:v.qte,pu:v.pu,mt:v.mt}];
         const noms=lignes.map(l=>{const a=ga(l.aid);return a?a.nom:'?'}).join(', ');
         return`<tr>
           <td style="font-family:'DM Mono',monospace;font-size:12px">${v.date}</td>
+          <td style="font-size:11px;color:var(--text3);white-space:nowrap">${v.heure||'—'}</td>
           <td class="tdm" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${noms}">${noms}</td>
           <td style="font-weight:600">${F(v.mt)}</td>
           <td>${v.client||'—'}</td>
@@ -2852,7 +2854,8 @@ function validerPanier(){
       caissier_uid:S.session?.uid||null,
       caissier_nom:S.session?.nom||null,
       caissier_emoji:S.session?.emoji||'👤',
-      caissier_role:S.session?.role||null
+      caissier_role:S.session?.role||null,
+      heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})
     });
     window.panier=[];
     window.remise={type:'%',val:0};
@@ -5678,7 +5681,7 @@ function rTransactions(){
           <div class="txn-icon txn-${t._type==='vente'?'vente':t._type==='achat'?'achat':t._type==='depense'?'dep':t._type==='revenu'?'rev':'service'}">${t._icon}</div>
           <div style="flex:1">
             <div style="font-weight:500;font-size:13px">${desc}</div>
-            <div style="font-size:11px;color:var(--text3)">${t.date} · ${t.client||t.four||t.cat||''} · ${t.cid?nomCompte(t.cid):(t.mode||'')}</div>
+            <div style="font-size:11px;color:var(--text3)">${t.date}${t.heure?' à '+t.heure:''}  · ${t.client||t.four||t.cat||''} · ${t.cid?nomCompte(t.cid):(t.mode||'')}</div>
           </div>
           <div style="text-align:right">
             <div style="font-weight:700;font-size:14px">${montant}</div>
@@ -6535,7 +6538,8 @@ function confirmerConversionDevis(id){
     caissier_nom: S.session?.nom||null,
     caissier_emoji: S.session?.emoji||'👤',
     caissier_role: S.session?.role||null,
-    devis_id: d.id
+    devis_id: d.id,
+    heure: new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})
   });
 
   // Mettre à jour compte si payé
@@ -8785,7 +8789,7 @@ function saveVenteRapide(aid){
   const mt=qte*pu;
   const vid=genId();
   S.ventes.push({id:vid,date:D(),aid,client,qte,pu,mt,cid,mode:nomCompte(cid),statut:'Payé',
-    lignes:[{aid,qte,pu,nom:a.nom}]});
+    lignes:[{aid,qte,pu,nom:a.nom}],heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});
   a.qv=(a.qv||0)+qte;
   crediterCompte(cid,mt);
   addHistorique('Sortie',a,qte,`Vente rapide — ${client}`);
