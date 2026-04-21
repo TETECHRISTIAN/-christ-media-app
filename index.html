@@ -1335,6 +1335,9 @@ body.dark th{background:var(--surface3)}
         🔑 Réinitialiser l'accès administrateur
       </button>
     </div>
+    <!-- DIAGNOSTIC -->
+    <div id="diag-panel" style="margin-top:12px;background:#f8f8f0;border:1px solid #ddd;border-radius:8px;padding:10px;font-size:11px;font-family:monospace;color:#333;display:none;max-height:180px;overflow-y:auto;text-align:left;line-height:1.7"></div>
+    <button onclick="afficherDiag()" style="margin-top:8px;background:none;border:1px solid #ccc;border-radius:6px;font-size:10px;color:#888;cursor:pointer;padding:4px 10px">🔍 Diagnostic</button>
   </div>
 </div>
 
@@ -1726,7 +1729,8 @@ async function saveData(){
 }
 
 // ─── MANUAL SYNC ───
-async // ─── FUSION INTELLIGENTE PAR COLLECTION ───
+
+// ─── FUSION INTELLIGENTE PAR COLLECTION ───
 // Principe : on ne choisit JAMAIS un appareil entier gagnant.
 // Pour chaque collection (tableaux), on garde l'union des deux côtés
 // identifiée par ID. En cas de doublon d'ID, on garde l'enregistrement
@@ -6866,6 +6870,18 @@ function connexionEmail(){
     return;
   }
 
+  // ── DEBUG : afficher l'état au moment du clic ──
+  const nbUsersLocal = (S.utilisateurs||[]).length;
+  const nbUsersDefault = (defaultData.utilisateurs||[]).length;
+  const fbStatus = fbReady ? 'Firebase OK' : 'Firebase non prêt';
+  console.log('[LOGIN] email:', email, '| users local:', nbUsersLocal, '| default:', nbUsersDefault, '| fb:', fbStatus);
+  // Afficher brièvement dans l'UI pour diagnostic
+  if(errEl){
+    errEl.style.color='var(--text3)';
+    errEl.textContent=`Recherche… (${nbUsersLocal} users local, ${fbStatus})`;
+    errEl.style.display='block';
+  }
+
   // ── Trouver l'utilisateur dans toutes les sources disponibles ──
   function _trouverUser(liste){
     return (liste||[]).find(u=>{
@@ -6877,30 +6893,31 @@ function connexionEmail(){
 
   // 1. S.utilisateurs (localStorage)
   let u=_trouverUser(S.utilisateurs);
+  console.log('[LOGIN] trouvé dans S.utilisateurs:', !!u);
   // 2. defaultData intégré (compte admin de secours)
   if(!u) u=_trouverUser(defaultData.utilisateurs);
+  console.log('[LOGIN] trouvé dans defaultData:', !!u);
 
   if(!u){
-    // Pas trouvé localement → peut-être que les utilisateurs ne sont pas encore sync
-    // On affiche un message adapté
     const tousUsers=[...(S.utilisateurs||[]),...(defaultData.utilisateurs||[])];
     const emailExiste=tousUsers.some(x=>x.actif!==false&&(x.email||'').toLowerCase()===email);
     if(emailExiste){
-      if(errEl){errEl.textContent='Mot de passe incorrect. Réessayez.';errEl.style.display='block';}
+      if(errEl){errEl.style.color='';errEl.textContent='Mot de passe incorrect. Réessayez.';errEl.style.display='block';}
       const pwEl=document.getElementById('login-password');
       if(pwEl){pwEl.value='';pwEl.focus();}
     } else {
       // Email inconnu localement → tenter Firebase en arrière-plan
-      if(errEl){errEl.textContent='Vérification en cours...';errEl.style.display='block';}
+      if(errEl){errEl.style.color='';errEl.textContent='Vérification en cours…';errEl.style.display='block';}
       const btnLogin=document.querySelector('.login-btn');
       if(btnLogin){btnLogin.disabled=true;}
       _connexionViaFirebase(email, password, errEl, btnLogin);
       return;
     }
-    setTimeout(()=>{if(errEl)errEl.style.display='none';},4000);
+    setTimeout(()=>{if(errEl){errEl.style.color='';errEl.style.display='none';}},4000);
     return;
   }
 
+  if(errEl){errEl.style.color='';errEl.style.display='none';}
   _ouvrirSession(u);
 }
 
@@ -6936,30 +6953,41 @@ async function _connexionViaFirebase(email, password, errEl, btnLogin){
 }
 
 function _ouvrirSession(u){
+  try{
   const errEl=document.getElementById('login-err');
   const email=(u.email||'').toLowerCase();
   localStorage.setItem('cm_last_email',email);
-  if(errEl)errEl.style.display='none';
+  if(errEl){errEl.style.color='';errEl.style.display='none';}
   let boutiqueActive=S.boutique_active||1;
   if(u.role!=='admin'&&u.boutique_id) boutiqueActive=u.boutique_id;
   S.session={uid:u.id,role:u.role,nom:u.nom,emoji:u.emoji||'👤',email:u.email,boutique_id:u.boutique_id||null,boutique_active:boutiqueActive};
   saveLocal(S);
-  enregistrerConnexion(u,'connexion');
+  try{enregistrerConnexion(u,'connexion');}catch(e){console.warn('enregistrerConnexion:',e);}
   document.getElementById('login-screen').style.display='none';
-  majBadgeUtilisateur();
-  appliquerAcces(u.role);
-  majBoutiqueUI();
-  toast(`✅ Bienvenue ${u.nom} !`);
-  addAudit('LOGIN','Connexion','Connexion de '+u.nom+' ('+u.role+') depuis '+navigator.userAgent.substring(0,50),null,null);
-  setTimeout(initPresence,1000);
-  if(u.role==='admin') setTimeout(checkGdriveAutoBackup,3000);
+  try{majBadgeUtilisateur();}catch(e){}
+  try{appliquerAcces(u.role);}catch(e){console.warn('appliquerAcces:',e);}
+  try{majBoutiqueUI();}catch(e){}
+  try{toast(`✅ Bienvenue ${u.nom} !`);}catch(e){}
+  try{addAudit('LOGIN','Connexion','Connexion de '+u.nom+' ('+u.role+')',null,null);}catch(e){}
+  setTimeout(()=>{try{initPresence();}catch(e){}},1000);
+  if(u.role==='admin') setTimeout(()=>{try{checkGdriveAutoBackup();}catch(e){}},3000);
   if(!S.ventes)S.ventes=[];
   if(!S.stock)S.stock=[];
   if(!S.achats)S.achats=[];
   if(!S.clients)S.clients=[];
   if(!S.fournisseurs)S.fournisseurs=[];
   if(!S.depenses)S.depenses=[];
-  rDash();
+  try{rDash();}catch(e){
+    console.error('[LOGIN] rDash() a planté:', e);
+    // Forcer l'affichage du dashboard quand même
+    document.querySelectorAll('.page-section').forEach(p=>p.style.display='none');
+    const dash=document.getElementById('page-dashboard');
+    if(dash) dash.style.display='';
+  }
+  }catch(e){
+    console.error('[LOGIN] _ouvrirSession a planté:', e);
+    alert('Erreur au démarrage: '+e.message+'\n\nVérifie la console (F12) pour plus de détails.');
+  }
 }
 
 // ─── RESET ACCÈS ADMIN (urgence) ───
@@ -12691,6 +12719,24 @@ if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded', initCalcFloat);
 } else {
   setTimeout(initCalcFloat, 50);
+}
+
+// ─── DIAGNOSTIC LOGIN ───
+function afficherDiag(){
+  const p = document.getElementById('diag-panel');
+  if(!p) return;
+  const users = S.utilisateurs||[];
+  const lines = [
+    '📦 localStorage: ' + (localStorage.getItem('christmedia_v2') ? 'OK ('+Math.round((localStorage.getItem('christmedia_v2')||'').length/1024)+'kb)' : 'VIDE'),
+    '👥 Utilisateurs chargés: ' + users.length,
+    ...users.map(u=>'  • '+u.email+' ['+u.role+'] pw='+(u.password?'✓':'∅')+' pin='+(u.pin?'✓':'∅')+' actif='+(u.actif!==false?'oui':'NON')),
+    '🔥 Firebase: ' + (fbReady ? 'OK' : 'NON PRÊT'),
+    '🌐 En ligne: ' + navigator.onLine,
+    '📋 Session: ' + JSON.stringify(S.session||null),
+    '⚠️ Erreurs console: voir F12 → Console',
+  ];
+  p.innerHTML = lines.map(l=>'<div>'+l.replace(/</g,'&lt;')+'</div>').join('');
+  p.style.display = p.style.display==='none' ? 'block' : 'none';
 }
 </script>
 
