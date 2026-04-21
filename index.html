@@ -2161,8 +2161,7 @@ const actionsMap={
   depots:()=>'<button class="btn" onclick="addDepot()">+ Dépôt</button> <button class="btn btn-primary" onclick="nouveauTransfert()">⇄ Transfert</button>',
   fidelite:()=>'<button class="btn" onclick="nav(document.querySelector(\"[data-page=parametres]\"),\"parametres\")">⚙️ Configurer</button>',
   audit:()=>'<button class="btn btn-danger btn-sm" onclick="effacerAudit()">🗑️ Effacer</button>',
-  live:()=>'<div style="display:flex;align-items:center;gap:6px"><span id="live-status-dot" style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse .8s infinite alternate"></span><span id="live-status-label" style="font-size:12px;color:var(--text2)">Connecté</span></div>'
-,
+  live:()=>'<div style="display:flex;align-items:center;gap:8px"><input type="date" id="live-topbar-date" value="'+D()+'" onchange="const el=document.getElementById(\'live-date-filter\');if(el)el.value=this.value;renderLiveFeed()" style="padding:4px 8px;border:1px solid var(--border2);border-radius:var(--rs);font-family:inherit;font-size:12px;background:var(--surface)"><div style="display:flex;align-items:center;gap:6px"><span id="live-status-dot" style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse .8s infinite alternate"></span><span id="live-status-label" style="font-size:12px;color:var(--text2)">Connecté</span></div>',
   rh:()=>'<button class="btn btn-primary" onclick="ouvrirModalNouvelEmploye()">+ Employé</button><button class="btn" onclick="ouvrirModalSalaire()" style="margin-left:6px">💰 Payer salaire</button>',
   comptabilite:()=>'<button class="btn" onclick="exportJournal()">📥 Exporter journal</button>',
   kpis:()=>'<select id="kpi-period" onchange="rKPIs()" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--rs);font-family:inherit;font-size:13px;background:var(--surface)"><option value="mois">Ce mois</option><option value="trim">Ce trimestre</option><option value="annee">Cette année</option><option value="tout">Tout</option></select>',
@@ -10356,12 +10355,17 @@ function rLive(){
 
 function renderLiveFeed(){
   const now = new Date();
-  const todayStr = now.toISOString().slice(0,10);
+  // Utiliser la date sélectionnée ou aujourd'hui
+  const liveDateEl = document.getElementById('live-date-filter');
+  const selectedDate = liveDateEl ? liveDateEl.value : null;
+  const todayStr = D(); // date locale
+  const isToday = !selectedDate || selectedDate === todayStr;
+  const dateFiltre = selectedDate || todayStr;
   const boutiques = S.boutiques || [];
 
-  // Toutes les ventes d'aujourd'hui, triées par heure (plus récente en premier)
+  // Ventes de la date sélectionnée, triées par heure (plus récente en premier)
   const ventesAuj = (S.ventes||[])
-    .filter(v => v.date && v.date.startsWith(todayStr))
+    .filter(v => v.date && v.date === dateFiltre)
     .slice().sort((a,b) => {
       // Trier par heure si disponible, sinon par id
       const ha = a.heure || '99:99';
@@ -10400,7 +10404,15 @@ function renderLiveFeed(){
   document.getElementById('content').innerHTML = `
   <div class="page">
 
-    <!-- Bandeau LIVE -->
+    <!-- Bandeau LIVE + Sélecteur date -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:4px 8px;font-size:12px">
+        <span>📅</span>
+        <input type="date" id="live-date-filter" value="${dateFiltre}" onchange="renderLiveFeed()" style="border:none;background:none;font-family:inherit;font-size:12px;color:var(--text);cursor:pointer;outline:none">
+      </div>
+      ${!isToday?`<span style="background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-light);border-radius:var(--rs);padding:3px 10px;font-size:11px;font-weight:600">📜 Historique — ${new Date(dateFiltre+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'})}</span>`:'<span style="background:var(--green-bg);color:var(--green);border:1px solid var(--green-light);border-radius:var(--rs);padding:3px 10px;font-size:11px;font-weight:700">🔴 LIVE — Aujourd\'hui</span>'}
+      <button onclick="renderLiveFeed()" style="background:none;border:1px solid var(--border);border-radius:var(--rs);padding:3px 10px;font-size:11px;cursor:pointer;color:var(--text2)">↺ Actualiser</button>
+    </div>
     <div style="background:linear-gradient(135deg,#0f1f3d,#1a3260);border-radius:var(--r);padding:16px 20px;margin-bottom:20px;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
       <div style="display:flex;align-items:center;gap:12px">
         <div style="position:relative;width:14px;height:14px">
@@ -10521,6 +10533,64 @@ function renderLiveFeed(){
               </div>`;
             }).join('')}
           </div>`}
+
+        <!-- Solde caisse en temps réel -->
+        <div style="margin-top:20px">
+          <p class="st">💰 Solde caisse — ${new Date(dateFiltre+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}</p>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+            <!-- En-tête solde -->
+            <div style="display:grid;grid-template-columns:60px 1fr 110px 120px;gap:8px;padding:8px 14px;background:var(--surface2);font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">
+              <span>Heure</span><span>Opération</span><span style="text-align:right">Montant</span><span style="text-align:right">Solde caisse</span>
+            </div>
+            ${(()=>{
+              // Construire toutes les opérations du jour avec solde cumulé
+              const bid=getBid();
+              const ops=[];
+              const ventesJour=(S.ventes||[]).filter(v=>v.date===dateFiltre&&v.statut==='Payé');
+              const depsJour=(S.depenses||[]).filter(d=>d.date===dateFiltre);
+              const achatsJour=getAchatsBoutique(bid).filter(a=>a.date===dateFiltre&&a.statut==='Payé');
+              const salsJour=(S.salaires||[]).filter(s=>s.date===dateFiltre);
+              const revsJour=(S.revenus||[]).filter(r=>r.date===dateFiltre);
+              const svcsJour=(S.ventes_services||[]).filter(v=>v.date===dateFiltre&&v.statut==='Payé');
+
+              ventesJour.forEach(v=>{
+                const lignes=v.lignes||[{aid:v.aid}];
+                const desc=lignes.map(l=>(ga(l.aid)||{}).nom||'Vente').join(', ');
+                ops.push({heure:v.heure||'--:--',label:'🛒 '+desc,mt:v.mt,type:'entree',client:v.client||''});
+              });
+              svcsJour.forEach(v=>ops.push({heure:v.heure||'--:--',label:'⭐ '+v.nom_service,mt:v.mt,type:'entree',client:v.client||''}));
+              revsJour.forEach(r=>ops.push({heure:r.heure||'--:--',label:'💵 '+r.desc,mt:r.mt,type:'entree',client:''}));
+              depsJour.forEach(d=>ops.push({heure:d.heure||'--:--',label:'💸 '+(d.four||d.cat),mt:d.mt,type:'sortie',client:d.cat||''}));
+              achatsJour.forEach(a=>{const art=ga(a.aid);ops.push({heure:a.heure||'--:--',label:'📦 '+(art?art.nom:'Achat'),mt:a.mt,type:'sortie',client:(gf(a.fid)||{}).nom||''});});
+              salsJour.forEach(s=>{const emp=(S.employes||[]).find(e=>e.id==s.emp_id);ops.push({heure:s.heure||'--:--',label:'👥 Salaire '+(emp?emp.nom:''),mt:s.montant,type:'sortie',client:''});});
+
+              // Trier par heure
+              ops.sort((a,b)=>a.heure.localeCompare(b.heure));
+
+              if(ops.length===0) return '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Aucune opération ce jour</div>';
+
+              let solde=0;
+              const totalE=ops.filter(o=>o.type==='entree').reduce((s,o)=>s+o.mt,0);
+              const totalS=ops.filter(o=>o.type==='sortie').reduce((s,o)=>s+o.mt,0);
+              const rows=ops.map((op,i)=>{
+                solde += op.type==='entree' ? op.mt : -op.mt;
+                return '<div style="display:grid;grid-template-columns:60px 1fr 110px 120px;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);font-size:12px;align-items:center;background:'+( solde<0?'var(--red-bg)':i===ops.length-1?'var(--navy-bg)':'var(--surface)')+'">'+
+                  '<span style="font-size:11px;color:var(--text3);font-family:monospace">'+op.heure+'</span>'+
+                  '<span><span style="font-weight:600">'+op.label+'</span>'+(op.client?'<span style="font-size:10px;color:var(--text3);margin-left:4px">'+op.client+'</span>':'')+'</span>'+
+                  '<span style="text-align:right;font-weight:600;color:'+(op.type==='entree'?'var(--green)':'var(--red)')+'">'+( op.type==='entree'?'+':'-')+F(op.mt)+'</span>'+
+                  '<span style="text-align:right;font-weight:700;font-size:13px;color:'+(solde>=0?'var(--navy)':'var(--red)')+'">'+F(solde)+'</span>'+
+                '</div>';
+              }).join('');
+              const finalSolde=totalE-totalS;
+              return rows+
+                '<div style="display:grid;grid-template-columns:60px 1fr 110px 120px;gap:8px;padding:10px 14px;background:var(--navy);color:#fff;font-weight:700;font-size:12px">'+
+                '<span></span><span>SOLDE FINAL</span>'+
+                '<span style="text-align:right;color:'+(finalSolde>=0?'#8ecba8':'#f0a0a0')+'">'+F(finalSolde)+'</span>'+
+                '<span style="text-align:right;font-size:14px;color:'+(finalSolde>=0?'#8ecba8':'#f0a0a0')+'">'+F(finalSolde)+'</span>'+
+                '</div>';
+            })()}
+          </div>
+        </div>
 
         <!-- Mini graphe horaire -->
         <p class="st" style="margin-top:20px">📈 Ventes par heure</p>
@@ -13713,6 +13783,7 @@ function validerConge(){
   rRH();
 }
 
+let fourniTab = 'overview';
 function rFourniAvance(){
   const tabs=[{k:'overview',l:'📊 Vue d\'ensemble'},{k:'historique',l:'📋 Historique commandes'},{k:'evaluation',l:'⭐ Évaluations'},{k:'delais',l:'⏱️ Délais & Paiements'}];
   document.getElementById('content').innerHTML=`
