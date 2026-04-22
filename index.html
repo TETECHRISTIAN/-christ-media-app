@@ -882,6 +882,31 @@ body.dark th{background:var(--surface3)}
 .bilan-row.total{font-weight:700;background:var(--surface2)}
 .bilan-row.highlight{background:var(--navy-bg);font-weight:600;color:var(--navy)}
 
+
+/* ─── COACH FINANCIER ─── */
+.coach-tab{display:flex;gap:4px;margin-bottom:20px;flex-wrap:wrap}
+.coach-tab button{padding:7px 18px;border:1px solid var(--border2);background:var(--surface);border-radius:24px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--text2);transition:all .15s}
+.coach-tab button.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.coach-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);margin-bottom:14px}
+.coach-score{width:80px;height:80px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;font-weight:900;border:4px solid;flex-shrink:0}
+.coach-tip{background:var(--amber-bg);border:1px solid var(--amber-light);border-radius:var(--rs);padding:12px 14px;font-size:13px;color:var(--amber);margin-bottom:10px;display:flex;gap:10px;align-items:flex-start}
+.coach-tip.good{background:var(--green-bg);border-color:var(--green-light);color:var(--green)}
+.coach-tip.danger{background:var(--red-bg);border-color:var(--red-light);color:var(--red)}
+.lecon-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:0;overflow:hidden;margin-bottom:12px;cursor:pointer;transition:all .15s}
+.lecon-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.1);transform:translateY(-1px)}
+.lecon-header{padding:14px 18px;display:flex;align-items:center;gap:12px}
+.lecon-body{padding:0 18px 16px;font-size:13px;color:var(--text2);line-height:1.7;display:none}
+.lecon-body.open{display:block}
+.lecon-tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600}
+.ia-bubble{background:var(--navy-bg);border:1px solid var(--navy-light);border-radius:12px 12px 12px 0;padding:14px 16px;font-size:13px;color:var(--text);line-height:1.7;margin-bottom:12px;max-width:90%}
+.ia-bubble.user{background:var(--navy);color:#fff;border-radius:12px 12px 0 12px;margin-left:auto}
+.ia-typing{display:flex;gap:4px;align-items:center;padding:10px 14px}
+.ia-typing span{width:7px;height:7px;border-radius:50%;background:var(--navy);animation:iaDot .8s infinite}
+.ia-typing span:nth-child(2){animation-delay:.15s}
+.ia-typing span:nth-child(3){animation-delay:.3s}
+@keyframes iaDot{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+.progress-ring{transform:rotate(-90deg)}
+
 </style>
 </head>
 <body>
@@ -989,6 +1014,10 @@ body.dark th{background:var(--surface3)}
       Opérations suivantes
     </div>
     <div class="nav-sec admin-only">Direction</div>
+    <div class="ni admin-only" data-page="coach" onclick="nav(this,'coach')">
+      <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="6" r="3.5" stroke="currentColor" stroke-width="1.5"/><path d="M2 14c0-3 2.7-5 6-5s6 2 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 9v3M6.5 11h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      Coach Financier
+    </div>
     <div class="ni admin-only" data-page="bilan_jour" onclick="nav(this,'bilan_jour')">
       <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M4 8h8M4 11h5M4 5h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
       Bilan Journalier
@@ -1729,7 +1758,7 @@ function activerListenerTempsReel(){
           inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,
           comptes:rComptes,devis:rDevis,planning:rPlanning,
           calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,
-          limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive,rh:rRH,comptabilite:rComptabilite,kpis:rKPIs,fourni_avance:rFourniAvance,bilan_jour:rBilanJour})[currentPage]();
+          limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive,rh:rRH,comptabilite:rComptabilite,kpis:rKPIs,fourni_avance:rFourniAvance,bilan_jour:rBilanJour,coach:rCoach})[currentPage]();
       }catch(e){}
       toast('🔄 Données mises à jour',1500);
     } else if(remoteVer === localVer && remoteVer > 0){
@@ -2134,7 +2163,7 @@ function toast(msg,dur=2200){
 }
 
 // ─── NAVIGATION ───
-const titles={dashboard:'Tableau de bord',objectifs:'Objectifs & KPIs',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres',dettes:'Gestion des dettes',flux:'Flux financier',limites:'Limites de dépenses',modeles:"Modèles d'opération",agenda:'Opérations suivantes',journal:'Journal privé',caisse:'Rapport de caisse',stats:'Statistiques vendeurs',promos:'Promotions & Réductions',commandes:'Commandes fournisseurs',depots:'Stock multi-dépôt',fidelite:'Programme de fidélité',audit:"Journal d'audit",live:'🔴 Live — Ventes en temps réel',rh:'RH & Salaires',comptabilite:'Comptabilité & Bilan',kpis:'KPIs & Rentabilité',fourni_avance:'Fournisseurs Pro',bilan_jour:'Bilan Journalier'};
+const titles={dashboard:'Tableau de bord',objectifs:'Objectifs & KPIs',transactions:'Transactions',vente:'Ventes',services:'Services',achats:'Achats',stock:'Gestion du Stock',clients:'Clients',fournisseurs:'Fournisseurs',depenses:'Dépenses',tresorerie:'Trésorerie & Santé financière',revenus:'Revenus & Charges',rapports:'Rapports & Analyses',inventaire:"Rapport d'inventaire",historique:'Historique des mouvements',workspace:'Espace de travail',comptes:'Comptes & Transferts',devis:'Devis clients',planning:'Planification',calculatrice:'Calculatrice',parametres:'Paramètres',dettes:'Gestion des dettes',flux:'Flux financier',limites:'Limites de dépenses',modeles:"Modèles d'opération",agenda:'Opérations suivantes',journal:'Journal privé',caisse:'Rapport de caisse',stats:'Statistiques vendeurs',promos:'Promotions & Réductions',commandes:'Commandes fournisseurs',depots:'Stock multi-dépôt',fidelite:'Programme de fidélité',audit:"Journal d'audit",live:'🔴 Live — Ventes en temps réel',rh:'RH & Salaires',comptabilite:'Comptabilité & Bilan',kpis:'KPIs & Rentabilité',fourni_avance:'Fournisseurs Pro',bilan_jour:'Bilan Journalier',coach:'🎓 Coach Financier'};
 const actionsMap={
   dashboard:()=>'<button class="btn btn-success" onclick="nav(document.querySelector(\'[data-page=vente]\'),\'vente\')">+ Vente</button>',
   objectifs:()=>'<button class="btn btn-primary" onclick="editObjectifs()">⚙️ Modifier objectifs</button>',
@@ -2184,7 +2213,7 @@ function nav(el,page){
   if(_presenceId&&fbReady&&db){
     db.ref('christmedia/presence/'+_presenceId+'/page').set(page).catch(()=>{});
   }
-  ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive,rh:rRH,comptabilite:rComptabilite,kpis:rKPIs,fourni_avance:rFourniAvance,bilan_jour:rBilanJour})[page]();
+  ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive,rh:rRH,comptabilite:rComptabilite,kpis:rKPIs,fourni_avance:rFourniAvance,bilan_jour:rBilanJour,coach:rCoach})[page]();
   closeMobileSidebar();
   document.getElementById('mn-dropdown').classList.remove('open');
 }
@@ -7223,7 +7252,7 @@ const PERMISSIONS = {
     pages: ['dashboard','objectifs','transactions','vente','services','achats','stock','clients',
             'fournisseurs','depenses','tresorerie','revenus','rapports','inventaire','historique',
             'comptes','devis','planning','calculatrice','workspace','parametres',
-            'dettes','flux','limites','modeles','agenda','journal','caisse','stats','promos','commandes','depots','fidelite','audit','live','rh','comptabilite','kpis','fourni_avance','bilan_jour'],
+            'dettes','flux','limites','modeles','agenda','journal','caisse','stats','promos','commandes','depots','fidelite','audit','live','rh','comptabilite','kpis','fourni_avance','bilan_jour','coach'],
     label: '👑 Administrateur',
     couleur: '#f5c060'
   },
@@ -7236,7 +7265,8 @@ const PERMISSIONS = {
     pages: ['dashboard','vente','services','clients','calculatrice','agenda','journal','caisse','stats','promos','commandes','depots','fidelite','live'],
     label: '🛒 Vendeur',
     couleur: '#c5d0e8'
-  }
+  },
+  coach:()=>'<select id="coach-cat" onchange="rCoach()" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--rs);font-family:inherit;font-size:13px;background:var(--surface)"><option value="analyse">📊 Mon analyse</option><option value="lecons">📚 Leçons</option><option value="ia">🤖 Coach IA</option></select>'
 };
 
 function appliquerAcces(role){
@@ -14149,6 +14179,447 @@ function rBilanJour(){
       </div>`:''}
     </div>
   </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MODULE — COACH FINANCIER
+// ═══════════════════════════════════════════════════════════════════
+let coachTab = 'analyse';
+
+function rCoach(){
+  const sel = (document.getElementById('coach-cat')||{}).value || coachTab;
+  coachTab = sel;
+  document.getElementById('content').innerHTML = `
+  <div class="coach-tab">
+    <button class="${coachTab==='analyse'?'active':''}" onclick="coachTab='analyse';rCoach()">📊 Mon analyse</button>
+    <button class="${coachTab==='lecons'?'active':''}" onclick="coachTab='lecons';rCoach()">📚 Leçons</button>
+    <button class="${coachTab==='ia'?'active':''}" onclick="coachTab='ia';rCoach()">🤖 Coach IA</button>
+  </div>
+  <div id="coach-body"></div>`;
+  if(coachTab==='analyse') renderCoachAnalyse();
+  else if(coachTab==='lecons') renderCoachLecons();
+  else if(coachTab==='ia') renderCoachIA();
+}
+
+// ── ANALYSE FINANCIÈRE PERSONNALISÉE ──
+function renderCoachAnalyse(){
+  const bid = getBid();
+  const today = D();
+  const curM = today.slice(0,7);
+  const curY = today.slice(0,4);
+
+  const ventes = getVentesBoutique(bid).filter(v=>v.statut==='Payé');
+  const deps = getDepensesBoutique(bid);
+  const achats = getAchatsBoutique(bid);
+  const sals = S.salaires||[];
+
+  // Mois courant
+  const ventesM = ventes.filter(v=>v.date&&v.date.startsWith(curM));
+  const depsM = deps.filter(d=>d.date&&d.date.startsWith(curM));
+  const achatsM = achats.filter(a=>a.date&&a.date.startsWith(curM));
+  const salsM = sals.filter(s=>s.date&&s.date.startsWith(curM));
+
+  const caM = ventesM.reduce((s,v)=>s+v.mt,0);
+  const depsTotal = depsM.reduce((s,d)=>s+d.mt,0);
+  const achatsTotal = achatsM.reduce((s,a)=>s+a.mt,0);
+  const salsTotal = salsM.reduce((s,s2)=>s+s2.montant,0);
+  const chargesTotal = depsTotal + achatsTotal + salsTotal;
+  const margeBrute = caM - achatsTotal;
+  const resultat = caM - chargesTotal;
+  const txMarge = caM>0 ? Math.round(margeBrute/caM*100) : 0;
+  const txCharges = caM>0 ? Math.round(chargesTotal/caM*100) : 0;
+  const txEpargne = caM>0 ? Math.round(resultat/caM*100) : 0;
+
+  // Score financier (0-100)
+  let score = 50;
+  if(txMarge >= 40) score += 15; else if(txMarge >= 25) score += 8; else score -= 10;
+  if(txCharges <= 50) score += 15; else if(txCharges <= 70) score += 5; else score -= 15;
+  if(txEpargne >= 15) score += 15; else if(txEpargne >= 5) score += 5; else score -= 10;
+  if(caM > 0) score += 5;
+  score = Math.max(0, Math.min(100, score));
+  const scoreColor = score>=70?'var(--green)':score>=45?'var(--amber)':'var(--red)';
+  const scoreLabel = score>=70?'Excellente 🌟':score>=45?'Correcte ⚠️':'Fragile 🚨';
+
+  // Conseils basés sur les données
+  const conseils = [];
+  if(txMarge < 25) conseils.push({type:'danger',icon:'📉',titre:'Marge brute trop faible',texte:`Votre marge de ${txMarge}% est en dessous de 25%. Revoyez vos prix de vente ou négociez de meilleures conditions avec vos fournisseurs.`});
+  else if(txMarge >= 40) conseils.push({type:'good',icon:'✅',titre:'Excellente marge',texte:`Votre marge de ${txMarge}% est très saine. Maintenez cette dynamique et réinvestissez une partie dans le stock.`});
+
+  if(txCharges > 70) conseils.push({type:'danger',icon:'🚨',titre:'Charges excessives',texte:`Vos charges représentent ${txCharges}% de votre CA. L'objectif est de rester sous 60%. Identifiez les postes à réduire.`});
+  else if(txCharges <= 50) conseils.push({type:'good',icon:'✅',titre:'Charges bien maîtrisées',texte:`Vos charges à ${txCharges}% du CA sont bien contrôlées. Continuez à surveiller chaque catégorie.`});
+
+  if(txEpargne < 5) conseils.push({type:'danger',icon:'💸',titre:'Pas d\'épargne ce mois',texte:`Vous ne gardez que ${txEpargne}% de votre CA. Visez 10-20% pour constituer une réserve de sécurité.`});
+  else if(txEpargne >= 15) conseils.push({type:'good',icon:'🏦',titre:'Bonne capacité d\'épargne',texte:`${txEpargne}% du CA conservé, c'est excellent ! Constituez un fonds de sécurité de 3 mois de charges.`});
+
+  // Analyse par catégorie de dépenses
+  const catDeps = {};
+  depsM.forEach(d=>{catDeps[d.cat||'Autre']=(catDeps[d.cat||'Autre']||0)+d.mt;});
+  const topDep = Object.entries(catDeps).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  if(topDep.length>0 && topDep[0][1]/depsTotal > 0.5) {
+    conseils.push({type:'warn',icon:'⚠️',titre:`Dépense dominante : ${topDep[0][0]}`,texte:`Cette catégorie représente ${Math.round(topDep[0][1]/depsTotal*100)}% de vos dépenses (${F(topDep[0][1])}). Diversifiez ou cherchez à réduire ce poste.`});
+  }
+
+  // Tendance sur 3 mois
+  const mois3 = [];
+  for(let i=2;i>=0;i--){
+    const d = new Date(new Date().getFullYear(), new Date().getMonth()-i, 1);
+    const mStr = d.getFullYear()+'-'+(String(d.getMonth()+1).padStart(2,'0'));
+    const caM2 = ventes.filter(v=>v.date&&v.date.startsWith(mStr)).reduce((s,v)=>s+v.mt,0);
+    const chM2 = [...deps.filter(d=>d.date&&d.date.startsWith(mStr)),...achats.filter(a=>a.date&&a.date.startsWith(mStr))].reduce((s,x)=>s+x.mt,0);
+    mois3.push({label:d.toLocaleDateString('fr-FR',{month:'short'}),ca:caM2,charges:chM2});
+  }
+  const tendanceCa = mois3[2].ca > mois3[0].ca ? 'hausse' : mois3[2].ca < mois3[0].ca ? 'baisse' : 'stable';
+
+  document.getElementById('coach-body').innerHTML = `
+  <!-- Score global -->
+  <div class="coach-card">
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+      <div class="coach-score" style="border-color:${scoreColor};color:${scoreColor}">
+        <span>${score}</span>
+        <span style="font-size:10px;font-weight:600">/100</span>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:18px;font-weight:800;color:${scoreColor}">Santé financière : ${scoreLabel}</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:4px">Basé sur vos données de ${new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</div>
+        <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap">
+          <span style="font-size:12px"><span style="font-weight:700;color:var(--green)">${F(caM)}</span> CA</span>
+          <span style="font-size:12px"><span style="font-weight:700;color:var(--red)">−${F(chargesTotal)}</span> Charges</span>
+          <span style="font-size:12px"><span style="font-weight:700;color:${resultat>=0?'var(--teal)':'var(--red)'};">${resultat>=0?'+':''}${F(resultat)}</span> Résultat</span>
+        </div>
+      </div>
+    </div>
+    <!-- Jauge score -->
+    <div style="margin-top:16px;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden">
+      <div style="height:100%;width:${score}%;background:${scoreColor};border-radius:4px;transition:width 1s ease"></div>
+    </div>
+  </div>
+
+  <!-- KPIs rapides -->
+  <div class="g3" style="margin-bottom:16px">
+    <div class="coach-card" style="padding:14px;text-align:center">
+      <div style="font-size:28px;font-weight:900;color:${txMarge>=30?'var(--green)':'var(--red)'}">${txMarge}%</div>
+      <div style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase">Taux de marge</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">Objectif : &gt; 30%</div>
+    </div>
+    <div class="coach-card" style="padding:14px;text-align:center">
+      <div style="font-size:28px;font-weight:900;color:${txCharges<=60?'var(--green)':'var(--red)'}">${txCharges}%</div>
+      <div style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase">Ratio charges/CA</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">Objectif : &lt; 60%</div>
+    </div>
+    <div class="coach-card" style="padding:14px;text-align:center">
+      <div style="font-size:28px;font-weight:900;color:${txEpargne>=10?'var(--green)':'var(--amber)'}">${txEpargne}%</div>
+      <div style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase">Taux d'épargne</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">Objectif : &gt; 10%</div>
+    </div>
+  </div>
+
+  <!-- Conseils personnalisés -->
+  <p class="st" style="margin-bottom:10px">💡 Conseils personnalisés</p>
+  ${conseils.map(c=>`
+  <div class="coach-tip ${c.type==='good'?'good':c.type==='danger'?'danger':''}">
+    <span style="font-size:20px;flex-shrink:0">${c.icon}</span>
+    <div><div style="font-weight:700;margin-bottom:3px">${c.titre}</div><div style="font-size:12px;opacity:.9">${c.texte}</div></div>
+  </div>`).join('')}
+
+  <!-- Tendance 3 mois -->
+  <div class="coach-card" style="margin-top:4px">
+    <p class="st" style="margin-bottom:12px">📈 Tendance 3 derniers mois — CA vs Charges</p>
+    <div style="display:flex;align-items:flex-end;gap:12px;height:100px">
+      ${mois3.map(m=>{
+        const maxV = Math.max(...mois3.map(x=>Math.max(x.ca,x.charges)),1);
+        const pCA = Math.round(m.ca/maxV*100);
+        const pCh = Math.round(m.charges/maxV*100);
+        return `<div style="flex:1;display:flex;flex-direction:column;gap:4px;align-items:center">
+          <div style="width:100%;display:flex;align-items:flex-end;gap:3px;height:80px">
+            <div style="flex:1;background:var(--green);border-radius:3px 3px 0 0;height:${pCA}%;min-height:3px" title="CA: ${F(m.ca)}"></div>
+            <div style="flex:1;background:var(--red-light);border-radius:3px 3px 0 0;height:${pCh}%;min-height:3px" title="Charges: ${F(m.charges)}"></div>
+          </div>
+          <div style="font-size:11px;font-weight:600;color:var(--text2)">${m.label}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;gap:16px;margin-top:8px;font-size:11px">
+      <span><span style="display:inline-block;width:10px;height:10px;background:var(--green);border-radius:2px;margin-right:4px"></span>CA</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:var(--red-light);border-radius:2px;margin-right:4px"></span>Charges</span>
+      <span style="margin-left:auto;color:var(--text3)">Tendance CA : <b style="color:${tendanceCa==='hausse'?'var(--green)':'var(--red)'}">${tendanceCa==='hausse'?'↑ En hausse':tendanceCa==='baisse'?'↓ En baisse':'→ Stable'}</b></span>
+    </div>
+  </div>
+
+  <!-- Top dépenses -->
+  ${topDep.length>0?`
+  <div class="coach-card">
+    <p class="st" style="margin-bottom:12px">💸 Top dépenses ce mois</p>
+    ${topDep.map(([cat,mt])=>{
+      const pct = Math.round(mt/depsTotal*100);
+      return `<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+          <span style="font-size:12px;font-weight:600">${cat}</span>
+          <span style="font-size:12px;color:var(--text3)">${F(mt)} (${pct}%)</span>
+        </div>
+        <div class="score-bar"><div class="score-fill" style="width:${pct}%;background:${pct>50?'var(--red)':pct>30?'var(--amber)':'var(--navy)'}"></div></div>
+      </div>`;
+    }).join('')}
+  </div>`:''}`;
+}
+
+// ── LEÇONS THÉORIQUES ──
+function renderCoachLecons(){
+  const lecons = [
+    {
+      icon:'🏦',cat:'Épargne',niveau:'Fondamental',couleur:'var(--navy)',
+      titre:'La règle des 3 fonds',
+      resume:'Divisez votre argent en 3 enveloppes : fonctionnement, épargne, investissement.',
+      contenu:`<p><strong>Tout entrepreneur sérieux doit gérer 3 fonds distincts :</strong></p>
+      <ol style="margin:10px 0 10px 16px;line-height:2">
+        <li><strong>Fonds de fonctionnement (60-70%)</strong> : Loyer, salaires, achats fournisseurs, charges quotidiennes</li>
+        <li><strong>Fonds d'urgence (10-15%)</strong> : 3 à 6 mois de charges en réserve. Ne jamais toucher sauf crise</li>
+        <li><strong>Fonds d'investissement (15-25%)</strong> : Expansion, nouveau stock, équipements, formation</li>
+      </ol>
+      <p>💡 <em>Astuce pratique :</em> Dès que vous encaissez, versez immédiatement les proportions sur des comptes séparés. Ne gérez jamais tout dans un seul compte.</p>`
+    },
+    {
+      icon:'📊',cat:'Gestion',niveau:'Fondamental',couleur:'var(--teal)',
+      titre:'La marge brute : votre thermomètre',
+      resume:'La marge brute révèle si votre modèle commercial est viable avant même les charges.',
+      contenu:`<p>La marge brute = <strong>CA − Coût d'achat</strong> des articles vendus.</p>
+      <p style="margin-top:8px">Pour Christ Media :</p>
+      <ul style="margin:8px 0 8px 16px;line-height:2">
+        <li>Marge &lt; 20% → <span style="color:var(--red);font-weight:600">Danger : vous vendez trop bon marché</span></li>
+        <li>Marge 20-35% → <span style="color:var(--amber);font-weight:600">Acceptable mais à améliorer</span></li>
+        <li>Marge &gt; 35% → <span style="color:var(--green);font-weight:600">Bonne santé commerciale</span></li>
+      </ul>
+      <p>💡 Pour améliorer votre marge : <strong>1)</strong> Négociez des prix d'achat plus bas, <strong>2)</strong> Augmentez légèrement vos prix, <strong>3)</strong> Supprimez les articles peu rentables.</p>`
+    },
+    {
+      icon:'💡',cat:'Comportement',niveau:'Intermédiaire',couleur:'var(--amber)',
+      titre:'Les 5 pièges qui vident une caisse',
+      resume:'Identifier ces comportements peut sauver votre trésorerie dès demain.',
+      contenu:`<ol style="margin:10px 0 10px 16px;line-height:2.2">
+        <li><strong>Mélanger argent perso et argent business</strong> : Ouvrez un compte séparé, payez-vous un salaire fixe</li>
+        <li><strong>Acheter trop de stock sans analyse</strong> : Achetez uniquement ce qui tourne vite (rotation &lt; 30 jours)</li>
+        <li><strong>Accorder trop de crédit clients</strong> : Maximum 20% du CA en créances. Au-delà c'est du capital immobilisé</li>
+        <li><strong>Ignorer les petites dépenses</strong> : 500 FCFA par jour = 180 000 FCFA par an. Chaque dépense compte</li>
+        <li><strong>Ne pas prévoir les charges fixes</strong> : Loyer, salaires, taxes. Provisionnez chaque mois même si le CA varie</li>
+      </ol>`
+    },
+    {
+      icon:'📈',cat:'Croissance',niveau:'Intermédiaire',couleur:'var(--purple)',
+      titre:'Réinvestir intelligemment',
+      resume:'Quoi réinvestir, combien, et quand — les règles du DG avisé.',
+      contenu:`<p>Règle d'or : <strong>Réinvestissez 50% de vos bénéfices nets</strong>, pas plus.</p>
+      <p style="margin-top:8px"><strong>Priorités d'investissement (dans l'ordre) :</strong></p>
+      <ol style="margin:8px 0 8px 16px;line-height:2">
+        <li>Fonds d'urgence d'abord (si pas constitué)</li>
+        <li>Stock des articles à forte rotation et forte marge</li>
+        <li>Amélioration des outils de travail (matériel, logiciels)</li>
+        <li>Formation de l'équipe</li>
+        <li>Expansion (nouveau local, nouvelle boutique)</li>
+      </ol>
+      <p>⚠️ <em>N'investissez jamais dans l'expansion sans avoir 3 mois de charges en réserve.</em></p>`
+    },
+    {
+      icon:'🤝',cat:'Fournisseurs',niveau:'Avancé',couleur:'var(--green)',
+      titre:'Négocier comme un pro',
+      resume:"Réduire vos prix d'achat de 10% peut doubler votre marge.",
+      contenu:`<p><strong>Stratégies de négociation testées :</strong></p>
+      <ul style="margin:10px 0 10px 16px;line-height:2">
+        <li><strong>Payez comptant</strong> : Offrez un paiement immédiat contre une réduction 5-10%</li>
+        <li><strong>Commandez en volume</strong> : Groupez vos commandes pour atteindre les seuils de remise</li>
+        <li><strong>Fidélité récompensée</strong> : Après 6 mois d'achat régulier, négociez un tarif préférentiel</li>
+        <li><strong>Mettez en concurrence</strong> : Toujours avoir 2-3 fournisseurs alternatifs comme levier</li>
+        <li><strong>Payez à temps</strong> : Un bon payeur obtient de meilleures conditions que n'importe qui</li>
+      </ul>`
+    },
+    {
+      icon:'🛡️',cat:'Protection',niveau:'Avancé',couleur:'var(--red)',
+      titre:'Se protéger des impayés',
+      resume:"Un crédit non récupéré est une perte sèche. Voici comment l'éviter.",
+      contenu:`<p><strong>Règles d'or pour les ventes à crédit :</strong></p>
+      <ul style="margin:10px 0 10px 16px;line-height:2">
+        <li>Maximum <strong>20% du CA mensuel</strong> en créances total</li>
+        <li>Délai maximum : <strong>30 jours</strong>. Au-delà, relance systématique</li>
+        <li>Toujours avoir <strong>un reçu signé</strong> pour tout crédit accordé</li>
+        <li>Connaître le <strong>téléphone + adresse</strong> de chaque client débiteur</li>
+        <li>Recouvrement doux : SMS → appel → visite → dernier délai</li>
+      </ul>
+      <p>📌 Dans Christ Media, utilisez le module Dettes pour suivre chaque créance avec son échéance.</p>`
+    },
+    {
+      icon:'📅',cat:'Trésorerie',niveau:'Fondamental',couleur:'var(--teal)',
+      titre:'Le plan de trésorerie sur 30 jours',
+      resume:'Anticiper vos entrées et sorties évite les mauvaises surprises.',
+      contenu:`<p>Chaque début de mois, posez-vous ces questions :</p>
+      <ol style="margin:10px 0 10px 16px;line-height:2">
+        <li><strong>Charges fixes garanties</strong> : Loyer ? Salaires ? Totalisez-les</li>
+        <li><strong>Stock à renouveler</strong> : Quels articles seront épuisés ce mois ?</li>
+        <li><strong>CA prévisionnel</strong> : Basé sur les 3 mois précédents</li>
+        <li><strong>Écart prévisionnel</strong> : CA prévu − Charges = trésorerie disponible</li>
+      </ol>
+      <p>Si l'écart est négatif avant même de commencer → <strong>réduisez les achats</strong> ou <strong>anticipez une source de revenus supplémentaire</strong>.</p>`
+    },
+  ];
+
+  document.getElementById('coach-body').innerHTML = `
+  <div style="background:var(--navy-bg);border:1px solid var(--navy-light);border-radius:var(--r);padding:14px 18px;margin-bottom:16px;font-size:13px;color:var(--navy)">
+    📚 <strong>7 leçons essentielles</strong> pour gérer Christ Media comme un DG professionnel. Cliquez sur chaque leçon pour la développer.
+  </div>
+  ${lecons.map((l,i)=>`
+  <div class="lecon-card" onclick="toggleLecon(${i})">
+    <div class="lecon-header">
+      <div style="width:40px;height:40px;border-radius:10px;background:${l.couleur}22;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${l.icon}</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-weight:700;font-size:14px">${l.titre}</span>
+          <span class="lecon-tag" style="background:${l.couleur}22;color:${l.couleur}">${l.cat}</span>
+          <span class="lecon-tag" style="background:var(--surface2);color:var(--text3)">${l.niveau}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-top:3px">${l.resume}</div>
+      </div>
+      <span id="lecon-arrow-${i}" style="font-size:16px;color:var(--text3);transition:transform .2s">▼</span>
+    </div>
+    <div class="lecon-body" id="lecon-body-${i}" style="color:var(--text2)">${l.contenu}</div>
+  </div>`).join('')}`;
+}
+
+function toggleLecon(i){
+  const body = document.getElementById('lecon-body-'+i);
+  const arrow = document.getElementById('lecon-arrow-'+i);
+  if(!body) return;
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  if(arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+// ── COACH IA ──
+let _coachHistory = [];
+
+function renderCoachIA(){
+  // Build financial context summary
+  const bid = getBid();
+  const today = D();
+  const curM = today.slice(0,7);
+  const ventes = getVentesBoutique(bid).filter(v=>v.statut==='Payé'&&v.date&&v.date.startsWith(curM));
+  const deps = getDepensesBoutique(bid).filter(d=>d.date&&d.date.startsWith(curM));
+  const achats = getAchatsBoutique(bid).filter(a=>a.date&&a.date.startsWith(curM));
+  const caM = ventes.reduce((s,v)=>s+v.mt,0);
+  const depsM = deps.reduce((s,d)=>s+d.mt,0);
+  const achatsM = achats.reduce((s,a)=>s+a.mt,0);
+  const marge = caM-achatsM;
+  const txMarge = caM>0?Math.round(marge/caM*100):0;
+  const resultat = caM-depsM-achatsM;
+  const stock = getStockBoutique(bid);
+  const nbRuptures = stock.filter(a=>sa(a)===0).length;
+  const nbStockBas = stock.filter(a=>sa(a)>0&&a.seuil>0&&sa(a)<=a.seuil).length;
+  const creditClients = getVentesBoutique(bid).filter(v=>v.statut==='Non payé').reduce((s,v)=>s+v.mt,0);
+  const masseSal = (S.employes||[]).reduce((s,e)=>s+(e.salaire||0),0);
+
+  window._coachContext = `Tu es un coach financier expert pour les PME africaines, spécialisé dans le commerce de détail au Togo (Lomé).
+Tu analyses les données réelles de Christ Media, une boutique qui vend lingerie, audio-vidéo et bureautique à Lomé.
+
+DONNÉES DU MOIS EN COURS (${new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}):
+- Chiffre d'affaires: ${F(caM)} FCFA
+- Coût des achats: ${F(achatsM)} FCFA  
+- Marge brute: ${F(marge)} FCFA (${txMarge}%)
+- Dépenses d'exploitation: ${F(depsM)} FCFA
+- Résultat net: ${F(resultat)} FCFA
+- Créances clients (impayés): ${F(creditClients)} FCFA
+- Articles en rupture: ${nbRuptures}
+- Articles en stock bas: ${nbStockBas}
+- Masse salariale mensuelle: ${F(masseSal)} FCFA
+
+Réponds toujours en français, de manière pratique et directe. Donne des conseils concrets adaptés à la réalité togolaise (FCFA, conditions locales). Sois bienveillant mais honnête. Maximum 3-4 paragraphes par réponse.`;
+
+  const suggestions = [
+    'Comment réduire mes dépenses ce mois ?',
+    'Mon taux de marge est-il bon ?',
+    'Comment gérer mes impayés clients ?',
+    'Comment mieux gérer ma trésorerie ?',
+    'Quelles dépenses peuvent être supprimées ?',
+    'Comment augmenter mon CA sans investir ?',
+  ];
+
+  document.getElementById('coach-body').innerHTML = `
+  <div style="background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:var(--r);padding:16px 20px;margin-bottom:16px;color:#fff">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <div style="font-size:28px">🤖</div>
+      <div>
+        <div style="font-weight:700;font-size:15px">Coach IA — Christ Media</div>
+        <div style="font-size:11px;opacity:.7">Analysé avec vos données réelles de ${new Date().toLocaleDateString('fr-FR',{month:'long'})}</div>
+      </div>
+    </div>
+    <div style="font-size:12px;opacity:.8">Posez vos questions financières, je les analyse avec vos chiffres réels.</div>
+  </div>
+
+  <!-- Chat -->
+  <div id="ia-chat" style="min-height:200px;margin-bottom:16px">
+    <div class="ia-bubble">
+      👋 Bonjour ! Je suis votre coach financier IA. J'ai analysé vos données de ${new Date().toLocaleDateString('fr-FR',{month:'long'})} :<br><br>
+      📊 CA : <strong>${F(caM)}</strong> · Marge : <strong>${txMarge}%</strong> · Résultat : <strong style="color:${resultat>=0?'#8ecba8':'#f0a0a0'}">${resultat>=0?'+':''}${F(resultat)}</strong><br><br>
+      Que voulez-vous améliorer ?
+    </div>
+  </div>
+
+  <!-- Suggestions rapides -->
+  <div style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap">
+    ${suggestions.map(s=>`<button onclick="envoyerCoachIA('${s.replace(/'/g,"\'")}',this)" style="background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:inherit;color:var(--text2);transition:all .15s" onmouseover="this.style.background='var(--navy-bg)'" onmouseout="this.style.background='var(--surface2)'">${s}</button>`).join('')}
+  </div>
+
+  <!-- Input -->
+  <div style="display:flex;gap:8px">
+    <input id="ia-input" class="finput" placeholder="Posez votre question financière..." style="flex:1" onkeydown="if(event.key==='Enter')envoyerCoachIA()">
+    <button class="btn btn-primary" onclick="envoyerCoachIA()">Envoyer →</button>
+  </div>`;
+}
+
+async function envoyerCoachIA(question, btn){
+  const input = document.getElementById('ia-input');
+  const chat = document.getElementById('ia-chat');
+  if(!chat) return;
+  const msg = question || (input?input.value.trim():'');
+  if(!msg) return;
+  if(input) input.value='';
+  if(btn) btn.style.opacity='0.4';
+
+  // Add user bubble
+  chat.innerHTML += `<div class="ia-bubble user">${msg}</div>`;
+
+  // Add typing indicator
+  const typingId = 'typing-'+Date.now();
+  chat.innerHTML += `<div class="ia-typing" id="${typingId}"><span></span><span></span><span></span></div>`;
+  chat.scrollTop = chat.scrollHeight;
+
+  // Build conversation history
+  _coachHistory.push({role:'user', content:msg});
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system: window._coachContext,
+        messages: _coachHistory
+      })
+    });
+    const data = await response.json();
+    const reply = (data.content&&data.content[0]&&data.content[0].text) || "Désolé, je n'ai pas pu analyser vos données.";
+    _coachHistory.push({role:'assistant', content:reply});
+
+    // Remove typing, add response
+    const typingEl = document.getElementById(typingId);
+    if(typingEl) typingEl.remove();
+
+    // Format reply with line breaks
+    const formatted = reply.replace(/[*][*](.*?)[*][*]/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+    chat.innerHTML += `<div class="ia-bubble">${formatted}</div>`;
+  } catch(e) {
+    const typingEl = document.getElementById(typingId);
+    if(typingEl) typingEl.remove();
+    chat.innerHTML += `<div class="ia-bubble" style="border-color:var(--red-light);color:var(--red)">❌ Erreur de connexion. Vérifiez votre connexion internet.</div>`;
+  }
+  if(btn) btn.style.opacity='1';
+  chat.scrollTop = chat.scrollHeight;
 }
 // ─── DIAGNOSTIC LOGIN ───
 function afficherDiag(){
