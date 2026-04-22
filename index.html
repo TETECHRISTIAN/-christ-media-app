@@ -2470,6 +2470,58 @@ function rDashVendeur(){
   </div>`;
 }
 
+// ─── CITATION QUOTIDIENNE COACH ───
+const _coachQuotes = [
+  {icon:'💡', text:"Un commerce qui ne mesure pas ses dépenses court à sa perte. Connaître ses chiffres, c'est garder le contrôle.", auteur:"Conseil du jour"},
+  {icon:'📈', text:"Augmenter son chiffre d'affaires est bien. Augmenter sa marge est mieux. Travaillez vos prix intelligemment.", auteur:"Conseil du jour"},
+  {icon:'🎯', text:"Un objectif sans chiffre n'est qu'un rêve. Fixez-vous un CA mensuel précis et suivez-le chaque semaine.", auteur:"Conseil du jour"},
+  {icon:'🤝', text:"Un client fidèle dépense 3 fois plus qu'un nouveau client. Prenez soin de vos habitués en priorité.", auteur:"Conseil du jour"},
+  {icon:'⚠️', text:"La trésorerie est le sang de votre commerce. Avant toute dépense, vérifiez que votre caisse peut l'absorber.", auteur:"Conseil du jour"},
+  {icon:'📦', text:"Un stock trop élevé immobilise votre argent. Commandez juste ce qu'il faut, au bon moment.", auteur:"Conseil du jour"},
+  {icon:'💳', text:"Les impayés clients sont des pertes déguisées. Relancez dès le premier jour de retard, sans hésiter.", auteur:"Conseil du jour"},
+  {icon:'📊', text:"Comparez vos résultats mois par mois. Ce qui ne s'améliore pas finit par régresser.", auteur:"Conseil du jour"},
+  {icon:'🔑', text:"Identifiez vos 3 articles les plus vendus et assurez-vous qu'ils ne soient jamais en rupture de stock.", auteur:"Conseil du jour"},
+  {icon:'💰', text:"Avant d'acheter de nouveaux stocks, soldez ce qui ne se vend pas. L'argent bloqué ne travaille pas.", auteur:"Conseil du jour"},
+  {icon:'🌱', text:"Réinvestissez au moins 20% de vos bénéfices dans votre stock ou votre visibilité. C'est votre croissance future.", auteur:"Conseil du jour"},
+  {icon:'⏰', text:"Les heures creuses sont une opportunité : comptez votre caisse, vérifiez vos stocks, planifiez vos achats.", auteur:"Conseil du jour"},
+  {icon:'🏆', text:"La régularité bat l'improvisation. Un commerce avec une routine solide résiste mieux aux imprévus.", auteur:"Conseil du jour"},
+  {icon:'📱', text:"Tenez votre comptabilité à jour chaque soir. 5 minutes par jour évitent des heures de stress en fin de mois.", auteur:"Conseil du jour"},
+  {icon:'🔍', text:"Analysez vos dépenses une fois par semaine. Une petite fuite non détectée peut ruiner un mois entier.", auteur:"Conseil du jour"},
+  {icon:'💬', text:"Demandez à vos clients ce qu'ils voudraient trouver dans votre boutique. Leur réponse vaut de l'or.", auteur:"Conseil du jour"},
+  {icon:'📉', text:"Une marge inférieure à 20% est un signal d'alarme. Revoyez vos prix d'achat ou vos prix de vente.", auteur:"Conseil du jour"},
+  {icon:'🤲', text:"Payez vos fournisseurs à temps pour maintenir leur confiance et négocier de meilleures conditions plus tard.", auteur:"Conseil du jour"},
+  {icon:'🧾', text:"Chaque vente sans reçu est une vente sans trace. Le reçu protège votre client et votre comptabilité.", auteur:"Conseil du jour"},
+  {icon:'🚀', text:"L'objectif n'est pas de vendre plus, mais de vendre mieux. Un client bien servi revient et amène d'autres.", auteur:"Conseil du jour"},
+  {icon:'🌍', text:"À Lomé comme ailleurs, la confiance se construit jour après jour. Votre réputation vaut plus que votre stock.", auteur:"Conseil du jour"},
+  {icon:'📝', text:"Notez chaque dépense, même les plus petites. Ce sont souvent les petits montants répétés qui creusent le déficit.", auteur:"Conseil du jour"},
+  {icon:'⚡', text:"Vitesse de service + sourire = client satisfait. Ces deux ingrédients ne coûtent rien et rapportent beaucoup.", auteur:"Conseil du jour"},
+  {icon:'🎁', text:"Une promotion bien ciblée peut doubler vos ventes sur un article. Testez, mesurez, recommencez.", auteur:"Conseil du jour"},
+  {icon:'🔄', text:"Diversifiez vos sources de revenus. Si une catégorie faiblit, les autres peuvent compenser.", auteur:"Conseil du jour"},
+  {icon:'🛡️', text:"Gardez toujours un fonds de sécurité équivalent à 1 mois de dépenses. C'est votre bouclier contre les imprévus.", auteur:"Conseil du jour"},
+  {icon:'📅', text:"Planifiez vos achats fournisseurs à l'avance pour éviter les commandes d'urgence qui coûtent plus cher.", auteur:"Conseil du jour"},
+  {icon:'💎', text:"La qualité de vos articles justifie leur prix. N'ayez pas honte de vendre bien — mais tenez votre promesse.", auteur:"Conseil du jour"},
+  {icon:'🌟', text:"Terminez chaque journée en vous demandant : 'Qu'est-ce qui s'est bien passé aujourd'hui ?' C'est ce qui doit se reproduire.", auteur:"Conseil du jour"},
+  {icon:'🧮', text:"Calculez votre point mort chaque mois : combien devez-vous vendre pour couvrir vos charges ? Ce chiffre est vital.", auteur:"Conseil du jour"},
+  {icon:'🏗️', text:"Un commerce solide se construit pierre par pierre. Ne cherchez pas la richesse rapide : cherchez la stabilité durable.", auteur:"Conseil du jour"},
+];
+function getDailyCoachQuote(){
+  const today = new Date();
+  const dayOfYear = Math.floor((today - new Date(today.getFullYear(),0,0))/(1000*60*60*24));
+  const q = _coachQuotes[dayOfYear % _coachQuotes.length];
+  const dateStr = today.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  return `<div style="background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);border-radius:var(--r);padding:16px 20px;margin-top:20px;cursor:pointer;position:relative;overflow:hidden" onclick="nav(document.querySelector('[data-page=coach]'),'coach')" title="Ouvrir le Coach Financier">
+    <div style="position:absolute;top:-20px;right:-20px;font-size:80px;opacity:.06;pointer-events:none">🤖</div>
+    <div style="display:flex;align-items:flex-start;gap:14px">
+      <div style="font-size:28px;flex-shrink:0">${q.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:6px">🎓 Coach Financier — ${dateStr}</div>
+        <div style="font-size:13px;font-weight:500;color:#fff;line-height:1.6;font-style:italic">"${q.text}"</div>
+        <div style="margin-top:10px;font-size:10px;color:rgba(255,255,255,.5)">Cliquez pour consulter votre Coach IA →</div>
+      </div>
+    </div>
+  </div>`;
+}
+
 function rDash(){
   if(!S||!S.ventes)return;
   // Tableau de bord adapté au rôle
@@ -2558,6 +2610,7 @@ function rDash(){
       <div class="card"><div class="ct">Dettes fournisseurs</div><div class="mv" style="color:var(--amber)">${F(S.fournisseurs.reduce((s,f)=>s+f.dette,0))}</div><span class="badge ba">À régler</span></div>
       <div class="card"><div class="ct">Clients débiteurs</div><div class="mv">${N(S.clients.filter(c=>c.solde>0).length)}</div><span class="badge ba">${F(S.clients.reduce((s,c)=>s+c.solde,0))}</span></div>
     </div>
+    ${getDailyCoachQuote()}
     <p class="st" style="color:var(--text3);font-size:11px;font-weight:400;margin-top:24px">
       Raccourcis : <span class="kbd">N</span> Vente &nbsp; <span class="kbd">Q</span> Caisse rapide &nbsp; <span class="kbd">S</span> Stock &nbsp; <span class="kbd">C</span> Clients &nbsp; <span class="kbd">R</span> Caisse &nbsp; <span class="kbd">Ctrl+K</span> Recherche &nbsp; <span class="kbd">?</span> Aide
     </p>`;
@@ -2950,7 +3003,7 @@ function validerPanier(){
     S.ventes.push({
       id:vid,date:D(),
       bid:getBid(),
-      lignes:window.panier.map(l=>({aid:l.aid,qte:l.qte,pu:l.pu,mt:l.mt,typePrix:l.typePrix})),
+      lignes:window.panier.map(l=>({aid:l.aid,nom:l.nom,qte:l.qte,pu:l.pu,mt:l.mt,typePrix:l.typePrix})),
       aid:window.panier[0].aid,qte:window.panier[0].qte,pu:window.panier[0].pu,
       mt,sousTotal,remise:remiseMt,typePrix:window.typePrix||'detail',
       statut,client,mode,cid,
@@ -4599,15 +4652,16 @@ function saveReglementDette(fid){
 let factureNum=1000;
 function printFacture(vid){
   const v=S.ventes.find(v=>v.id==vid);if(!v)return;
-  const a=ga(v.aid);
+  const lignes=v.lignes||[{aid:v.aid,nom:v.nom_article,qte:v.qte,pu:v.pu,mt:v.mt}];
   factureNum++;
+  const p=S.parametres||{};
   const fd=document.getElementById('facture-print');
   fd.style.display='block';
   fd.innerHTML=`
     <div class="facture-header">
       <div>
-        <div class="facture-logo">⛪ Christ Media</div>
-        <div style="font-size:12px;color:#555;margin-top:4px">Lomé, Togo<br>christmedia176@gmail.com</div>
+        <div class="facture-logo">⛪ ${p.nom||'Christ Media'}</div>
+        <div style="font-size:12px;color:#555;margin-top:4px">${p.ville||'Lomé, Togo'}${p.tel?'<br>'+p.tel:''}<br>${p.email||'christmedia176@gmail.com'}</div>
       </div>
       <div class="facture-info">
         <div style="font-size:18px;font-weight:700;color:#0f1f3d">FACTURE</div>
@@ -4619,8 +4673,8 @@ function printFacture(vid){
     <div class="facture-parties">
       <div class="facture-party">
         <div class="facture-party-title">Émetteur</div>
-        <div style="font-weight:600">Christ Media</div>
-        <div style="font-size:12px;color:#555;margin-top:4px">Lomé, Togo<br>Lingerie · Audio-Vidéo · Bureautique</div>
+        <div style="font-weight:600">${p.nom||'Christ Media'}</div>
+        <div style="font-size:12px;color:#555;margin-top:4px">${p.ville||'Lomé, Togo'}<br>Lingerie · Audio-Vidéo · Bureautique</div>
       </div>
       <div class="facture-party">
         <div class="facture-party-title">Client</div>
@@ -4628,23 +4682,26 @@ function printFacture(vid){
       </div>
     </div>
     <table class="facture-table">
-      <thead><tr><th>Description</th><th>Catégorie</th><th>Qté</th><th>Prix unitaire</th><th>Total</th></tr></thead>
+      <thead><tr><th>#</th><th>Description</th><th>Catégorie</th><th>Qté</th><th>Prix unitaire</th><th>Total</th></tr></thead>
       <tbody>
+        ${lignes.map((l,i)=>{const a=ga(l.aid);const nom=l.nom||(a?a.nom:'Article');const cat=a?a.cat:'';return`
         <tr>
-          <td style="font-weight:500">${a?a.nom:'Article'}</td>
-          <td>${a?a.cat:''}</td>
-          <td>${v.qte}</td>
-          <td>${F(v.pu)}</td>
-          <td style="font-weight:600">${F(v.mt)}</td>
-        </tr>
+          <td style="color:#999;font-size:11px">${i+1}</td>
+          <td style="font-weight:500">${nom}</td>
+          <td style="color:#777;font-size:12px">${cat}</td>
+          <td style="text-align:center">${l.qte}</td>
+          <td>${F(l.pu)}</td>
+          <td style="font-weight:600">${F(l.mt)}</td>
+        </tr>`}).join('')}
       </tbody>
     </table>
     <div class="facture-totaux">
-      <div class="facture-tot-row"><span>Sous-total</span><span>${F(v.mt)}</span></div>
+      ${lignes.length>1&&v.sousTotal?`<div class="facture-tot-row"><span>Sous-total (${lignes.length} articles)</span><span>${F(v.sousTotal)}</span></div>`:''}
+      ${v.remise&&v.remise>0?`<div class="facture-tot-row" style="color:#8a5200"><span>🎯 Remise</span><span>−${F(v.remise)}</span></div>`:''}
       <div class="facture-tot-row"><span>Mode de paiement</span><span>${v.cid?nomCompte(v.cid):(v.mode||'—')}</span></div>
       <div class="facture-tot-row facture-tot-final"><span>TOTAL</span><span>${F(v.mt)}</span></div>
     </div>
-    <div class="facture-footer">Merci pour votre confiance · Christ Media · Lomé, Togo</div>`;
+    <div class="facture-footer">Merci pour votre confiance · ${p.nom||'Christ Media'} · ${p.ville||'Lomé, Togo'}</div>`;
   window.print();
   setTimeout(()=>{fd.style.display='none';},500);
 }
@@ -5128,6 +5185,26 @@ function rParametres(){
     </div>
 
     <div class="param-section">
+      <div class="param-section-title">🤖 Coach IA — Clé API Anthropic</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.6">
+        Le Coach IA utilise l'API Anthropic (Claude). Entrez votre clé API pour activer les réponses intelligentes.<br>
+        <a href="https://console.anthropic.com/account/keys" target="_blank" style="color:var(--navy);font-weight:600">Obtenir une clé sur console.anthropic.com →</a>
+      </div>
+      <div class="fg"><label class="fl">Clé API Anthropic (sk-ant-...)</label>
+        <div style="display:flex;gap:8px">
+          <input class="fi" id="p-anthropic-key" type="password" value="${p.anthropic_key||''}" placeholder="sk-ant-api03-..." style="flex:1;font-family:monospace;font-size:12px">
+          <button class="btn btn-sm" onclick="document.getElementById('p-anthropic-key').type=document.getElementById('p-anthropic-key').type==='password'?'text':'password'">👁️</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-primary" onclick="sauvegarderCleAPI()">💾 Enregistrer la clé</button>
+        <button class="btn btn-sm" onclick="testerCleAPI()" style="border-color:var(--teal);color:var(--teal)">🔌 Tester la connexion</button>
+        ${p.anthropic_key?'<span style="color:var(--green);font-size:12px;font-weight:600">✅ Clé configurée</span>':'<span style="color:var(--amber);font-size:12px">⚠️ Aucune clé — Coach IA désactivé</span>'}
+      </div>
+      <div id="api-test-result" style="margin-top:8px;font-size:12px"></div>
+    </div>
+
+    <div class="param-section">
       <div class="param-section-title">⏰ Sauvegarde automatique</div>
       <div class="fg"><label class="fl">Fréquence de sync Firebase automatique</label>
         <select class="fs" id="p-autoBackup" onchange="majParam('autoBackupFreq',+this.value);initAutoBackup()">
@@ -5290,6 +5367,40 @@ function ajouterCategorie(){ajouterCatBoutique(getBid());}
 function supprimerCategorie(i){supprimerCatBoutique(getBid(),i);}
 function majCatDep(i,val){if(!S.parametres)S.parametres={};if(!S.parametres.categoriesDep)S.parametres.categoriesDep=getCatsDep();S.parametres.categoriesDep[i]=val;}
 function majParam(k,v){if(!S.parametres)S.parametres={};S.parametres[k]=v;}
+
+function sauvegarderCleAPI(){
+  const val = (document.getElementById('p-anthropic-key')?.value||'').trim();
+  if(!val) return toast('⚠️ Entrez une clé API avant de sauvegarder');
+  if(!val.startsWith('sk-ant-')) return toast('❌ La clé doit commencer par sk-ant-');
+  if(!S.parametres) S.parametres={};
+  S.parametres.anthropic_key = val;
+  saveData();
+  toast('✅ Clé API enregistrée !');
+  rParametres();
+}
+
+async function testerCleAPI(){
+  const key = (document.getElementById('p-anthropic-key')?.value||'').trim() || (S.parametres?.anthropic_key||'');
+  const res = document.getElementById('api-test-result');
+  if(!key){if(res)res.innerHTML='<span style="color:var(--red)">❌ Aucune clé saisie</span>';return;}
+  if(res) res.innerHTML='<span style="color:var(--text3)">⏳ Test en cours...</span>';
+  try{
+    const r = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:20,messages:[{role:'user',content:'Dis juste "OK"'}]})
+    });
+    const d = await r.json();
+    if(d.content&&d.content[0]){
+      if(res) res.innerHTML='<span style="color:var(--green);font-weight:600">✅ Connexion réussie ! Coach IA opérationnel.</span>';
+    } else {
+      if(res) res.innerHTML=`<span style="color:var(--red)">❌ Erreur : ${d.error?.message||'Réponse invalide'}</span>`;
+    }
+  }catch(e){
+    if(res) res.innerHTML=`<span style="color:var(--red)">❌ Erreur réseau : ${e.message}</span>`;
+  }
+}
+
 function sauvegarderParams(){
   addAudit('UPDATE','Paramètres','Modification des paramètres généraux', null, {nom:S.parametres?.nom});
   saveData();
@@ -7670,9 +7781,12 @@ function printRecu(vid){
         </div>
         <div class="recu-articles-titre"><span>Articles</span><span>${lignes.length} art.</span></div>
         <div style="margin-bottom:4px">
-          ${lignes.map(l=>{const a=ga(l.aid);return`
+          ${lignes.map(l=>{const a=ga(l.aid);const nom=l.nom||(a?a.nom:'Article supprimé');const puUnit=l.pu||0;return`
             <div class="recu-item-row">
-              <span class="recu-item-nom">${a?a.nom:'Article supprimé'}</span>
+              <div style="flex:1;min-width:0">
+                <span class="recu-item-nom">${nom}</span>
+                ${lignes.length>1?`<div style="font-size:10px;color:#aaa;margin-top:1px">${F(puUnit)} × ${l.qte}</div>`:''}
+              </div>
               <span class="recu-item-qte">×${l.qte}</span>
               <span class="recu-item-mt">${F(l.mt)}</span>
             </div>`}).join('')}
@@ -14594,7 +14708,12 @@ async function envoyerCoachIA(question, btn){
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': (S.parametres&&S.parametres.anthropic_key)||'',
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:1000,
@@ -14602,6 +14721,10 @@ async function envoyerCoachIA(question, btn){
         messages: _coachHistory
       })
     });
+    if(!response.ok){
+      const err = await response.json().catch(()=>({}));
+      throw new Error(err.error?.message||'Erreur API '+response.status);
+    }
     const data = await response.json();
     const reply = (data.content&&data.content[0]&&data.content[0].text) || "Désolé, je n'ai pas pu analyser vos données.";
     _coachHistory.push({role:'assistant', content:reply});
@@ -14616,7 +14739,13 @@ async function envoyerCoachIA(question, btn){
   } catch(e) {
     const typingEl = document.getElementById(typingId);
     if(typingEl) typingEl.remove();
-    chat.innerHTML += `<div class="ia-bubble" style="border-color:var(--red-light);color:var(--red)">❌ Erreur de connexion. Vérifiez votre connexion internet.</div>`;
+    const isKeyMissing = !(S.parametres&&S.parametres.anthropic_key);
+    chat.innerHTML += `<div class="ia-bubble" style="border-color:var(--red-light);color:var(--red)">
+      ❌ ${isKeyMissing
+        ? 'Clé API manquante. Allez dans <strong>Paramètres → Clé API Anthropic</strong> pour activer le Coach IA.'
+        : 'Erreur : '+e.message+'. Vérifiez votre clé API dans les Paramètres.'
+      }
+    </div>`;
   }
   if(btn) btn.style.opacity='1';
   chat.scrollTop = chat.scrollHeight;
