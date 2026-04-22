@@ -8488,7 +8488,10 @@ function rModeles(){
         <div class="card" style="border-top:3px solid ${typeCouleur[m.type]||'var(--navy)'}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
             <div style="font-size:22px">${typeIcon[m.type]||'📋'}</div>
-            <button class="btn-icon" onclick="delModele(${m.id})" style="color:var(--red);font-size:12px">✕</button>
+            <div style="display:flex;gap:4px">
+              <button class="btn-icon btn-sm" onclick="editModele(${m.id})" title="Modifier" style="color:var(--navy);font-size:11px">✏️</button>
+              <button class="btn-icon" onclick="delModele(${m.id})" style="color:var(--red);font-size:12px">✕</button>
+            </div>
           </div>
           <div style="font-weight:700;font-size:14px;margin-bottom:2px">${m.nom}</div>
           <div style="font-size:11px;color:var(--text3);margin-bottom:4px">${m.type} · ${m.cat||''}</div>
@@ -8548,6 +8551,57 @@ function delModele(id){
   if(!confirm('Supprimer ce modèle ?'))return;
   S.modeles=S.modeles.filter(m=>m.id!=id);
   saveData();rModeles();toast('🗑️ Modèle supprimé');
+}
+function editModele(id){
+  const m=S.modeles.find(x=>x.id==id);if(!m)return;
+  const devise=(S.parametres&&S.parametres.devise)||'FCFA';
+  modal(`<div class="mft">✏️ Modifier le modèle</div>
+    <div class="fg"><label class="fl">Nom du modèle</label>
+      <input class="fi" id="mod-nom" value="${m.nom}">
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Type d'opération</label>
+        <select class="fs" id="mod-type">
+          <option value="depense"${m.type==='depense'?' selected':''}>💸 Dépense</option>
+          <option value="revenu"${m.type==='revenu'?' selected':''}>💰 Revenu</option>
+          <option value="achat"${m.type==='achat'?' selected':''}>📦 Achat stock</option>
+          <option value="transfert"${m.type==='transfert'?' selected':''}>🔄 Transfert</option>
+          <option value="rappel"${m.type==='rappel'?' selected':''}>🔔 Rappel</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Catégorie</label>
+        <input class="fi" id="mod-cat" value="${m.cat||''}">
+      </div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Montant (${devise})</label>
+        <input class="fi" type="number" id="mod-mt" value="${m.montant||0}">
+      </div>
+      <div class="fg"><label class="fl">Compte par défaut</label>
+        ${selectComptes('mod-cid', m.cid||premierCompteId())}
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Notes / Description</label>
+      <input class="fi" id="mod-notes" value="${m.notes||''}">
+    </div>
+    <div class="mff">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveEditModele(${id})">💾 Enregistrer</button>
+    </div>`);
+}
+function saveEditModele(id){
+  const m=S.modeles.find(x=>x.id==id);if(!m)return;
+  const nom=document.getElementById('mod-nom').value.trim();
+  const mt=+document.getElementById('mod-mt').value||0;
+  if(!nom)return toast('❌ Nom requis');
+  if(!mt)return toast('❌ Montant requis');
+  m.nom=nom;
+  m.type=document.getElementById('mod-type').value;
+  m.cat=document.getElementById('mod-cat').value;
+  m.montant=mt;
+  m.cid=document.getElementById('mod-cid').value;
+  m.notes=document.getElementById('mod-notes').value;
+  saveData();closeModal();toast('✅ Modèle modifié');rModeles();
 }
 function appliquerModele(id){
   const m=S.modeles.find(x=>x.id==id);if(!m)return;
@@ -8634,8 +8688,9 @@ function rAgenda(){
               ${op.notes?`<div style="font-size:11px;color:var(--text2);margin-top:4px;font-style:italic">${op.notes}</div>`:''}
             </div>
             <div style="display:flex;gap:5px;flex-shrink:0;margin-left:10px">
-              <button class="btn btn-sm btn-success" onclick="marquerFait(${op.id})">✓</button>
+              <button class="btn btn-sm btn-success" onclick="marquerFait(${op.id})" title="Marquer fait">✓</button>
               ${op.modeleId?`<button class="btn btn-sm btn-primary" onclick="appliquerModele(${op.modeleId})" title="Appliquer modèle">▶</button>`:''}
+              <button class="btn-icon btn-sm" onclick="editAgenda(${op.id})" title="Modifier" style="color:var(--navy);font-size:12px">✏️</button>
               <button class="btn-icon btn-sm" onclick="delAgenda(${op.id})" style="color:var(--red)">✕</button>
             </div>
           </div>
@@ -8760,6 +8815,73 @@ function saveAgenda(){
     modeleId,notes:document.getElementById('ag-notes').value,fait:false
   });
   saveData();closeModal();toast('✅ Opération planifiée');rAgenda();
+}
+
+function editAgenda(id){
+  const op=S.agenda.find(a=>a.id==id);if(!op)return;
+  const modelesOpts=(S.modeles||[]).map(m=>`<option value="${m.id}"${op.modeleId==m.id?' selected':''}>[${m.type}] ${m.nom} — ${F(m.montant)}</option>`).join('');
+  const devise=(S.parametres&&S.parametres.devise)||'FCFA';
+  modal(`<div class="mft">✏️ Modifier l'opération planifiée</div>
+    <div class="fg"><label class="fl">Titre / Description</label>
+      <input class="fi" id="ag-titre" value="${op.titre}">
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Date</label>
+        <input class="fi" type="date" id="ag-date" value="${op.date}">
+      </div>
+      <div class="fg"><label class="fl">Type</label>
+        <select class="fs" id="ag-type">
+          <option value="depense"${op.type==='depense'?' selected':''}>💸 Dépense</option>
+          <option value="revenu"${op.type==='revenu'?' selected':''}>💰 Revenu</option>
+          <option value="achat"${op.type==='achat'?' selected':''}>📦 Achat</option>
+          <option value="transfert"${op.type==='transfert'?' selected':''}>🔄 Transfert</option>
+          <option value="rappel"${op.type==='rappel'?' selected':''}>🔔 Rappel</option>
+        </select>
+      </div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Montant (${devise}) optionnel</label>
+        <input class="fi" type="number" id="ag-mt" value="${op.montant||0}">
+      </div>
+      <div class="fg"><label class="fl">Compte lié</label>
+        ${selectComptes('ag-cid', op.cid||premierCompteId())}
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Récurrence</label>
+      <select class="fs" id="ag-rec">
+        <option value=""${!op.recurrence?' selected':''}>Aucune (ponctuel)</option>
+        <option value="Quotidien"${op.recurrence==='Quotidien'?' selected':''}>Quotidien</option>
+        <option value="Hebdomadaire"${op.recurrence==='Hebdomadaire'?' selected':''}>Hebdomadaire</option>
+        <option value="Mensuel"${op.recurrence==='Mensuel'?' selected':''}>Mensuel</option>
+      </select>
+    </div>
+    ${modelesOpts?`<div class="fg"><label class="fl">Lier à un modèle (optionnel)</label>
+      <select class="fs" id="ag-modele">
+        <option value="">— Aucun —</option>${modelesOpts}
+      </select>
+    </div>`:''}
+    <div class="fg"><label class="fl">Notes</label>
+      <input class="fi" id="ag-notes" value="${op.notes||''}">
+    </div>
+    <div class="mff">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveEditAgenda(${id})">💾 Enregistrer</button>
+    </div>`);
+}
+function saveEditAgenda(id){
+  const op=S.agenda.find(a=>a.id==id);if(!op)return;
+  const titre=document.getElementById('ag-titre').value.trim();
+  const date=document.getElementById('ag-date').value;
+  if(!titre||!date)return toast('❌ Titre et date requis');
+  op.titre=titre;
+  op.date=date;
+  op.type=document.getElementById('ag-type').value;
+  op.montant=+document.getElementById('ag-mt').value||0;
+  op.cid=document.getElementById('ag-cid').value||null;
+  op.recurrence=document.getElementById('ag-rec').value||null;
+  op.modeleId=document.getElementById('ag-modele')?+document.getElementById('ag-modele').value||null:op.modeleId||null;
+  op.notes=document.getElementById('ag-notes').value;
+  saveData();closeModal();toast('✅ Opération modifiée');rAgenda();
 }
 
 function marquerFait(id){
