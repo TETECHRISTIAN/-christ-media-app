@@ -1,92 +1,102 @@
-// ─── CHRIST MEDIA — SERVICE WORKER ───
-const CACHE_NAME = 'christmedia-v4';
-const BASE = '/-christ-media-app';
+// ─── SERVICE WORKER — Christ Media PWA ───
+// Version 2.1 — Correction clone error + Firebase exclus du cache
 
-const ASSETS_TO_CACHE = [
-  BASE + '/',
-  BASE + '/index.html',
-  BASE + '/manifest.json',
-  BASE + '/icons/icon-192x192.png',
-  BASE + '/icons/icon-512x512.png',
+const CACHE_NAME = 'christ-media-v4';
+const STATIC_ASSETS = [
+  './',
+  './index.html',
+  './manifest.json',
+  './icons/icon-192x192.png',
+  './icons/icon-512x512.png',
 ];
 
-// ─── INSTALLATION ───
+// Domaines à NE JAMAIS mettre en cache (toujours réseau)
+const NETWORK_ONLY_DOMAINS = [
+  'firebaseio.com',
+  'firebase.googleapis.com',
+  'googleapis.com',
+  'gstatic.com',
+  'firebaseapp.com',
+  'anthropic.com',
+  'api.cloudinary.com',
+  'res.cloudinary.com',
+];
+
+// ─── INSTALL ───
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(ASSETS_TO_CACHE).catch(err => {
-        console.warn('SW: certains fichiers non mis en cache:', err);
+      return cache.addAll(STATIC_ASSETS).catch(err => {
+        console.warn('SW: Certains assets non mis en cache:', err);
       });
-    }).then(() => self.skipWaiting())
+    })
   );
+  self.skipWaiting();
 });
 
-// ─── ACTIVATION ───
+// ─── ACTIVATE ───
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(names =>
-      Promise.all(names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n)))
-    ).then(() => self.clients.claim())
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          .filter(key => key !== CACHE_NAME)
+          .map(key => caches.delete(key))
+      )
+    )
   );
+  self.clients.claim();
 });
 
 // ─── FETCH ───
 self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-  if (event.request.method !== 'GET') return;
+  const url = event.request.url;
 
-  // Laisser passer Firebase, Cloudinary, APIs externes
-  if (
-    url.hostname.includes('firebase') ||
-    url.hostname.includes('firebaseio') ||
-    url.hostname.includes('googleapis') ||
-    url.hostname.includes('cloudinary') ||
-    url.hostname.includes('qrserver') ||
-    url.protocol === 'chrome-extension:'
-  ) return;
+  // 1. Ignorer les requêtes non-HTTP
+  if (!url.startsWith('http')) return;
 
-  // CDN (fonts, scripts) — Cache First
-  if (
-    url.hostname.includes('fonts.googleapis') ||
-    url.hostname.includes('fonts.gstatic') ||
-    url.hostname.includes('cdnjs.cloudflare') ||
-    url.hostname.includes('unpkg.com') ||
-    url.hostname.includes('cdn.jsdelivr')
-  ) {
-    event.respondWith(
-      caches.match(event.request).then(cached => {
-        if (cached) return cached;
-        return fetch(event.request).then(res => {
-          if (res && res.status === 200) {
-            caches.open(CACHE_NAME).then(c => c.put(event.request, res.clone()));
-          }
-          return res;
-        }).catch(() => cached);
-      })
-    );
+  // 2. Firebase et APIs externes → toujours réseau, jamais de cache
+  const isNetworkOnly = NETWORK_ONLY_DOMAINS.some(domain => url.includes(domain));
+  if (isNetworkOnly) {
+    // Laisser passer sans interception (pas de event.respondWith)
     return;
   }
 
-  // App locale — Network First avec fallback cache
-  event.respondWith(
-    fetch(event.request).then(res => {
-      if (res && res.status === 200 && res.type !== 'opaque') {
-        caches.open(CACHE_NAME).then(c => c.put(event.request, res.clone()));
-      }
-      return res;
-    }).catch(() =>
-      caches.match(event.request).then(cached => {
-        if (cached) return cached;
-        if (event.request.mode === 'navigate') {
-          return caches.match(BASE + '/index.html');
-        }
-        return new Response('Hors ligne', { status: 503 });
-      })
-    )
-  );
-});
+  // 3. Requêtes POST/PUT/DELETE → toujours réseau
+  if (event.request.method !== 'GET') return;
 
-// ─── MESSAGES ───
-self.addEventListener('message', event => {
-  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
+  // 4. Assets statiques → Cache First avec fallback réseau
+  event.respondWith(
+    caches.match(event.request).then(cached => {
+      if (cached) return cached;
+
+      // Pas en cache → fetch réseau puis mettre en cache
+      return fetch(event.request)
+        .then(response => {
+          // Vérifier que la réponse est valide avant de cloner
+          if (
+            !response ||
+            response.status !== 200 ||
+            response.type === 'opaque'
+          ) {
+            return response;
+          }
+
+          // Cloner AVANT toute utilisation
+          const responseToCache = response.clone();
+
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
+
+          return response;
+        })
+        .catch(() => {
+          // Hors ligne et pas en cache → page offline si disponible
+          if (event.request.destination === 'document') {
+            return caches.match('./index.html');
+          }
+        });
+    })
+  );
 });
