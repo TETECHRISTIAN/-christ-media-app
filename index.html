@@ -7477,21 +7477,12 @@ function connexionEmail(){
   console.log('[LOGIN] trouvé dans defaultData:', !!u);
 
   if(!u){
-    const tousUsers=[...(S.utilisateurs||[]),...(defaultData.utilisateurs||[])];
-    const emailExiste=tousUsers.some(x=>x.actif!==false&&(x.email||'').toLowerCase()===email);
-    if(emailExiste){
-      if(errEl){errEl.style.color='';errEl.textContent='Mot de passe incorrect. Réessayez.';errEl.style.display='block';}
-      const pwEl=document.getElementById('login-password');
-      if(pwEl){pwEl.value='';pwEl.focus();}
-    } else {
-      // Email inconnu localement → tenter Firebase en arrière-plan
-      if(errEl){errEl.style.color='';errEl.textContent='Vérification en cours…';errEl.style.display='block';}
-      const btnLogin=document.querySelector('.login-btn');
-      if(btnLogin){btnLogin.disabled=true;}
-      _connexionViaFirebase(email, password, errEl, btnLogin);
-      return;
-    }
-    setTimeout(()=>{if(errEl){errEl.style.color='';errEl.style.display='none';}},4000);
+    // Toujours tenter Firebase si l'auth locale échoue
+    // (les données locales peuvent être obsolètes sur un autre appareil)
+    if(errEl){errEl.style.color='';errEl.textContent='Vérification en cours…';errEl.style.display='block';}
+    const btnLogin=document.querySelector('.login-btn');
+    if(btnLogin){btnLogin.disabled=true;}
+    _connexionViaFirebase(email, password, errEl, btnLogin);
     return;
   }
 
@@ -7555,6 +7546,24 @@ function _ouvrirSession(u){
   if(!S.clients)S.clients=[];
   if(!S.fournisseurs)S.fournisseurs=[];
   if(!S.depenses)S.depenses=[];
+  // Forcer rechargement complet depuis Firebase apres connexion
+  // (indispensable sur un appareil distant dont le localStorage est vide/obsolete)
+  if(fbReady && db && navigator.onLine){
+    setSyncStatus('syncing','Chargement des donnees...');
+    setTimeout(()=>{
+      loadFromFirebase().then(remote=>{
+        if(remote){
+          const savedSession=S.session;
+          const merged=fusionnerDonnees(S,remote);
+          appliquerEtatFusionne(merged);
+          if(savedSession&&savedSession.uid) S.session=savedSession;
+          setSyncStatus('online','Synchronise ✓');
+          if(!_realtimeListener) activerListenerTempsReel();
+          rafraichirPageCourante();
+        }
+      }).catch(()=>{setSyncStatus('offline','Hors ligne');});
+    }, 500);
+  }
   try{rDash();}catch(e){
     console.error('[LOGIN] rDash() a planté:', e);
     // Forcer l'affichage du dashboard quand même
