@@ -1761,54 +1761,44 @@ function activerListenerTempsReel(){
     const remoteVer = remote.version || 0;
     const localVer  = S.version  || 0;
 
-    if(remoteVer > localVer){
-      // Remote plus récent → fusion intelligente
-      const merged = fusionnerDonnees(S, remote);
-      appliquerEtatFusionne(merged);
+    // Fusionner par IDs dans tous les cas — peu importe la version
+    // L'approche "ignorer si version locale > remote" causait des pertes de données
+    // car l'appareil distant pouvait avoir une version plus haute après le login
+    const savedSession = S.session;
+    let changed = false;
+    const merged = Object.assign({}, S);
+
+    // Toujours prendre les métadonnées les plus récentes
+    if(remoteVer > (S.version||0)){
+      merged.version = remoteVer;
+      merged.parametres = remote.parametres || S.parametres;
+      merged.boutique_active = remote.boutique_active || S.boutique_active;
+    }
+
+    // Fusionner chaque collection par IDs (union complète)
+    FB_COLLECTIONS.forEach(col=>{
+      const remoteArr = Array.isArray(remote[col]) ? remote[col] : [];
+      const localArr  = Array.isArray(S[col])     ? S[col]      : [];
+      const localIds  = new Set(localArr.map(x=>String(x.id)));
+      const nouveauxRemote = remoteArr.filter(x => !localIds.has(String(x.id)));
+      if(nouveauxRemote.length > 0){
+        merged[col] = [...localArr, ...nouveauxRemote];
+        changed = true;
+      }
+    });
+
+    if(changed){
+      S = merged;
+      if(savedSession && savedSession.uid) S.session = savedSession;
+      saveLocal(S);
       setSyncStatus('online','Synchronisé ✓');
       rafraichirPageCourante();
-      toast('🔄 Données mises à jour depuis un autre appareil', 1800);
-
-    } else if(remoteVer === localVer && remoteVer > 0){
-      // MÊME version → conflit simultané
-      // FIX : on fusionne par IDs (union) au lieu de comparer les longueurs
-      // Cela gère correctement les suppressions et ajouts simultanés
-      const savedSession = S.session;
-      let changed = false;
-      const merged = Object.assign({}, S);
-      FB_COLLECTIONS.forEach(col=>{
-        const remoteArr = Array.isArray(remote[col]) ? remote[col] : [];
-        const localArr  = Array.isArray(S[col])     ? S[col]      : [];
-        // Construire un Set des IDs locaux pour détecter les nouveautés remote
-        const localIds = new Set(localArr.map(x=>String(x.id)));
-        const remoteIds = new Set(remoteArr.map(x=>String(x.id)));
-        // Éléments présents dans remote mais absents en local = nouveaux
-        const nouveauxRemote = remoteArr.filter(x => !localIds.has(String(x.id)));
-        // Éléments présents en local mais absents dans remote = supprimés en remote
-        // On respecte la suppression remote si remote est une source d'autorité (même version)
-        // Compromis : on garde l'union (ajouter sans supprimer) pour éviter pertes
-        if(nouveauxRemote.length > 0){
-          merged[col] = [...localArr, ...nouveauxRemote];
-          changed = true;
-        }
-      });
-      if(changed){
-        S = merged;
-        if(savedSession && savedSession.uid) S.session = savedSession;
-        // Bump la version pour signaler qu'on a fusionné
-        S.version = Date.now();
-        saveLocal(S);
-        // Repousser la fusion vers Firebase
-        _ignorerProchainUpdate = true;
-        clearTimeout(_ignorerTimer);
-        _ignorerTimer = setTimeout(()=>{ _ignorerProchainUpdate = false; }, 6000);
-        saveToFirebase(S).catch(()=>{});
-        setSyncStatus('online','Fusionné ✓');
-        rafraichirPageCourante();
-        toast('🔀 Conflit résolu — données fusionnées', 2000);
+      if(remoteVer > localVer){
+        toast('🔄 Données mises à jour', 1800);
       }
+    } else {
+      setSyncStatus('online','Synchronisé ✓');
     }
-    // Si remoteVer < localVer : notre version est plus récente, on ignore
   }, e=>{
     console.warn('Realtime listener error:',e);
     setSyncStatus('offline','Hors ligne');
