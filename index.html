@@ -1924,7 +1924,13 @@ function fusionnerDonnees(local, remote){
 function appliquerEtatFusionne(merged){
   const savedSession = S.session;
   S = merged;
-  if(savedSession && savedSession.uid) S.session = savedSession;
+  if(savedSession && savedSession.uid){
+    S.session = savedSession;
+    // Preserver boutique_active de la session (sinon getBid() bascule sur la mauvaise boutique)
+    if(savedSession.boutique_active){
+      S.boutique_active = savedSession.boutique_active;
+    }
+  }
   saveLocal(S);
 }
 
