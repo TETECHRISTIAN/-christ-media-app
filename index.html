@@ -2420,7 +2420,7 @@ function ouvrirQBManager(){
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div>
               <div style="font-size:15px;font-weight:700">✏️ Personnaliser les raccourcis</div>
-              <div style="font-size:11px;color:var(--text3);margin-top:2px">Choisissez jusqu'à 6 menus à afficher dans la barre du haut</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">Choisissez jusqu'à 10 menus à afficher dans la barre du haut</div>
             </div>
             <button class="btn-icon" onclick="fermerQBManager()">✕</button>
           </div>
@@ -2454,7 +2454,7 @@ function toggleQBPage(page, btn){
     cfg.splice(idx,1);
     btn.classList.remove('selected');
   } else {
-    if(cfg.length>=6){ toast('⚠️ Maximum 6 raccourcis dans la barre'); return; }
+    if(cfg.length>=10){ toast('⚠️ Maximum 10 raccourcis dans la barre'); return; }
     cfg.push({page, center:false});
     btn.classList.add('selected');
   }
@@ -3208,7 +3208,17 @@ function ouvrirPanierModal(){
       <div class="fg"><label class="fl">Compte encaissement</label>${selectComptes('pa-mode', premierCompteId())}</div>
     </div>
     <div class="fg"><label class="fl">Statut</label>
-      <select class="fs" id="pa-statut"><option value="Payé">✅ Payé</option><option value="Non payé">⏳ À percevoir</option></select>
+      <select class="fs" id="pa-statut" onchange="toggleChampRecu(this.value,${totalFinal})"><option value="Payé">✅ Payé</option><option value="Non payé">⏳ À percevoir</option></select>
+    </div>
+    <div id="zone-recu-panier" style="margin-top:4px">
+      <div class="fr">
+        <div class="fg"><label class="fl">💵 Montant remis</label>
+          <input class="fi" type="number" id="pa-recu" placeholder="${totalFinal}" oninput="calcMonnaieInline(${totalFinal})" style="font-weight:700">
+        </div>
+        <div class="fg"><label class="fl">🪙 Monnaie à rendre</label>
+          <input class="fi" type="number" id="pa-monnaie" readonly style="background:var(--green-bg);color:var(--green);font-weight:700;font-size:15px">
+        </div>
+      </div>
     </div>
     <!-- Boutons -->
     <div class="mff">
@@ -3263,6 +3273,7 @@ function validerPanier(){
   const cid=document.getElementById('pa-mode')?.value||premierCompteId();
   const mode=nomCompte(cid);
   const statut=document.getElementById('pa-statut')?.value||'Payé';
+  const montantRecu=+document.getElementById('pa-recu')?.value||0;
   const sousTotal=window.panier.reduce((s,l)=>s+l.mt,0);
   const remiseMt=window.remise.type==='%'?Math.round(sousTotal*window.remise.val/100):Math.min(window.remise.val||0,sousTotal);
   const mt=Math.max(0,sousTotal-remiseMt);
@@ -3293,7 +3304,9 @@ function validerPanier(){
       caissier_nom:S.session?.nom||null,
       caissier_emoji:S.session?.emoji||'👤',
       caissier_role:S.session?.role||null,
-      heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})
+      heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
+      montant_recu: statut==='Payé' && montantRecu > 0 ? montantRecu : null,
+      monnaie: statut==='Payé' && montantRecu > 0 ? Math.max(0, montantRecu - mt) : null
     });
     window.panier=[];
     window.remise={type:'%',val:0};
@@ -8140,6 +8153,19 @@ function demanderMontantRecu(vid){
       <button class="btn" onclick="partagerWAAvecMontant(${vid})">📱 WhatsApp</button>
     </div>`);
   calcMonnaie(v.mt);
+}
+function toggleChampRecu(statut, total){
+  const z = document.getElementById('zone-recu-panier');
+  if(z) z.style.display = statut === 'Payé' ? '' : 'none';
+}
+function calcMonnaieInline(total){
+  const recu = +document.getElementById('pa-recu')?.value || 0;
+  const monnaie = Math.max(0, recu - total);
+  const el = document.getElementById('pa-monnaie');
+  if(el){
+    el.value = monnaie;
+    el.style.color = recu < total ? 'var(--red)' : 'var(--green)';
+  }
 }
 function calcMonnaie(total){
   const recu=+document.getElementById('mr-recu')?.value||0;
