@@ -3175,7 +3175,7 @@ function ouvrirPanierModal(){
             oninput="majLignePanier(${i},'qte',+this.value||1)" style="padding:4px 6px;font-size:12px;text-align:center">
           <input class="fi" type="number" min="0" value="${l.pu}"
             oninput="majLignePanier(${i},'pu',+this.value||0)" style="padding:4px 6px;font-size:12px">
-          <div style="font-weight:700;font-size:13px">${F(l.mt)}</div>
+          <div id="ligne-mt-${i}" style="font-weight:700;font-size:13px">${F(l.mt)}</div>
           <button onclick="retirerDuPanier(${i})" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:0">✕</button>
         </div>`).join('')}
     </div>
@@ -3251,12 +3251,18 @@ function majLignePanier(i,champ,val){
   window.panier[i][champ]=val;
   if(champ==='qte'&&val>window.panier[i].dispo){window.panier[i].qte=window.panier[i].dispo;toast('⚠️ Stock max atteint');}
   window.panier[i].mt=window.panier[i].qte*window.panier[i].pu;
-  // Recalculer total sans re-render complet
-  const total=window.panier.reduce((s,l)=>s+l.mt,0);
+  // Mettre à jour le montant de la ligne directement
+  const elLigne=document.getElementById('ligne-mt-'+i);
+  if(elLigne)elLigne.textContent=F(window.panier[i].mt);
+  // Recalculer le total avec remise
+  const sousTotal=window.panier.reduce((s,l)=>s+l.mt,0);
+  const remiseMt=window.remise.type==='%'?Math.round(sousTotal*window.remise.val/100):Math.min(window.remise.val||0,sousTotal);
+  const total=Math.max(0,sousTotal-remiseMt);
   const el=document.querySelector('.panier-total-val');
   if(el)el.textContent=F(total);
-  const btn=document.querySelector('.btn-success');
-  if(btn&&btn.textContent.includes('Valider'))btn.textContent=`✓ Valider la vente (${F(total)})`;
+  const btn=document.querySelector('.btn.btn-success[onclick*="validerPanier"]');
+  if(btn)btn.textContent='✓ Valider — '+F(total);
+  calcMonnaieInline(total);
 }
 function retirerDuPanier(i){window.panier.splice(i,1);rVente();}
 function viderPanier(){window.panier=[];rVente();}
