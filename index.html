@@ -52,7 +52,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0;padding-bottom:80px}
 .topbar{padding:10px 24px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10;box-shadow:var(--shadow);gap:12px}
 /* ─── RACCOURCIS RAPIDES TOPBAR ─── */
-.quick-bar{display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:6px 10px;box-shadow:0 4px 20px rgba(0,0,0,.15);position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:500;max-width:calc(100vw - 24px)}
+.quick-bar{display:none;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center;background:var(--surface);border-bottom:1px solid var(--border);padding:6px 16px;width:100%;box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .qb-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 10px;border-radius:18px;cursor:pointer;color:var(--text3);transition:all .15s;user-select:none;font-size:10px;font-weight:500;white-space:nowrap}
 .qb-item:hover{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .qb-item.active{background:var(--surface);color:var(--navy);box-shadow:0 1px 4px rgba(0,0,0,.1)}
@@ -84,7 +84,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .qb-page-option:hover{border-color:var(--navy);background:var(--navy-bg);color:var(--navy)}
 .qb-page-option.selected{border-color:var(--navy);background:var(--navy);color:#fff}
 .qb-page-option .qp-emoji{font-size:16px;flex-shrink:0}
-@media(max-width:768px){.topbar{padding:8px 12px;gap:8px}.quick-bar{gap:2px;padding:4px 6px;bottom:12px}.qb-item{padding:4px 7px;font-size:9px}.qb-center{padding:5px 10px;font-size:9px}}
+@media(max-width:768px){.topbar{padding:8px 12px;gap:8px}.quick-bar{gap:2px;padding:4px 8px}.qb-item{padding:4px 7px;font-size:9px}.qb-center{padding:5px 10px;font-size:9px}}
 @media(max-width:480px){.qb-item span,.qb-center span{display:none}.qb-item{padding:6px 8px}.qb-center{padding:6px 10px}}
 .topbar-left{display:flex;align-items:center;gap:10px}
 .menu-btn{display:none;background:none;border:none;cursor:pointer;color:var(--text);padding:4px}
@@ -1228,6 +1228,7 @@ body.dark th{background:var(--surface3)}
       </div>
     </div>
   </div>
+  <div class="quick-bar" id="quick-bar"><!-- Rendu dynamique par renderQuickBar() --></div>
   <div class="page" id="content"></div>
 </div>
 </div>
@@ -1961,7 +1962,7 @@ async function manualSync(){
 let S=loadData();
 // Rendu initial de la barre de raccourcis personnalisables
 if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded', renderQuickBar);
+  document.addEventListener('DOMContentLoaded', ()=>{ renderQuickBar(); showQuickBar(currentPage||'dashboard'); });
 } else {
   renderQuickBar();
 }
@@ -2272,6 +2273,7 @@ function nav(el,page){
   ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive,rh:rRH,comptabilite:rComptabilite,kpis:rKPIs,fourni_avance:rFourniAvance,bilan_jour:rBilanJour,coach:rCoach})[page]();
   closeMobileSidebar();
   document.getElementById('mn-dropdown').classList.remove('open');
+  showQuickBar(page);
 }
 
 function qbActivate(id){
@@ -2376,7 +2378,16 @@ function renderQuickBar(){
         <span>${def.labelCourt}</span>
       </div>`;
     }
-  }).join('');
+  }).join('') + `<button class="qb-edit-btn" onclick="ouvrirQBManager()" title="Personnaliser les raccourcis" style="margin-left:4px;flex-shrink:0">✏️</button>`;
+}
+function showQuickBar(page){
+  const bar = document.getElementById('quick-bar');
+  if(!bar) return;
+  if(page==='dashboard'){
+    bar.style.display='flex';
+  } else {
+    bar.style.display='none';
+  }
 }
 
 // ─── MODALE GESTIONNAIRE ───
@@ -15260,7 +15271,6 @@ function afficherDiag(){
 </div>
 <button id="calc-float-toggle" onclick="toggleCalcFloat()" title="Ouvrir la calculatrice">🧮</button>
   <!-- BARRE DE RACCOURCIS FLOTTANTE -->
-  <div class="quick-bar" id="quick-bar"><!-- Rendu dynamique par renderQuickBar() --></div>
-  <button class="qb-edit-btn" id="qb-edit-btn" onclick="ouvrirQBManager()" title="Personnaliser les raccourcis" style="position:fixed;bottom:80px;right:16px;z-index:501;width:32px;height:32px">✏️</button>
+
 </body>
 </html>
