@@ -1822,9 +1822,37 @@ function activerListenerTempsReel(){
       }
       setSyncStatus('online','Synchronisé ✓');
 
-    // CAS 3 : Remote plus vieux que local → ignorer complètement
-    // (on vient de sauvegarder, Firebase n'a pas encore propagé notre version)
+    // CAS 3 : Remote plus vieux que local → fusionner quand même les nouveaux IDs
+    // (même si la version Firebase est plus ancienne, elle peut contenir des ventes
+    // d'un autre appareil qui n'ont pas encore été fusionnées localement)
     } else {
+      const merged3 = Object.assign({}, S);
+      let changed3 = false;
+      FB_COLLECTIONS.forEach(col=>{
+        const remoteArr = Array.isArray(remote[col]) ? remote[col] : [];
+        const localArr  = Array.isArray(S[col])      ? S[col]      : [];
+        const localIds  = new Set(localArr.map(x=>String(x.id)));
+        const nouveaux  = remoteArr.filter(x => !localIds.has(String(x.id)) && !x._deleted);
+        if(nouveaux.length > 0){
+          merged3[col] = [...localArr, ...nouveaux];
+          changed3 = true;
+        }
+      });
+      if(changed3){
+        S = merged3;
+        if(savedSession && savedSession.uid){
+          S.session = savedSession;
+          if(savedSession.boutique_active) S.boutique_active = savedSession.boutique_active;
+        }
+        saveLocal(S);
+        rafraichirPageCourante();
+        toast('🔄 Nouvelles données reçues', 1800);
+        // Republier la fusion vers Firebase pour mettre à jour sa version
+        _ignorerProchainUpdate = true;
+        clearTimeout(_ignorerTimer);
+        _ignorerTimer = setTimeout(()=>{ _ignorerProchainUpdate = false; }, 8000);
+        saveToFirebase(S).catch(()=>{});
+      }
       setSyncStatus('online','Synchronisé ✓');
     }
   }, e=>{
@@ -1846,6 +1874,11 @@ function loadData(){
 }
 async function saveData(){
   genVersion();
+  // Garantir que chaque vente/achat/dépense a un ts pour la fusion intelligente
+  const now = Date.now();
+  ['ventes','achats','depenses','clients','stock','fournisseurs'].forEach(col=>{
+    if(Array.isArray(S[col])) S[col].forEach(item=>{ if(!item.ts) item.ts = now; });
+  });
   saveLocal(S);
   if(typeof majNotifBadge==='function') majNotifBadge();
   if(fbReady&&navigator.onLine){
@@ -1853,7 +1886,7 @@ async function saveData(){
     // Évite que le listener reçoive notre propre mise à jour et rafraîchisse inutilement
     _ignorerProchainUpdate=true;
     clearTimeout(_ignorerTimer);
-    _ignorerTimer=setTimeout(()=>{ _ignorerProchainUpdate=false; }, 6000);
+    _ignorerTimer=setTimeout(()=>{ _ignorerProchainUpdate=false; }, 3000);
     await saveToFirebase(S);
     // S'il y avait des ops en attente, elles sont maintenant sync
     if(getOfflineQueue().length > 0) viderFileAttente();
@@ -1957,6 +1990,8 @@ async function manualSync(){
   if(remote){
     const merged = fusionnerDonnees(S, remote);
     appliquerEtatFusionne(merged);
+    genVersion(); // nouvelle version = fusion gagne sur tous les appareils
+    saveLocal(S);
     await saveToFirebase(S);
     setSyncStatus('online','Synchronisé ✓');
     toast('✅ Synchronisation fusionnée (' + (S.ventes||[]).length + ' ventes)');
