@@ -5094,56 +5094,130 @@ function saveReglementDette(fid){
 let factureNum=1000;
 function printFacture(vid){
   const v=S.ventes.find(v=>v.id==vid);if(!v)return;
-  const lignes=v.lignes||[{aid:v.aid,nom:v.nom_article,qte:v.qte,pu:v.pu,mt:v.mt}];
+  const lignes=v.lignes||[{aid:v.aid,nom:v.nom_article||ga(v.aid)?.nom||'Article',qte:v.qte||1,pu:v.pu,mt:v.mt}];
   factureNum++;
   const p=S.parametres||{};
+  const couleur=p.ticketColor||'#0f1f3d';
+  const nomShop=p.nom||'Christ Media';
+  const dev=p.devise||'FCFA';
+  const sousTotal=v.sousTotal||v.mt;
+  const remise=v.remise||0;
+  const montantRecu=v.montant_recu||null;
+  const monnaieRendue=v.monnaie||null;
+  const caissier=(v.caissier_emoji||'')+' '+(v.caissier_nom||'');
+  const typePrixLabel=v.typePrix==='gros'?'Gros':v.typePrix==='semi'?'Semi-gros':'Détail';
+  const heure=v.heure||'';
+  const boutique=getBoutiqueActive();
+
   const fd=document.getElementById('facture-print');
   fd.style.display='block';
   fd.innerHTML=`
-    <div class="facture-header">
-      <div>
-        <div class="facture-logo">⛪ ${p.nom||'Christ Media'}</div>
-        <div style="font-size:12px;color:#555;margin-top:4px">${p.ville||'Lomé, Togo'}${p.tel?'<br>'+p.tel:''}<br>${p.email||'christmedia176@gmail.com'}</div>
+  <style>
+    .f-wrap{font-family:'DM Sans',system-ui,sans-serif;font-size:13px;color:#111;max-width:800px;margin:0 auto;padding:32px 40px;background:#fff}
+    .f-header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:20px;border-bottom:3px solid ${couleur};margin-bottom:24px}
+    .f-logo-zone{display:flex;align-items:center;gap:12px}
+    .f-logo-icon{width:48px;height:48px;background:${couleur};border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;flex-shrink:0}
+    .f-logo-text{font-size:22px;font-weight:800;color:${couleur};letter-spacing:-.5px}
+    .f-logo-sub{font-size:11px;color:#888;margin-top:2px}
+    .f-num-zone{text-align:right}
+    .f-num-title{font-size:22px;font-weight:900;color:${couleur};letter-spacing:1px}
+    .f-num-ref{font-size:13px;color:#555;margin-top:4px}
+    .f-statut{display:inline-block;margin-top:8px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;
+      background:${v.statut==='Payé'?'#e6f9ef':'#fff8e6'};color:${v.statut==='Payé'?'#1a7a3c':'#8a5200'};
+      border:1px solid ${v.statut==='Payé'?'#9ee6bf':'#f0c87a'}}
+    .f-parties{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+    .f-party{background:#f9f9f9;border:1px solid #eee;border-radius:10px;padding:14px 18px}
+    .f-party-title{font-size:9px;font-weight:800;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+    .f-party-name{font-size:15px;font-weight:700;color:#111}
+    .f-party-info{font-size:11px;color:#777;margin-top:4px;line-height:1.7}
+    table.ft{width:100%;border-collapse:collapse;margin-bottom:20px}
+    table.ft thead tr{background:${couleur}}
+    table.ft thead th{color:#fff;padding:9px 12px;font-size:11px;font-weight:700;text-align:left;letter-spacing:.3px}
+    table.ft thead th:last-child{text-align:right}
+    table.ft tbody tr:nth-child(even){background:#f9f9f9}
+    table.ft tbody td{padding:9px 12px;font-size:12px;border-bottom:1px solid #eee}
+    table.ft tbody td:last-child{text-align:right;font-weight:700}
+    table.ft tfoot td{padding:8px 12px;font-size:12px}
+    .f-totaux{margin-left:auto;width:280px;border:1px solid #eee;border-radius:10px;overflow:hidden;margin-bottom:20px}
+    .f-tot-row{display:flex;justify-content:space-between;align-items:center;padding:8px 16px;font-size:13px;border-bottom:1px solid #eee}
+    .f-tot-row:last-child{border-bottom:none}
+    .f-tot-remise{color:#8a5200;background:#fffbf0}
+    .f-tot-recu{color:#555;background:#f9f9f9}
+    .f-tot-monnaie{color:#1a7a3c;background:#f0faf4;font-weight:700}
+    .f-tot-final{background:${couleur};color:#fff;font-size:16px;font-weight:800;padding:12px 16px}
+    .f-footer{text-align:center;margin-top:24px;font-size:11px;color:#aaa;border-top:1px solid #eee;padding-top:14px;line-height:1.8}
+    .f-meta{font-size:10px;color:#bbb;margin-top:4px}
+    @media print{@page{margin:12mm}body{padding:0}.no-print{display:none}}
+  </style>
+  <div class="f-wrap">
+    <div class="f-header">
+      <div class="f-logo-zone">
+        <div class="f-logo-icon">${p.ticketEmoji||'🏪'}</div>
+        <div>
+          <div class="f-logo-text">${nomShop}</div>
+          <div class="f-logo-sub">${boutique.nom||nomShop}${p.ticketSlogan?' · '+p.ticketSlogan:''}</div>
+        </div>
       </div>
-      <div class="facture-info">
-        <div style="font-size:18px;font-weight:700;color:#0f1f3d">FACTURE</div>
-        <div>N° FAC-${String(factureNum).padStart(5,'0')}</div>
-        <div>Date : ${v.date}</div>
-        <div style="margin-top:4px;padding:4px 8px;background:#e8edf5;border-radius:4px;font-weight:600;color:#0f1f3d">Statut : ${v.statut}</div>
+      <div class="f-num-zone">
+        <div class="f-num-title">FACTURE</div>
+        <div class="f-num-ref">N° FAC-${String(factureNum).padStart(5,'0')}</div>
+        <div class="f-num-ref">Date : ${v.date}${heure?' à '+heure:''}</div>
+        <div><span class="f-statut">${v.statut==='Payé'?'✅':'⏳'} ${v.statut}</span></div>
       </div>
     </div>
-    <div class="facture-parties">
-      <div class="facture-party">
-        <div class="facture-party-title">Émetteur</div>
-        <div style="font-weight:600">${p.nom||'Christ Media'}</div>
-        <div style="font-size:12px;color:#555;margin-top:4px">${p.ville||'Lomé, Togo'}<br>Lingerie · Audio-Vidéo · Bureautique</div>
+
+    <div class="f-parties">
+      <div class="f-party">
+        <div class="f-party-title">Émetteur</div>
+        <div class="f-party-name">${nomShop}</div>
+        <div class="f-party-info">${p.ville||'Lomé, Togo'}${p.tel?'<br>'+p.tel:''}${p.email?'<br>'+p.email:''}<br>Lingerie · Audio-Vidéo · Bureautique</div>
       </div>
-      <div class="facture-party">
-        <div class="facture-party-title">Client</div>
-        <div style="font-weight:600">${v.client||'Client anonyme'}</div>
+      <div class="f-party">
+        <div class="f-party-title">Client</div>
+        <div class="f-party-name">${v.client||'Client anonyme'}</div>
+        ${caissier.trim()?`<div class="f-party-info">Servi par : ${caissier.trim()}</div>`:''}
+        <div class="f-party-info">Type de prix : ${typePrixLabel}</div>
       </div>
     </div>
-    <table class="facture-table">
-      <thead><tr><th>#</th><th>Description</th><th>Catégorie</th><th>Qté</th><th>Prix unitaire</th><th>Total</th></tr></thead>
+
+    <table class="ft">
+      <thead>
+        <tr><th>#</th><th>Description</th><th>Catégorie</th><th>Qté</th><th>Prix unitaire</th><th>Total</th></tr>
+      </thead>
       <tbody>
-        ${lignes.map((l,i)=>{const a=ga(l.aid);const nom=l.nom||(a?a.nom:'Article');const cat=a?a.cat:'';return`
-        <tr>
-          <td style="color:#999;font-size:11px">${i+1}</td>
-          <td style="font-weight:500">${nom}</td>
-          <td style="color:#777;font-size:12px">${cat}</td>
-          <td style="text-align:center">${l.qte}</td>
-          <td>${F(l.pu)}</td>
-          <td style="font-weight:600">${F(l.mt)}</td>
-        </tr>`}).join('')}
+        ${lignes.map((l,i)=>{
+          const a=ga(l.aid);
+          const nom=l.nom||(a?a.nom:'Article');
+          const cat=a?a.cat:'';
+          const pu=l.pu||0;
+          const qte=l.qte||1;
+          const mt=l.mt||(qte*pu);
+          return `<tr>
+            <td style="color:#bbb;font-size:11px">${i+1}</td>
+            <td style="font-weight:600">${nom}</td>
+            <td style="color:#888;font-size:11px">${cat}</td>
+            <td style="text-align:center;color:#555">${qte}</td>
+            <td style="color:#555">${F(pu)}</td>
+            <td>${F(mt)}</td>
+          </tr>`;
+        }).join('')}
       </tbody>
     </table>
-    <div class="facture-totaux">
-      ${lignes.length>1&&v.sousTotal?`<div class="facture-tot-row"><span>Sous-total (${lignes.length} articles)</span><span>${F(v.sousTotal)}</span></div>`:''}
-      ${v.remise&&v.remise>0?`<div class="facture-tot-row" style="color:#8a5200"><span>🎯 Remise</span><span>−${F(v.remise)}</span></div>`:''}
-      <div class="facture-tot-row"><span>Mode de paiement</span><span>${v.cid?nomCompte(v.cid):(v.mode||'—')}</span></div>
-      <div class="facture-tot-row facture-tot-final"><span>TOTAL</span><span>${F(v.mt)}</span></div>
+
+    <div class="f-totaux">
+      ${lignes.length>1||remise>0?`<div class="f-tot-row"><span style="color:#888">Sous-total</span><span>${F(sousTotal)}</span></div>`:''}
+      ${remise>0?`<div class="f-tot-row f-tot-remise"><span>🎯 Remise${v.remiseType==='%'?' ('+v.remiseVal+'%)':''}</span><span>−${F(remise)}</span></div>`:''}
+      <div class="f-tot-row"><span style="color:#888">Mode de paiement</span><span style="font-weight:600">${v.cid?nomCompte(v.cid):(v.mode||'Espèces')}</span></div>
+      <div class="f-tot-row f-tot-final"><span>TOTAL</span><span>${F(v.mt)} ${dev}</span></div>
+      ${montantRecu?`<div class="f-tot-row f-tot-recu"><span>Montant remis</span><span>${F(montantRecu)} ${dev}</span></div>`:''}
+      ${monnaieRendue>0?`<div class="f-tot-row f-tot-monnaie"><span>💵 Monnaie rendue</span><span>${F(monnaieRendue)} ${dev}</span></div>`:''}
     </div>
-    <div class="facture-footer">Merci pour votre confiance · ${p.nom||'Christ Media'} · ${p.ville||'Lomé, Togo'}</div>`;
+
+    <div class="f-footer">
+      ${p.ticketMsg||'Merci pour votre confiance'} · ${nomShop} · ${p.ville||'Lomé, Togo'}
+      <div class="f-meta">Document généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>
+    </div>
+  </div>`;
   window.print();
   setTimeout(()=>{fd.style.display='none';},500);
 }
