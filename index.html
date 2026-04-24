@@ -1766,7 +1766,8 @@ function activerListenerTempsReel(){
       const merged = Object.assign({}, S);
       merged.version = remoteVer;
       merged.parametres = remote.parametres || S.parametres;
-      merged.boutique_active = remote.boutique_active || S.boutique_active;
+      // Préserver la boutique_active locale (choix de l'admin) — ne pas la laisser écraser par Firebase
+      merged.boutique_active = S.session?.boutique_active || S.boutique_active || remote.boutique_active || 1;
       let changed = false;
       FB_COLLECTIONS.forEach(col=>{
         const remoteArr = Array.isArray(remote[col]) ? remote[col] : [];
@@ -1780,7 +1781,11 @@ function activerListenerTempsReel(){
       });
       if(changed){
         S = merged;
-        if(savedSession && savedSession.uid) S.session = savedSession;
+        if(savedSession && savedSession.uid){
+          S.session = savedSession;
+          // Resync boutique_active depuis la session admin
+          if(savedSession.boutique_active) S.boutique_active = savedSession.boutique_active;
+        }
         saveLocal(S);
         rafraichirPageCourante();
         toast('🔄 Données mises à jour', 1800);
@@ -1803,7 +1808,10 @@ function activerListenerTempsReel(){
       });
       if(changed){
         S = merged;
-        if(savedSession && savedSession.uid) S.session = savedSession;
+        if(savedSession && savedSession.uid){
+          S.session = savedSession;
+          if(savedSession.boutique_active) S.boutique_active = savedSession.boutique_active;
+        }
         S.version = Date.now();
         saveLocal(S);
         _ignorerProchainUpdate = true;
@@ -1933,6 +1941,8 @@ function appliquerEtatFusionne(merged){
 }
 
 function rafraichirPageCourante(){
+  // Re-appliquer boutique_active de la session admin avant chaque rafraîchissement
+  if(S.session?.boutique_active) S.boutique_active = S.session.boutique_active;
   try{
     ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,vente:rVente,services:rServices,achats:rAchats,stock:rStock,clients:rClients,fournisseurs:rFour,depenses:rDep,tresorerie:rTresorerie,revenus:rRevenus,rapports:rRap,inventaire:rInventaire,historique:rHistorique,workspace:rWorkspace,comptes:rComptes,devis:rDevis,planning:rPlanning,calculatrice:rCalc,parametres:rParametres,dettes:rDettes,flux:rFlux,limites:rLimites,modeles:rModeles,agenda:rAgenda,journal:rJournal,caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive,rh:rRH,comptabilite:rComptabilite,kpis:rKPIs,fourni_avance:rFourniAvance,bilan_jour:rBilanJour,coach:rCoach})[currentPage]();
   }catch(e){}
@@ -2123,6 +2133,10 @@ function switcherBoutique(bid){
   S.session.boutique_active = bid;
   S.boutique_active = bid; // sync global
   saveLocal(S);
+  // Bloquer le listener Firebase pendant 10s pour éviter rollback boutique_active
+  _ignorerProchainUpdate = true;
+  clearTimeout(_ignorerTimer);
+  _ignorerTimer = setTimeout(()=>{ _ignorerProchainUpdate = false; }, 10000);
   majBoutiqueUI();
   // Rafraîchir la page courante
   try{
