@@ -10333,12 +10333,22 @@ let crPanier = [];
 let crMode = 'Espèces';
 let crSearch = '';
 let crCat = 'Tout';
+let crTypePrix = 'detail';
+let crRemise = {type:'%', val:0};
+let crClient = '';
+let crMonnaie = 0;
+let crCid = null;
 
 function ouvrirCaisseRapide(){
   crPanier = [];
   crMode = 'Espèces';
   crSearch = '';
   crCat = 'Tout';
+  crTypePrix = 'detail';
+  crRemise = {type:'%', val:0};
+  crClient = '';
+  crMonnaie = 0;
+  crCid = premierCompteId();
   // Créer l'overlay plein écran
   let overlay = document.getElementById('cr-overlay');
   if(!overlay){
@@ -10364,119 +10374,251 @@ function fermerCaisseRapide(){
 function renderCaisseRapide(){
   const overlay = document.getElementById('cr-overlay');
   if(!overlay) return;
+  if(!crCid) crCid = premierCompteId();
 
-  const total = crPanier.reduce((s,l) => s+l.mt, 0);
-  const nbItems = crPanier.reduce((s,l) => s+l.qte, 0);
-  const cats = ['Tout', ...new Set(S.stock.map(a => a.cat).filter(Boolean))];
-  const p = S.parametres || {};
+  const remiseMt = crRemise.type==='%'
+    ? Math.round(crPanier.reduce((s,l)=>s+l.mt,0)*crRemise.val/100)
+    : Math.min(crRemise.val||0, crPanier.reduce((s,l)=>s+l.mt,0));
+  const sousTotal = crPanier.reduce((s,l)=>s+l.mt,0);
+  const total = Math.max(0, sousTotal - remiseMt);
+  const nbItems = crPanier.reduce((s,l)=>s+l.qte,0);
+  const monnaieRendue = crMonnaie > total ? crMonnaie - total : 0;
+
+  const cats = ['Tout', ...new Set(S.stock.map(a=>a.cat).filter(Boolean))];
   const modes = ['Espèces','Flooz','Mixx','Carte','Autre'];
+  const clients = S.clients||[];
 
-  // Filtrer stock
-  let stockFiltre = S.stock.filter(a => sa(a) >= 0);
-  if(crCat !== 'Tout') stockFiltre = stockFiltre.filter(a => a.cat === crCat);
+  let stockFiltre = S.stock.filter(a=>sa(a)>=0);
+  if(crCat!=='Tout') stockFiltre = stockFiltre.filter(a=>a.cat===crCat);
   if(crSearch){
     const q = crSearch.toLowerCase();
-    stockFiltre = stockFiltre.filter(a => a.nom.toLowerCase().includes(q) || a.code.toLowerCase().includes(q));
+    stockFiltre = stockFiltre.filter(a=>a.nom.toLowerCase().includes(q)||a.code.toLowerCase().includes(q));
   }
 
+  const getPrix = (a) => {
+    const promo = getPrixPromo(a.id);
+    if(promo!==null) return promo;
+    if(crTypePrix==='gros') return a.pv3||a.pv;
+    if(crTypePrix==='semi') return a.pv2||a.pv;
+    return a.pv;
+  };
+
   overlay.innerHTML = `
-  <!-- TOPBAR -->
   <div class="cr-topbar">
     <button onclick="fermerCaisseRapide()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit">✕ Fermer</button>
     <div class="cr-topbar-title">⚡ Caisse Rapide</div>
-    ${nbItems > 0 ? `<div class="cr-total-badge">${nbItems} art. · ${F(total)}</div>` : '<div style="font-size:12px;color:rgba(255,255,255,.4)">Panier vide</div>'}
+    ${nbItems>0?`<div class="cr-total-badge">${nbItems} art. · ${F(total)}</div>`:'<div style="font-size:12px;color:rgba(255,255,255,.4)">Panier vide</div>'}
   </div>
 
-  <!-- BODY -->
   <div class="cr-body">
-
     <!-- GAUCHE : PRODUITS -->
     <div class="cr-left">
-      <!-- Recherche -->
       <div class="cr-search">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         <input id="cr-search-inp" type="text" placeholder="Rechercher un article..." value="${crSearch}"
           oninput="crSearch=this.value;renderCaisseRapide()"
           onkeydown="if(event.key==='Escape'){crSearch='';renderCaisseRapide()}">
-        ${crSearch ? `<button onclick="crSearch='';renderCaisseRapide()" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--text3)">✕</button>` : ''}
+        ${crSearch?`<button onclick="crSearch='';renderCaisseRapide()" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--text3)">✕</button>`:''}
+      </div>
+      <!-- Type de prix -->
+      <div style="display:flex;gap:4px;padding:6px 0;flex-wrap:wrap">
+        ${['detail','semi','gros'].map(t=>`<button onclick="crSetTypePrix('${t}')" style="flex:1;padding:5px;font-size:11px;font-weight:700;border-radius:8px;border:1px solid var(--border);cursor:pointer;background:${crTypePrix===t?'var(--navy)':'var(--surface2)'};color:${crTypePrix===t?'#fff':'var(--text2)'}">${t==='detail'?'Détail':t==='semi'?'Semi-gros':'Gros'}</button>`).join('')}
       </div>
       <!-- Filtres catégorie -->
       <div class="cr-cats">
-        ${cats.map(cat => `<button class="cr-cat-btn${crCat===cat?' active':''}" onclick="crCat='${cat}';renderCaisseRapide()">${cat}</button>`).join('')}
+        ${cats.map(cat=>`<button class="cr-cat-btn${crCat===cat?' active':''}" onclick="crCat='${cat}';renderCaisseRapide()">${cat}</button>`).join('')}
       </div>
       <!-- Grille produits -->
       <div class="cr-grid">
-        ${stockFiltre.length === 0
-          ? '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text3)">Aucun article trouvé</div>'
-          : stockFiltre.map(a => {
-            const dispo = sa(a);
-            const inPan = crPanier.find(l => l.aid === a.id);
-            const icon = a.cat==='Lingerie'?'👗':a.cat==='Audio-Vidéo'?'🎧':'📦';
+        ${stockFiltre.length===0
+          ?'<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text3)">Aucun article trouvé</div>'
+          :stockFiltre.map(a=>{
+            const dispo=sa(a);
+            const inPan=crPanier.find(l=>l.aid===a.id);
+            const icon=a.cat==='Lingerie'?'👗':a.cat==='Audio-Vidéo'?'🎧':'📦';
+            const pu=getPrix(a);
             return `<div class="cr-prod${inPan?' added':''}${dispo<=0?' rupture':''}" onclick="crAjouter(${a.id})">
-              ${inPan ? `<div class="cr-prod-qty">${inPan.qte}</div>` : ''}
+              ${inPan?`<div class="cr-prod-qty">${inPan.qte}</div>`:''}
               <div class="cr-prod-stock">${dispo}</div>
               <div class="cr-prod-icon">${a.photo?`<img src="${a.photo}" style="width:28px;height:28px;object-fit:cover;border-radius:4px" onerror="this.outerHTML='${icon}'">`:icon}</div>
               <div class="cr-prod-nom" title="${a.nom}">${a.nom}</div>
-              <div class="cr-prod-prix">${F(a.pv)}</div>
+              <div class="cr-prod-prix">${F(pu)}</div>
             </div>`;
-          }).join('')
-        }
+          }).join('')}
       </div>
     </div>
 
     <!-- DROITE : PANIER + VALIDATION -->
     <div class="cr-right">
       <div class="cr-panier-header">
-        🛒 Panier ${nbItems > 0 ? `(${nbItems} article${nbItems>1?'s':''})` : '— vide'}
+        🛒 Panier ${nbItems>0?`(${nbItems} article${nbItems>1?'s':''})`:'— vide'}
       </div>
       <div class="cr-panier-list">
-        ${crPanier.length === 0
-          ? '<div style="text-align:center;padding:24px;color:var(--text3);font-size:12px">Tapez sur un article<br>pour l\'ajouter</div>'
-          : crPanier.map((l,i) => `
+        ${crPanier.length===0
+          ?'<div style="text-align:center;padding:24px;color:var(--text3);font-size:12px">Tapez sur un article<br>pour l\'ajouter</div>'
+          :crPanier.map((l,i)=>`
           <div class="cr-panier-item">
-            <div class="cr-panier-nom" title="${l.nom}">${l.nom}</div>
+            <div class="cr-panier-nom" title="${l.nom}">${l.nom}
+              <span style="font-size:9px;color:var(--text3);display:block">${l.typePrix==='semi'?'Semi-gros':l.typePrix==='gros'?'Gros':'Détail'}</span>
+            </div>
             <div class="cr-panier-ctrl">
               <button class="cr-qty-btn" onclick="crRetirer(${i})">−</button>
-              <span style="font-size:12px;font-weight:700;min-width:16px;text-align:center">${l.qte}</span>
+              <input type="number" min="1" value="${l.qte}" oninput="crSetQte(${i},+this.value||1)"
+                style="width:36px;text-align:center;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:700;padding:2px 4px;background:var(--surface)">
               <button class="cr-qty-btn" onclick="crAjouter(${l.aid})">+</button>
             </div>
-            <div class="cr-panier-mt">${F(l.mt)}</div>
-          </div>`).join('')
-        }
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+              <input type="number" value="${l.pu}" oninput="crSetPu(${i},+this.value||0)"
+                style="width:72px;text-align:right;border:1px solid var(--border);border-radius:6px;font-size:11px;padding:2px 4px;background:var(--surface);color:var(--text2)">
+              <div class="cr-panier-mt" id="cr-mt-${i}">${F(l.mt)}</div>
+            </div>
+          </div>`).join('')}
       </div>
+
       <!-- Footer validation -->
       <div class="cr-footer">
+        <!-- Client -->
+        <div style="margin-bottom:8px">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Client</div>
+          <div style="display:flex;gap:6px">
+            <input list="cr-clients-list" type="text" placeholder="Anonyme" value="${crClient}"
+              oninput="crClient=this.value"
+              style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--surface);color:var(--text)">
+            <datalist id="cr-clients-list">${clients.map(c=>`<option value="${c.nom}">`).join('')}</datalist>
+          </div>
+        </div>
+        <!-- Remise -->
+        <div style="margin-bottom:8px">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Remise</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select onchange="crRemise.type=this.value;renderCaisseRapide()"
+              style="padding:5px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--surface);color:var(--text)">
+              <option value="%" ${crRemise.type==='%'?'selected':''}>%</option>
+              <option value="FCFA" ${crRemise.type==='FCFA'?'selected':''}>Montant</option>
+            </select>
+            <input type="number" min="0" placeholder="0" value="${crRemise.val||''}"
+              oninput="crRemise.val=+this.value||0;crMajTotal()"
+              style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--surface);color:var(--text)">
+            ${remiseMt>0?`<span style="font-size:11px;color:var(--green);font-weight:600">−${F(remiseMt)}</span>`:''}
+          </div>
+        </div>
+        <!-- Sous-total / remise / total -->
+        <div class="cr-total-line" style="font-size:12px;color:var(--text2);margin-bottom:2px">
+          <span>Sous-total</span><span>${F(sousTotal)}</span>
+        </div>
+        ${remiseMt>0?`<div class="cr-total-line" style="font-size:12px;color:var(--green);margin-bottom:2px"><span>Remise</span><span>−${F(remiseMt)}</span></div>`:''}
         <div class="cr-total-line">
           <span class="cr-total-lbl">TOTAL</span>
-          <span class="cr-total-val">${F(total)}</span>
+          <span class="cr-total-val" id="cr-total-val">${F(total)}</span>
         </div>
-        <!-- Modes de paiement -->
-        <div class="cr-mode-btns">
-          ${modes.map(m => `<button class="cr-mode-btn${crMode===m?' active':''}" onclick="crMode='${m}';renderCaisseRapide()">${m}</button>`).join('')}
+        <!-- Mode paiement -->
+        <div class="cr-mode-btns" style="margin-top:8px">
+          ${modes.map(m=>`<button class="cr-mode-btn${crMode===m?' active':''}" onclick="crMode='${m}';renderCaisseRapide()">${m}</button>`).join('')}
         </div>
+        <!-- Compte + Monnaie -->
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <div style="flex:1">
+            <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:3px">Compte</div>
+            ${selectComptes('cr-cid', crCid)}
+          </div>
+          <div style="flex:1">
+            <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:3px">Monnaie reçue</div>
+            <input type="number" min="0" placeholder="${F(total)}" value="${crMonnaie||''}"
+              oninput="crMonnaie=+this.value||0;crMajMonnaie()"
+              id="cr-monnaie-inp"
+              style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--surface);color:var(--text)">
+          </div>
+        </div>
+        ${monnaieRendue>0?`<div style="margin-top:4px;background:var(--green-bg);border:1px solid var(--green-light);border-radius:8px;padding:6px 10px;display:flex;justify-content:space-between;font-size:13px;font-weight:700"><span>💵 Monnaie à rendre</span><span style="color:var(--green)">${F(monnaieRendue)}</span></div>`:''}
         <!-- Bouton valider -->
-        <button class="cr-valider-btn" onclick="crValider()" ${crPanier.length===0?'disabled':''}>
-          ✓ Encaisser ${total > 0 ? F(total) : ''}
+        <button class="cr-valider-btn" onclick="crValider()" ${crPanier.length===0?'disabled':''} style="margin-top:8px">
+          ✓ Encaisser ${total>0?F(total):''}
         </button>
-        ${crPanier.length > 0 ? `<button class="cr-vider-btn" onclick="crPanier=[];renderCaisseRapide()">🗑️ Vider le panier</button>` : ''}
+        ${crPanier.length>0?`<button class="cr-vider-btn" onclick="crPanier=[];crRemise={type:'%',val:0};crClient='';crMonnaie=0;renderCaisseRapide()">🗑️ Vider le panier</button>`:''}
       </div>
     </div>
   </div>`;
+
+  setTimeout(()=>{
+    const cidEl=document.getElementById('cr-cid');
+    if(cidEl){
+      if(crCid) cidEl.value=crCid;
+      cidEl.onchange=()=>{ crCid=cidEl.value; };
+    }
+  },50);
 }
+
+function crMajTotal(){
+  const sousTotal=crPanier.reduce((s,l)=>s+l.mt,0);
+  const remiseMt=crRemise.type==='%'?Math.round(sousTotal*crRemise.val/100):Math.min(crRemise.val||0,sousTotal);
+  const total=Math.max(0,sousTotal-remiseMt);
+  const el=document.getElementById('cr-total-val');
+  if(el)el.textContent=F(total);
+  const btn=document.querySelector('.cr-valider-btn');
+  if(btn)btn.textContent=`✓ Encaisser ${F(total)}`;
+  crMajMonnaie();
+}
+
+function crMajMonnaie(){
+  const sousTotal=crPanier.reduce((s,l)=>s+l.mt,0);
+  const remiseMt=crRemise.type==='%'?Math.round(sousTotal*crRemise.val/100):Math.min(crRemise.val||0,sousTotal);
+  const total=Math.max(0,sousTotal-remiseMt);
+  // Si monnaie saisie, recalc rendu sans re-render complet
+  if(crMonnaie>0){
+    const rendu=crMonnaie-total;
+    const renduEl=document.querySelector('.cr-monnaie-rendu');
+    if(renduEl)renduEl.textContent=rendu>0?`💵 Monnaie: ${F(rendu)}`:'';
+  }
+}
+
+function crSetTypePrix(t){
+  crTypePrix=t;
+  // Mettre à jour les prix dans le panier
+  crPanier.forEach(l=>{
+    const a=ga(l.aid); if(!a) return;
+    const promo=getPrixPromo(l.aid);
+    l.pu=promo!==null?promo:(t==='gros'?(a.pv3||a.pv):t==='semi'?(a.pv2||a.pv):a.pv);
+    l.mt=l.qte*l.pu;
+    l.typePrix=t;
+  });
+  renderCaisseRapide();
+}
+
+function crSetQte(i,val){
+  if(!crPanier[i])return;
+  const max=crPanier[i].dispo;
+  crPanier[i].qte=Math.min(val,max);
+  if(val>max)toast('⚠️ Stock max atteint');
+  crPanier[i].mt=crPanier[i].qte*crPanier[i].pu;
+  const el=document.getElementById('cr-mt-'+i);
+  if(el)el.textContent=F(crPanier[i].mt);
+  crMajTotal();
+}
+
+function crSetPu(i,val){
+  if(!crPanier[i])return;
+  crPanier[i].pu=val;
+  crPanier[i].mt=crPanier[i].qte*val;
+  const el=document.getElementById('cr-mt-'+i);
+  if(el)el.textContent=F(crPanier[i].mt);
+  crMajTotal();
+}
+
 
 function crAjouter(aid){
   const a = ga(aid); if(!a) return;
-  const prixPromo = getPrixPromo(a.id);
-  const pu = prixPromo !== null ? prixPromo : a.pv;
+  const promo = getPrixPromo(a.id);
+  const pu = promo!==null ? promo : (crTypePrix==='gros'?(a.pv3||a.pv):crTypePrix==='semi'?(a.pv2||a.pv):a.pv);
   const idx = crPanier.findIndex(l => l.aid === aid);
   if(idx >= 0){
+    if(crPanier[idx].qte >= sa(a)){ toast('⚠️ Stock max atteint'); return; }
     crPanier[idx].qte++;
     crPanier[idx].mt = crPanier[idx].qte * crPanier[idx].pu;
   } else {
-    crPanier.push({aid:a.id, nom:a.nom, qte:1, pu, mt:pu, dispo:sa(a)});
+    if(sa(a)<=0){ toast('❌ Rupture de stock'); return; }
+    crPanier.push({aid:a.id, nom:a.nom, qte:1, pu, mt:pu, dispo:sa(a), typePrix:crTypePrix});
   }
   renderCaisseRapide();
-  // Refocus search
   setTimeout(()=>{ const inp=document.getElementById('cr-search-inp'); if(inp) inp.focus(); }, 50);
 }
 
@@ -10489,45 +10631,56 @@ function crRetirer(i){
 }
 
 function crValider(){
-  if(!crPanier || crPanier.length === 0) return toast('⚠️ Panier vide');
-  const total = crPanier.reduce((s,l) => s+l.mt, 0);
-  // Vérifier stocks
+  if(!crPanier || crPanier.length===0) return toast('⚠️ Panier vide');
+  const sousTotal = crPanier.reduce((s,l)=>s+l.mt,0);
+  const remiseMt = crRemise.type==='%'?Math.round(sousTotal*crRemise.val/100):Math.min(crRemise.val||0,sousTotal);
+  const total = Math.max(0, sousTotal-remiseMt);
   for(const l of crPanier){
-    const a = ga(l.aid);
-    if(!a || sa(a) < l.qte){ toast(`❌ Stock insuffisant : ${l.nom}`); return; }
+    const a=ga(l.aid);
+    if(!a||sa(a)<l.qte){ toast(`❌ Stock insuffisant : ${l.nom}`); return; }
   }
-  // Déduire stocks
   for(const l of crPanier){
-    const a = ga(l.aid);
-    a.qv += l.qte;
-    addHistorique('Sortie', a, l.qte, 'Vente caisse rapide');
+    const a=ga(l.aid);
+    a.qv+=l.qte;
+    addHistorique('Sortie',a,l.qte,'Vente caisse rapide');
   }
   verifierAlerteVente(total, function(ok){
     if(!ok) return;
-    const vid = genId();
-    const cid = premierCompteId();
+    const vid=genId();
+    const cid=crCid||premierCompteId();
+    // Points fidélité client
+    const clientNom=crClient.trim();
+    if(clientNom){
+      const cli=S.clients?.find(c=>c.nom.toLowerCase()===clientNom.toLowerCase());
+      if(cli){
+        const pts=Math.floor(total/1000);
+        cli.points=(cli.points||0)+pts;
+        // Mettre à jour solde si client débiteur
+      }
+    }
     S.ventes.push({
-      id:vid, date:D(),
-      bid:getBid(),
-      lignes: crPanier.map(l => ({aid:l.aid, qte:l.qte, pu:l.pu, mt:l.mt, typePrix:'detail'})),
+      id:vid, date:D(), bid:getBid(),
+      lignes: crPanier.map(l=>({aid:l.aid,qte:l.qte,pu:l.pu,mt:l.mt,typePrix:l.typePrix||crTypePrix})),
       aid:crPanier[0].aid, qte:crPanier[0].qte, pu:crPanier[0].pu,
-      mt:total, sousTotal:total, remise:0, typePrix:'detail',
-      statut:'Payé', client:'', mode:crMode, cid,
+      mt:total, sousTotal, remise:remiseMt, remiseType:crRemise.type, remiseVal:crRemise.val,
+      typePrix:crTypePrix, statut:'Payé', client:clientNom, mode:crMode, cid,
       caissier_uid:S.session?.uid||null,
       caissier_nom:S.session?.nom||null,
       caissier_emoji:S.session?.emoji||'👤',
       caissier_role:S.session?.role||null,
       heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})
     });
-    const compte = S.comptes?.find(c => c.id == cid);
-    if(compte){ compte.solde = (compte.solde||0) + total; }
-    // Points fidélité (caisse rapide - client anonyme par défaut)
+    const compte=S.comptes?.find(c=>c.id==cid);
+    if(compte) compte.solde=(compte.solde||0)+total;
     saveData();
     toast(`✅ Vente encaissée — ${F(total)}`);
     if(confirm('Imprimer le reçu thermique ?')){
       imprimerThermique(vid);
     }
-    crPanier = [];
+    crPanier=[];
+    crRemise={type:'%',val:0};
+    crClient='';
+    crMonnaie=0;
     renderCaisseRapide();
   });
 }
