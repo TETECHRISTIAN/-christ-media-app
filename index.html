@@ -10672,6 +10672,8 @@ function crValider(){
         // Mettre à jour solde si client débiteur
       }
     }
+    const monnaieRecue = crMonnaie > 0 ? crMonnaie : null;
+    const monnaieRendue = crMonnaie > total ? crMonnaie - total : null;
     S.ventes.push({
       id:vid, date:D(), bid:getBid(),
       lignes: crPanier.map(l=>({aid:l.aid,qte:l.qte,pu:l.pu,mt:l.mt,typePrix:l.typePrix||crTypePrix})),
@@ -10682,7 +10684,9 @@ function crValider(){
       caissier_nom:S.session?.nom||null,
       caissier_emoji:S.session?.emoji||'👤',
       caissier_role:S.session?.role||null,
-      heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})
+      heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
+      montant_recu: monnaieRecue,
+      monnaie: monnaieRendue
     });
     const compte=S.comptes?.find(c=>c.id==cid);
     if(compte) compte.solde=(compte.solde||0)+total;
@@ -13778,11 +13782,15 @@ function genTicketHTML(v, opts){
   <div class="line"></div>
   ${lignes.map(l => {
     const nom = l.nom || (ga(l.aid) ? ga(l.aid).nom : 'Article');
-    const mt = (l.qte||1) * (l.pu||0);
-    return '<div class="row">' +
-      '<div><div class="article-nom">' + nom + '</div>' +
-      '<div class="article-detail">' + (l.qte||1) + ' × ' + (l.pu||0).toLocaleString('fr-FR') + ' ' + dev + '</div></div>' +
-      '<div class="article-mt">' + mt.toLocaleString('fr-FR') + '</div>' +
+    const pu = l.pu || 0;
+    const qte = l.qte || 1;
+    const mt = qte * pu;
+    return '<div style="margin:4px 0;padding-bottom:4px;border-bottom:1px dotted #eee">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
+        '<div style="font-size:11px;font-weight:600;flex:1;padding-right:6px;line-height:1.3">' + nom + '</div>' +
+        '<div style="font-size:11px;font-weight:700;white-space:nowrap">' + mt.toLocaleString('fr-FR') + ' ' + dev + '</div>' +
+      '</div>' +
+      '<div style="font-size:9px;color:#888;margin-top:1px">' + qte + ' × ' + pu.toLocaleString('fr-FR') + ' ' + dev + (l.typePrix&&l.typePrix!=='detail'?' · '+(l.typePrix==='gros'?'Gros':'Semi-gros'):'') + '</div>' +
     '</div>';
   }).join('')}
   <div class="line"></div>
@@ -13792,8 +13800,10 @@ function genTicketHTML(v, opts){
     <div class="total-lbl">Total</div>
     <div class="total-val">${v.mt.toLocaleString('fr-FR')} ${dev}</div>
   </div>
-  <div class="center"><span class="mode-badge">${v.mode || 'Espèces'}</span></div>
-  ${v.statut === 'Non payé' ? '<div class="center" style="font-size:10px;color:#c07000;font-weight:700;margin:3px 0">⏳ EN ATTENTE DE PAIEMENT</div>' : ''}
+  ${v.montant_recu ? '<div class="row" style="margin:3px 0"><span style="font-size:10px;color:#555">Montant remis</span><span style="font-size:10px;font-weight:600">' + v.montant_recu.toLocaleString('fr-FR') + ' ' + dev + '</span></div>' : ''}
+  ${v.monnaie > 0 ? '<div class="row" style="background:#f0f9f0;border-radius:5px;padding:4px 6px;margin:3px 0"><span style="font-size:11px;font-weight:700;color:#1a7a3c">💵 Monnaie rendue</span><span style="font-size:12px;font-weight:800;color:#1a7a3c">' + v.monnaie.toLocaleString('fr-FR') + ' ' + dev + '</span></div>' : ''}
+  <div class="center" style="margin:4px 0"><span class="mode-badge">${v.mode || 'Espèces'}</span></div>
+  ${v.statut === 'Non payé' ? '<div class="center" style="font-size:10px;color:#c07000;font-weight:700;margin:3px 0;background:#fff8e6;padding:4px;border-radius:4px">⏳ EN ATTENTE DE PAIEMENT</div>' : ''}
   <div class="line-solid"></div>
   <div class="footer-msg">${msgFin}</div>
   ${showQR ? '<div class="qr-block"><img src="' + qrSrc + '" alt="WhatsApp"><div class="qr-label">Scanner pour nous contacter sur WhatsApp</div></div>' : ''}
@@ -13814,25 +13824,40 @@ function imprimerThermique(vid){
 }
 
 function aperçuTicketModal(){
-  // Créer une vente fictive pour l\'aperçu
   const vDemo = {
     id: 999999,
     date: new Date().toISOString().slice(0,10),
+    heure: new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
     lignes: [
-      {aid:0, qte:2, pu:15000, nom:'Article exemple'},
-      {aid:0, qte:1, pu:8500, nom:'Deuxième article'}
+      {aid:0, qte:2, pu:15000, nom:'Soutien-gorge Dentelle'},
+      {aid:0, qte:1, pu:8500, nom:'Collant opaque'},
+      {aid:0, qte:3, pu:5000, nom:'Chaussette coton'}
     ],
-    mt: 38500, sousTotal:40000, remise:1500,
+    mt: 53500, sousTotal:56500, remise:3000,
     statut:'Payé', mode:'Espèces',
+    montant_recu: 55000,
+    monnaie: 1500,
     caissier_nom: S.session?.nom || 'Christian',
     caissier_emoji: S.session?.emoji || '👤',
-    client: 'Client exemple'
+    client: 'Marie Kokou'
   };
   const html = genTicketHTML(vDemo);
-  const w = window.open('', '_apercu_ticket', 'width=380,height=700');
-  if(!w) { toast('❌ Popup bloquée'); return; }
-  w.document.write(html);
-  w.document.close();
+  modal(`<div class="mft">🧾 Aperçu du reçu</div>
+    <div style="overflow:auto;max-height:65vh;border-radius:8px;border:1px solid var(--border);background:#f5f5f5;padding:12px;display:flex;justify-content:center">
+      <iframe id="apercu-iframe" style="width:260px;min-height:580px;border:none;border-radius:6px;box-shadow:0 4px 20px rgba(0,0,0,.15);background:#fff"></iframe>
+    </div>
+    <div class="mff">
+      <button class="btn" onclick="closeModal()">Fermer</button>
+      <button class="btn btn-primary" onclick="document.getElementById('apercu-iframe').contentWindow.print()">🖨️ Imprimer l'aperçu</button>
+    </div>`);
+  setTimeout(()=>{
+    const iframe = document.getElementById('apercu-iframe');
+    if(iframe){
+      iframe.contentDocument.open();
+      iframe.contentDocument.write(html);
+      iframe.contentDocument.close();
+    }
+  }, 150);
 }
 
 function aperçuTicket(){ /* appelé en temps réel — pas d\'action pour l\'instant */ }
