@@ -1149,8 +1149,9 @@ body.dark th{background:var(--surface3)}
     <div class="sync-bar-row">
       <div class="sync-dot" id="sync-dot"></div>
       <span id="sync-label">Initialisation...</span>
-      <button class="sync-btn" onclick="manualSync()" title="Synchroniser maintenant" style="margin-left:auto">↻ Sync</button>
+      <button class="sync-btn" onclick="isMobile ? syncMobileNow() : manualSync()" title="Synchroniser maintenant" style="margin-left:auto">↻ Sync</button>
     </div>
+    <div id="mobile-sync-info" style="display:none;font-size:10px;color:rgba(255,255,255,.4);padding:2px 0 0 15px">📱 Sync auto toutes les 3 min</div>
     <div class="presence-bar" id="presence-bar"></div>
   </div>
 </div>
@@ -1741,6 +1742,10 @@ async function saveCollectionFirebase(col, data){
 }
 
 // ─── LISTENER TEMPS RÉEL ───
+// Détection mobile — sur mobile on désactive le listener temps réel
+// et on fait une sync périodique toutes les 3 minutes à la place
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+let _mobileSyncInterval = null;
 let _realtimeListener=null;
 // Cache de protection : IDs des ventes/achats créés localement dans les 5 dernières minutes
 // Ces enregistrements ne peuvent JAMAIS être effacés par une fusion entrante
@@ -1916,6 +1921,43 @@ function desactiverListenerTempsReel(){
   }
 }
 
+// ─── SYNC MOBILE PÉRIODIQUE ───
+// Sur mobile, on évite le listener temps réel (cause d'écrasements)
+// et on fait une fusion propre toutes les 3 minutes + bouton manuel
+async function syncMobileNow(){
+  if(!fbReady || !navigator.onLine || !S.session) return;
+  setSyncStatus('syncing','Sync...');
+  try {
+    const remote = await loadFromFirebase();
+    if(remote){
+      const savedSession = S.session;
+      const merged = fusionnerDonnees(S, remote);
+      const protege = _protegerDonneesLocales(merged);
+      appliquerEtatFusionne(protege);
+      if(savedSession && savedSession.uid) S.session = savedSession;
+      // Republier la fusion pour que le PC ait aussi nos dernières données
+      genVersion();
+      await saveToFirebase(S);
+      setSyncStatus('online','Synchronisé ✓');
+      rafraichirPageCourante();
+    }
+  } catch(e) {
+    setSyncStatus('offline','Sync échouée');
+  }
+}
+
+function demarrerSyncMobile(){
+  if(_mobileSyncInterval) clearInterval(_mobileSyncInterval);
+  // Sync immédiate au démarrage, puis toutes les 3 minutes
+  syncMobileNow();
+  _mobileSyncInterval = setInterval(syncMobileNow, 3 * 60 * 1000);
+  // Afficher le bouton sync dans le header si on est sur mobile
+  const btn = document.getElementById('btn-sync-mobile');
+  if(btn) btn.style.display = 'inline-flex';
+  const info = document.getElementById('mobile-sync-info');
+  if(info) info.style.display = 'block';
+}
+
 // ─── MAIN LOAD / SAVE ───
 function loadData(){
   return loadLocal(); // synchrone, Firebase sera chargé après init
@@ -2069,15 +2111,6 @@ async function manualSync(){
 
 // ─── INIT FIREBASE ASYNC ───
 let S=loadData();
-
-// ─── DEVICE DETECTION (anti-crash mobile) ───
-// Sur mobile, les listeners Firebase globaux peuvent provoquer une surcharge mémoire
-// (surtout avec de gros tableaux: stock, ventes, clients...).
-// On limite donc le temps réel sur mobile et on privilégie la sync manuelle/auto.
-const IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-const IS_LOW_RAM = (typeof navigator.deviceMemory === 'number') && navigator.deviceMemory <= 2;
-const DISABLE_HEAVY_REALTIME = IS_MOBILE || IS_LOW_RAM;
-
 // Rendu initial de la barre de raccourcis personnalisables
 if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded', ()=>{ renderQuickBar(); showQuickBar(currentPage||'dashboard'); });
@@ -2107,11 +2140,11 @@ async function startFirebaseSync(){
         setSyncStatus('online','Synchronisé ✓');
       }
       // Activer la sync temps réel après le chargement initial
-      // FIX anti-crash mobile : sur mobile on évite le listener global (trop lourd)
-      if(!DISABLE_HEAVY_REALTIME){
-        activerListenerTempsReel();
+      // Sur mobile : sync périodique toutes les 3 min au lieu du listener continu
+      if(isMobile){
+        demarrerSyncMobile();
       } else {
-        console.warn('[SYNC] Temps réel global désactivé (mobile/low-ram).');
+        activerListenerTempsReel();
       }
     }else{
       await initAuth(); // session locale
@@ -2199,7 +2232,7 @@ window.addEventListener('online', async()=>{
       viderFileAttente();
       setSyncStatus('online', nbOps > 0 ? `${nbOps} op. synchronisées ✓` : 'Synchronisé ✓');
       setTimeout(()=>setSyncStatus('online','Synchronisé ✓'), 3000);
-      activerListenerTempsReel();
+      if(isMobile){ demarrerSyncMobile(); } else { activerListenerTempsReel(); }
     }
   }
 });
@@ -2209,6 +2242,7 @@ window.addEventListener('offline', ()=>{
   toast('📵 Mode hors ligne — vos données sont sauvegardées localement', 3500);
   majBandeauOffline();
   desactiverListenerTempsReel();
+  if(_mobileSyncInterval){ clearInterval(_mobileSyncInterval); _mobileSyncInterval=null; }
 });
 
 // ─── HELPERS ───
@@ -7895,7 +7929,7 @@ function _ouvrirSession(u){
   try{majBoutiqueUI();}catch(e){}
   try{toast(`✅ Bienvenue ${u.nom} !`);}catch(e){}
   try{addAudit('LOGIN','Connexion','Connexion de '+u.nom+' ('+u.role+')',null,null);}catch(e){}
-  setTimeout(()=>{try{initPresence();}catch(e){}},1000);
+  setTimeout(()=>{try{ if(!isMobile) initPresence(); }catch(e){}},1000);
   if(u.role==='admin') setTimeout(()=>{try{checkGdriveAutoBackup();}catch(e){}},3000);
   if(!S.ventes)S.ventes=[];
   if(!S.stock)S.stock=[];
@@ -7915,7 +7949,8 @@ function _ouvrirSession(u){
           appliquerEtatFusionne(merged);
           if(savedSession&&savedSession.uid) S.session=savedSession;
           setSyncStatus('online','Synchronise ✓');
-          if(!_realtimeListener) activerListenerTempsReel();
+          if(!_realtimeListener && !isMobile) activerListenerTempsReel();
+          if(isMobile) demarrerSyncMobile();
           rafraichirPageCourante();
         }
       }).catch(()=>{setSyncStatus('offline','Hors ligne');});
