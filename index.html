@@ -1761,29 +1761,26 @@ function activerListenerTempsReel(){
 
     const savedSession = S.session;
 
-    // CAS 1 : Remote plus récent → fusionner (ajouter les nouveaux IDs remote)
+    // CAS 1 : Remote plus récent → fusion complète (nouveaux IDs + modifications)
+    // FIX : on utilise fusionnerDonnees au lieu d'un merge partiel (id-only)
+    // pour capturer aussi les ventes modifiées (client corrigé, montant, statut…)
     if(remoteVer > localVer){
-      const merged = Object.assign({}, S);
-      merged.version = remoteVer;
-      merged.parametres = remote.parametres || S.parametres;
-      // Préserver la boutique_active locale (choix de l'admin) — ne pas la laisser écraser par Firebase
+      const merged = fusionnerDonnees(S, remote);
+      // Préserver la boutique_active locale (choix de l'admin)
       merged.boutique_active = S.session?.boutique_active || S.boutique_active || remote.boutique_active || 1;
-      let changed = false;
-      FB_COLLECTIONS.forEach(col=>{
-        const remoteArr = Array.isArray(remote[col]) ? remote[col] : [];
-        const localArr  = Array.isArray(S[col])     ? S[col]      : [];
-        const localIds  = new Set(localArr.map(x=>String(x.id)));
-        const nouveaux  = remoteArr.filter(x => !localIds.has(String(x.id)));
-        if(nouveaux.length > 0){
-          merged[col] = [...localArr, ...nouveaux];
-          changed = true;
-        }
+      // Détecter si quelque chose a vraiment changé (taille ou contenu)
+      const tsOf = item => item.ts || item.updatedAt || item.date_ts || item.created_at || 0;
+      let changed = FB_COLLECTIONS.some(col=>{
+        const loc = Array.isArray(S[col]) ? S[col] : [];
+        const mer = Array.isArray(merged[col]) ? merged[col] : [];
+        if(loc.length !== mer.length) return true;
+        const locMap = new Map(loc.map(x=>[String(x.id), tsOf(x)]));
+        return mer.some(x=> !locMap.has(String(x.id)) || tsOf(x) > (locMap.get(String(x.id))||0));
       });
       if(changed){
         S = merged;
         if(savedSession && savedSession.uid){
           S.session = savedSession;
-          // Resync boutique_active depuis la session admin
           if(savedSession.boutique_active) S.boutique_active = savedSession.boutique_active;
         }
         saveLocal(S);
@@ -1882,12 +1879,18 @@ async function saveData(){
   saveLocal(S);
   if(typeof majNotifBadge==='function') majNotifBadge();
   if(fbReady&&navigator.onLine){
-    // FIX : délai porté à 6s (était 2s) pour couvrir les connexions lentes
+    // FIX : délai porté à 10s pour couvrir les connexions lentes (Togo)
     // Évite que le listener reçoive notre propre mise à jour et rafraîchisse inutilement
+    // Reset immédiat après succès pour ne pas bloquer les mises à jour légitimes
     _ignorerProchainUpdate=true;
     clearTimeout(_ignorerTimer);
-    _ignorerTimer=setTimeout(()=>{ _ignorerProchainUpdate=false; }, 3000);
-    await saveToFirebase(S);
+    _ignorerTimer=setTimeout(()=>{ _ignorerProchainUpdate=false; }, 10000);
+    await saveToFirebase(S).then(()=>{
+      clearTimeout(_ignorerTimer);
+      _ignorerProchainUpdate=false;
+    }).catch(()=>{
+      // En cas d'erreur on laisse le timer expirer naturellement
+    });
     // S'il y avait des ops en attente, elles sont maintenant sync
     if(getOfflineQueue().length > 0) viderFileAttente();
   }else{
@@ -2227,7 +2230,8 @@ function getStockBoutique(bid){
 // Filtre ventes par boutique active
 function getVentesBoutique(bid){
   bid = bid || getBid();
-  return (S.ventes||[]).filter(v => !v.bid || v.bid == bid);
+  // FIX : exclure les ventes soft-deleted (_deleted:true) propagées par la fusion
+  return (S.ventes||[]).filter(v => !v._deleted && (!v.bid || v.bid == bid));
 }
 
 // Filtre achats par boutique active
@@ -3354,7 +3358,7 @@ function validerPanier(){
     if(!ok) return;
     const vid=genId();
     S.ventes.push({
-      id:vid,date:D(),
+      id:vid,date:D(),ts:Date.now(),
       bid:getBid(),
       lignes:window.panier.map(l=>({aid:l.aid,nom:l.nom,qte:l.qte,pu:l.pu,mt:l.mt,typePrix:l.typePrix})),
       aid:window.panier[0].aid,qte:window.panier[0].qte,pu:window.panier[0].pu,
@@ -3419,7 +3423,10 @@ function delVente(id){
       if(v.tranches) v.tranches.forEach(t=>{if(t.cid) debiterCompte(t.cid, t.mt);});
     }
   }
-  S.ventes=S.ventes.filter(v=>v.id!=id);
+  // FIX : soft delete → marquer _deleted:true au lieu de retirer physiquement
+  // Permet à la fusion Firebase de propager la suppression sur tous les appareils
+  const vDelIdx = S.ventes.findIndex(v=>v.id==id);
+  if(vDelIdx>=0){ S.ventes[vDelIdx]={...S.ventes[vDelIdx], _deleted:true, ts:Date.now()}; }
   saveData();toast('🗑️ Vente supprimée — stock et comptes mis à jour');rVente();
 }
 
@@ -7377,7 +7384,7 @@ function confirmerConversionDevis(id){
   // Créer la vente
   const vid = genId();
   S.ventes.push({
-    id:vid, date,
+    id:vid, date, ts:Date.now(),
     lignes: d.lignes,
     aid: d.lignes[0].aid, qte: d.lignes[0].qte, pu: d.lignes[0].pu,
     mt: d.mt, sousTotal: d.mt, remise: 0,
@@ -9813,7 +9820,7 @@ function saveVenteRapide(aid){
   if(sa(a)<qte)return toast('❌ Stock insuffisant');
   const mt=qte*pu;
   const vid=genId();
-  S.ventes.push({id:vid,date:D(),aid,client,qte,pu,mt,cid,mode:nomCompte(cid),statut:'Payé',
+  S.ventes.push({id:vid,date:D(),ts:Date.now(),aid,client,qte,pu,mt,cid,mode:nomCompte(cid),statut:'Payé',
     lignes:[{aid,qte,pu,nom:a.nom}],heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});
   a.qv=(a.qv||0)+qte;
   crediterCompte(cid,mt);
@@ -10784,7 +10791,7 @@ function crValider(){
     const monnaieRecue = crMonnaie > 0 ? crMonnaie : null;
     const monnaieRendue = crMonnaie > total ? crMonnaie - total : null;
     S.ventes.push({
-      id:vid, date:D(), bid:getBid(),
+      id:vid, date:D(), ts:Date.now(), bid:getBid(),
       lignes: crPanier.map(l=>({aid:l.aid,qte:l.qte,pu:l.pu,mt:l.mt,typePrix:l.typePrix||crTypePrix})),
       aid:crPanier[0].aid, qte:crPanier[0].qte, pu:crPanier[0].pu,
       mt:total, sousTotal, remise:remiseMt, remiseType:crRemise.type, remiseVal:crRemise.val,
