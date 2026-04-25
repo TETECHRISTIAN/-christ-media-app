@@ -2069,6 +2069,15 @@ async function manualSync(){
 
 // ─── INIT FIREBASE ASYNC ───
 let S=loadData();
+
+// ─── DEVICE DETECTION (anti-crash mobile) ───
+// Sur mobile, les listeners Firebase globaux peuvent provoquer une surcharge mémoire
+// (surtout avec de gros tableaux: stock, ventes, clients...).
+// On limite donc le temps réel sur mobile et on privilégie la sync manuelle/auto.
+const IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const IS_LOW_RAM = (typeof navigator.deviceMemory === 'number') && navigator.deviceMemory <= 2;
+const DISABLE_HEAVY_REALTIME = IS_MOBILE || IS_LOW_RAM;
+
 // Rendu initial de la barre de raccourcis personnalisables
 if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded', ()=>{ renderQuickBar(); showQuickBar(currentPage||'dashboard'); });
@@ -2098,7 +2107,12 @@ async function startFirebaseSync(){
         setSyncStatus('online','Synchronisé ✓');
       }
       // Activer la sync temps réel après le chargement initial
-      activerListenerTempsReel();
+      // FIX anti-crash mobile : sur mobile on évite le listener global (trop lourd)
+      if(!DISABLE_HEAVY_REALTIME){
+        activerListenerTempsReel();
+      } else {
+        console.warn('[SYNC] Temps réel global désactivé (mobile/low-ram).');
+      }
     }else{
       await initAuth(); // session locale
       setSyncStatus('offline','Mode hors ligne');
