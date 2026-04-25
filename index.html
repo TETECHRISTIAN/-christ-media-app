@@ -5940,6 +5940,70 @@ function rParametres(){
       <button class="btn btn-sm" onclick="effacerHistoriqueConnexions();rParametres()" style="margin-top:10px;color:var(--red)">🗑️ Effacer l'historique</button>
     </div>
 
+    <div class="param-section">
+      <div class="param-section-title">🛒 Paramètres de vente &amp; Caisse Rapide</div>
+
+      <!-- Type de prix par défaut -->
+      <div class="param-row">
+        <div>
+          <div class="param-label">Type de prix par défaut</div>
+          <div class="param-desc">Appliqué à l'ouverture de la caisse rapide et de la page Ventes</div>
+        </div>
+        <select class="fs" style="width:120px" onchange="majParam('defTypePrix',this.value);saveData()">
+          <option value="detail" ${(p.defTypePrix||'detail')==='detail'?'selected':''}>Détail</option>
+          <option value="semi"   ${(p.defTypePrix||'detail')==='semi'  ?'selected':''}>Semi-gros</option>
+          <option value="gros"   ${(p.defTypePrix||'detail')==='gros'  ?'selected':''}>Gros</option>
+        </select>
+      </div>
+
+      <!-- Mode de paiement par défaut -->
+      <div class="param-row">
+        <div>
+          <div class="param-label">Mode de paiement par défaut</div>
+          <div class="param-desc">Pré-sélectionné à chaque nouvelle vente</div>
+        </div>
+        <select class="fs" style="width:130px" onchange="majParam('defModePaiement',this.value);saveData()">
+          ${['Espèces','Mobile Money','Carte','Chèque','Virement','Autre'].map(m=>`<option value="${m}" ${(p.defModePaiement||'Espèces')===m?'selected':''}>${m}</option>`).join('')}
+        </select>
+      </div>
+
+      <!-- Afficher la calculette monnaie -->
+      <div class="param-row">
+        <div>
+          <div class="param-label">Calculette monnaie automatique</div>
+          <div class="param-desc">Affiche le champ "Monnaie reçue" et calcule le rendu dans la caisse rapide</div>
+        </div>
+        <div class="toggle${p.afficherMonnaie!==false?' on':''}" onclick="majParam('afficherMonnaie',${p.afficherMonnaie!==false?'false':'true'});saveData();rParametres()"></div>
+      </div>
+
+      <!-- Demander le nom du client -->
+      <div class="param-row">
+        <div>
+          <div class="param-label">Demander le client à chaque vente</div>
+          <div class="param-desc">Affiche le champ client dans la caisse rapide (sinon "Anonyme")</div>
+        </div>
+        <div class="toggle${p.demanderClient!==false?' on':''}" onclick="majParam('demanderClient',${p.demanderClient!==false?'false':'true'});saveData();rParametres()"></div>
+      </div>
+
+      <!-- Impression auto du reçu -->
+      <div class="param-row">
+        <div>
+          <div class="param-label">Impression automatique du reçu</div>
+          <div class="param-desc">Lance l'impression après chaque vente validée</div>
+        </div>
+        <div class="toggle${p.impressionAuto?' on':''}" onclick="majParam('impressionAuto',${p.impressionAuto?'false':'true'});saveData();rParametres()"></div>
+      </div>
+
+      <!-- Vente à crédit depuis la caisse rapide -->
+      <div class="param-row">
+        <div>
+          <div class="param-label">Autoriser les ventes à crédit (caisse rapide)</div>
+          <div class="param-desc">Ajoute le bouton "À crédit" dans la caisse rapide</div>
+        </div>
+        <div class="toggle${p.crAutoriserCredit?' on':''}" onclick="majParam('crAutoriserCredit',${p.crAutoriserCredit?'false':'true'});saveData();rParametres()"></div>
+      </div>
+    </div>
+
     <div class="param-section" style="border:1px solid var(--red-light)">
       <div class="param-section-title" style="color:var(--red)">🔐 Session</div>
       <div class="param-row">
@@ -10529,11 +10593,12 @@ let crMonnaie = 0;
 let crCid = null;
 
 function ouvrirCaisseRapide(){
+  const p = S.parametres || {};
   crPanier = [];
-  crMode = 'Espèces';
+  crMode = p.defModePaiement || 'Espèces';
   crSearch = '';
   crCat = 'Tout';
-  crTypePrix = 'detail';
+  crTypePrix = p.defTypePrix || 'detail';
   crRemise = {type:'%', val:0};
   crClient = '';
   crMonnaie = 0;
@@ -10667,6 +10732,7 @@ function renderCaisseRapide(){
       <!-- Footer validation -->
       <div class="cr-footer">
         <!-- Client -->
+        ${(S.parametres?.demanderClient!==false)?`
         <div style="margin-bottom:8px">
           <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Client</div>
           <div style="display:flex;gap:6px">
@@ -10675,7 +10741,7 @@ function renderCaisseRapide(){
               style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--surface);color:var(--text)">
             <datalist id="cr-clients-list">${clients.map(c=>`<option value="${c.nom}">`).join('')}</datalist>
           </div>
-        </div>
+        </div>`:''}
         <!-- Remise -->
         <div style="margin-bottom:8px">
           <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Remise</div>
@@ -10710,15 +10776,16 @@ function renderCaisseRapide(){
             <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:3px">Compte</div>
             ${selectComptes('cr-cid', crCid)}
           </div>
+          ${(S.parametres?.afficherMonnaie!==false)?`
           <div style="flex:1">
             <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:3px">Monnaie reçue</div>
             <input type="number" min="0" placeholder="${F(total)}" value="${crMonnaie||''}"
               oninput="crMonnaie=+this.value||0;crMajMonnaie()"
               id="cr-monnaie-inp"
               style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--surface);color:var(--text)">
-          </div>
+          </div>`:''}
         </div>
-        ${monnaieRendue>0?`<div style="margin-top:4px;background:var(--green-bg);border:1px solid var(--green-light);border-radius:8px;padding:6px 10px;display:flex;justify-content:space-between;font-size:13px;font-weight:700"><span>💵 Monnaie à rendre</span><span style="color:var(--green)">${F(monnaieRendue)}</span></div>`:''}
+        ${(S.parametres?.afficherMonnaie!==false)&&monnaieRendue>0?`<div style="margin-top:4px;background:var(--green-bg);border:1px solid var(--green-light);border-radius:8px;padding:6px 10px;display:flex;justify-content:space-between;font-size:13px;font-weight:700"><span>💵 Monnaie à rendre</span><span style="color:var(--green)">${F(monnaieRendue)}</span></div>`:''}
         <!-- Bouton valider -->
         <button class="cr-valider-btn" onclick="crValider()" ${crPanier.length===0?'disabled':''} style="margin-top:8px">
           ✓ Encaisser ${total>0?F(total):''}
