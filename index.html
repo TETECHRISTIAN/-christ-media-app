@@ -170,6 +170,10 @@ tr:hover .td-actions{opacity:1}
 
 /* ─── MODAL ─── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(2px)}
+@media(max-width:768px){
+  .overlay{align-items:flex-end}
+  .modal{border-radius:16px 16px 0 0;max-height:92dvh;width:100%;max-width:100%}
+}
 .modal{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:24px;width:500px;max-width:95vw;max-height:90dvh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
 .mft{font-size:16px;font-weight:600;margin-bottom:18px}
 .mff{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
@@ -929,6 +933,93 @@ body.dark th{background:var(--surface3)}
 .ia-typing span:nth-child(3){animation-delay:.3s}
 @keyframes iaDot{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
 .progress-ring{transform:rotate(-90deg)}
+
+/* ═══════════════════════════════════════════
+   CORRECTIFS AFFICHAGE MOBILE — Christ Media
+   ═══════════════════════════════════════════ */
+
+/* ── Tables : scroll horizontal au lieu de débordement ── */
+@media(max-width:768px){
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:480px}
+  th,td{padding:7px 8px;font-size:12px;white-space:nowrap}
+
+  /* ── Topbar : masquer les éléments secondaires ── */
+  .topbar-actions .btn{display:none} /* masquer "+ Vente" (disponible dans nav) */
+  button[onclick*="afficherRaccourcis"]{display:none} /* masquer bouton ? */
+  .user-pill-name,.user-pill-role{display:none} /* juste l'emoji sur mobile */
+  .topbar{padding:8px 12px;gap:6px}
+  .topbar-left{gap:8px}
+
+  /* ── Modal : padding réduit, pleine largeur ── */
+  .modal{padding:16px;width:100%;max-width:100vw;border-radius:12px 12px 0 0;margin:0;max-height:88dvh}
+  .mft{font-size:14px;margin-bottom:14px}
+
+  /* ── Cards dashboard : 2 colonnes au lieu de 4 ── */
+  .g4{grid-template-columns:1fr 1fr;gap:10px}
+  .g3{grid-template-columns:1fr;gap:10px}
+  .g2{grid-template-columns:1fr;gap:10px}
+
+  /* ── Caisse rapide : panier en bas sur mobile ── */
+  .caisse-rapide-layout{flex-direction:column!important}
+  .cr-right{width:100%!important;border-left:none!important;border-top:1px solid var(--border)!important;max-height:260px}
+  .cr-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))!important;gap:6px!important;padding:8px!important}
+
+  /* ── Panier lignes : colonnes adaptées ── */
+  .panier-ligne,.panier-ligne-header{grid-template-columns:1fr 50px 80px 40px 24px;gap:4px;font-size:12px}
+
+  /* ── Toast : remonter au dessus de la nav mobile ── */
+  .toast{bottom:100px}
+
+  /* ── Page : padding minimal ── */
+  .page{padding:12px 10px;padding-bottom:100px}
+
+  /* ── Vrf (vente récap) : pas de débordement ── */
+  .vrf{padding:14px}
+
+  /* ── Stat cards : textes plus petits ── */
+  .card{padding:14px}
+  .card h3{font-size:20px}
+  .ct{font-size:9px}
+
+  /* ── Quick-bar : toujours visible avec bonne hauteur ── */
+  .quick-bar{display:flex!important;padding:5px 8px;min-height:44px;align-items:center}
+  .qb-item{padding:5px 8px;font-size:9px}
+  .qb-center{padding:5px 10px;font-size:9px}
+
+  /* ── Formulaires : inputs pleine largeur ── */
+  .fi,.fs{font-size:16px} /* évite le zoom auto iOS */
+
+  /* ── Grille inventaire/rapports ── */
+  .inv-summary{flex-direction:column;gap:8px}
+  .inv-chip{min-width:unset}
+
+  /* ── Charts ── */
+  .chart-canvas{max-height:180px}
+
+  /* ── Period tabs ── */
+  .period-tabs{gap:4px}
+  .ptab{padding:4px 10px;font-size:11px}
+
+  /* ── Facture parties : 1 colonne ── */
+  .facture-parties{grid-template-columns:1fr}
+  .f-parties{grid-template-columns:1fr}
+  .f-totaux{width:100%}
+
+  /* ── Présence bar : masquée sur mobile (gain de place sidebar) ── */
+  .presence-bar{display:none}
+}
+
+/* ── Très petits écrans (< 380px) ── */
+@media(max-width:380px){
+  .g4{grid-template-columns:1fr}
+  .qb-item span,.qb-center span{display:none}
+  .qb-item{padding:6px 8px}
+  .qb-center{padding:6px 10px}
+  th,td{font-size:11px;padding:6px 6px}
+  .card h3{font-size:18px}
+  .topbar-title{font-size:13px}
+}
 
 </style>
 </head>
