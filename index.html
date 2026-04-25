@@ -1868,21 +1868,26 @@ function activerListenerTempsReel(){
     // Rien de nouveau a apporter
     if(remoteVer <= localVer) return;
 
-    // Fusion propre : union par ID, ts decide du gagnant
-    const savedSession = S.session;
+    // Sauvegarder la session et la boutique locale AVANT la fusion
+    // Ces valeurs ne doivent JAMAIS etre ecrasees par le remote
+    const savedSession       = S.session;
+    const savedBoutiqueActive = S.session?.boutique_active || S.boutique_active;
+
     const merged = fusionnerDonnees(S, remote);
-    merged.boutique_active = S.session?.boutique_active || S.boutique_active || remote.boutique_active || 1;
+
+    // Restaurer systematiquement boutique_active locale
+    // (le remote vient peut-etre d'un autre appareil sur une autre boutique)
+    if(savedBoutiqueActive) merged.boutique_active = savedBoutiqueActive;
 
     S = merged;
     if(savedSession?.uid){
       S.session = savedSession;
-      if(savedSession.boutique_active) S.boutique_active = savedSession.boutique_active;
+      if(savedBoutiqueActive) S.boutique_active = savedBoutiqueActive;
     }
     saveLocal(S);
     rafraichirPageCourante();
-    setSyncStatus('online','Synchronise');
-    toast('Donnees mises a jour', 1800);
-    // PAS de republication ici -- evite les boucles d'ecrasement
+    setSyncStatus('online','Synchronisé ✓');
+    toast('🔄 Nouvelles données reçues', 1800);
 
   }, e=>{
     console.warn('Realtime listener error:', e);
@@ -1904,13 +1909,18 @@ async function syncMobileNow(){
   try {
     const remote = await loadFromFirebase();
     if(remote){
-      const savedSession = S.session;
+      const savedSession        = S.session;
+      const savedBoutiqueActive = S.session?.boutique_active || S.boutique_active;
+
       const merged = fusionnerDonnees(S, remote);
-      merged.boutique_active = S.session?.boutique_active || S.boutique_active || remote.boutique_active || 1;
+
+      // Restaurer boutique_active locale — jamais ecraser par le remote
+      if(savedBoutiqueActive) merged.boutique_active = savedBoutiqueActive;
+
       S = merged;
       if(savedSession?.uid){
         S.session = savedSession;
-        if(savedSession.boutique_active) S.boutique_active = savedSession.boutique_active;
+        if(savedBoutiqueActive) S.boutique_active = savedBoutiqueActive;
       }
       saveLocal(S);
       // Republier la fusion pour que le PC recupere nos donnees
@@ -2004,9 +2014,11 @@ function fusionnerDonnees(local, remote){
 
   // Paramètres : garder celui de l'appareil avec la version la plus haute
   if((local.version||0) > (remote.version||0)){
-    result.parametres    = local.parametres    || remote.parametres;
-    result.boutique_active = local.boutique_active ?? remote.boutique_active;
+    result.parametres = local.parametres || remote.parametres;
   }
+  // boutique_active n'est JAMAIS fusionné depuis remote — c'est une valeur locale
+  // propre à chaque appareil/session. Elle est restaurée par le listener après fusion.
+  result.boutique_active = local.boutique_active;
 
   // Utilisateurs : fusion par ID — ne jamais perdre un compte (surtout l'admin)
   const usersMap = new Map();
@@ -2288,20 +2300,25 @@ function getStockBoutique(bid){
 // Filtre ventes par boutique active
 function getVentesBoutique(bid){
   bid = bid || getBid();
-  // FIX : exclure les ventes soft-deleted (_deleted:true) propagées par la fusion
-  return (S.ventes||[]).filter(v => !v._deleted && (!v.bid || v.bid == bid));
+  return (S.ventes||[]).filter(v => {
+    if(v._deleted) return false;
+    // Vente avec bid explicite → filtre strict
+    if(v.bid) return v.bid == bid;
+    // Vente sans bid (ancienne) → appartient à la boutique 1 seulement
+    return bid == 1;
+  });
 }
 
 // Filtre achats par boutique active
 function getAchatsBoutique(bid){
   bid = bid || getBid();
-  return (S.achats||[]).filter(a => !a.bid || a.bid == bid);
+  return (S.achats||[]).filter(a => a.bid ? a.bid == bid : bid == 1);
 }
 
 // Filtre dépenses par boutique active
 function getDepensesBoutique(bid){
   bid = bid || getBid();
-  return (S.depenses||[]).filter(d => !d.bid || d.bid == bid);
+  return (S.depenses||[]).filter(d => d.bid ? d.bid == bid : bid == 1);
 }
 
 // Filtre clients par boutique active
@@ -7507,6 +7524,7 @@ function confirmerConversionDevis(id){
   const vid = genId();
   S.ventes.push({
     id:vid, date, ts:Date.now(),
+    bid: getBid(),
     lignes: d.lignes,
     aid: d.lignes[0].aid, qte: d.lignes[0].qte, pu: d.lignes[0].pu,
     mt: d.mt, sousTotal: d.mt, remise: 0,
@@ -9943,7 +9961,7 @@ function saveVenteRapide(aid){
   if(sa(a)<qte)return toast('❌ Stock insuffisant');
   const mt=qte*pu;
   const vid=genId();
-  S.ventes.push({id:vid,date:D(),ts:Date.now(),aid,client,qte,pu,mt,cid,mode:nomCompte(cid),statut:'Payé',
+  S.ventes.push({id:vid,date:D(),ts:Date.now(),bid:getBid(),aid,client,qte,pu,mt,cid,mode:nomCompte(cid),statut:'Payé',
     lignes:[{aid,qte,pu,nom:a.nom}],heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});
   a.qv=(a.qv||0)+qte;
   crediterCompte(cid,mt);
