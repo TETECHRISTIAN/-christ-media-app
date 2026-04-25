@@ -1741,189 +1741,72 @@ async function saveCollectionFirebase(col, data){
   });
 }
 
-// ─── LISTENER TEMPS RÉEL ───
-// Détection mobile — sur mobile on désactive le listener temps réel
-// et on fait une sync périodique toutes les 3 minutes à la place
+// ═══════════════════════════════════════════════════════════════
+// SYNCHRONISATION FIREBASE - VERSION PROPRE
+// Principe simple :
+//   PC  -> listener temps reel (lecture seule, jamais de republication)
+//   Mobile -> sync manuelle/periodique toutes les 3 min
+//   saveData() -> toujours ecrire Firebase directement
+//   fusionnerDonnees() -> union par ID, le plus recent (ts) gagne
+// ═══════════════════════════════════════════════════════════════
+
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 let _mobileSyncInterval = null;
-let _realtimeListener=null;
-// Cache de protection : IDs des ventes/achats créés localement dans les 5 dernières minutes
-// Ces enregistrements ne peuvent JAMAIS être effacés par une fusion entrante
-let _localRecentIds = new Map(); // Map<collection, Set<id>>
-function _enregistrerIdLocal(col, id){
-  if(!_localRecentIds.has(col)) _localRecentIds.set(col, new Map());
-  _localRecentIds.get(col).set(String(id), Date.now());
-}
-function _nettoyerIdsLocaux(){
-  const limite = Date.now() - 5*60*1000; // 5 minutes
-  _localRecentIds.forEach((map, col)=>{
-    map.forEach((ts, id)=>{ if(ts < limite) map.delete(id); });
-  });
-}
-// Après toute fusion, réinjecter les enregistrements locaux récents si manquants
-function _protegerDonneesLocales(merged){
-  _nettoyerIdsLocaux();
-  _localRecentIds.forEach((map, col)=>{
-    if(!Array.isArray(S[col])) return;
-    const mergedIds = new Set((merged[col]||[]).map(x=>String(x.id)));
-    map.forEach((ts, id)=>{
-      if(!mergedIds.has(id)){
-        const item = (S[col]||[]).find(x=>String(x.id)===id);
-        if(item && !item._deleted){
-          if(!merged[col]) merged[col]=[];
-          merged[col].push(item);
-          console.warn(`[SYNC] Réinjection protection: ${col}#${id}`);
-        }
-      }
-    });
-  });
-  return merged;
-}
-let _ignorerProchainUpdate=false;
-let _ignorerTimer=null;
+let _realtimeListener = null;
+// Timestamp du dernier save local -- sert a ignorer notre propre echo Firebase
+let _lastSaveTs = 0;
+// Stubs de compatibilite (anciens correctifs supprimes)
+function _protegerDonneesLocales(merged){ return merged; }
+function _enregistrerIdLocal(){}
 
+// LISTENER PC (lecture seule, pas de republication)
 function activerListenerTempsReel(){
-  if(!fbReady||!db)return;
-  if(_realtimeListener) return; // déjà actif
+  if(!fbReady || !db) return;
+  if(_realtimeListener) return;
 
   _realtimeListener = db.ref('christmedia/data').on('value', snap=>{
-    if(_ignorerProchainUpdate){
-      // On ignore notre propre écho — le timer s'en charge
-      return;
-    }
-    const remote=snap.val();
-    if(!remote)return;
+    const remote = snap.val();
+    if(!remote) return;
+
+    // Ignorer notre propre echo : on vient d'ecrire dans les 4 dernieres secondes
+    if(Date.now() - _lastSaveTs < 4000) return;
+
     const remoteVer = remote.version || 0;
     const localVer  = S.version  || 0;
 
+    // Rien de nouveau a apporter
+    if(remoteVer <= localVer) return;
+
+    // Fusion propre : union par ID, ts decide du gagnant
     const savedSession = S.session;
+    const merged = fusionnerDonnees(S, remote);
+    merged.boutique_active = S.session?.boutique_active || S.boutique_active || remote.boutique_active || 1;
 
-    // CAS 1 : Remote plus récent → fusion complète puis republication
-    // CORRECTIF ÉCRASEMENT : après fusion on remonte la version locale ET on
-    // republie immédiatement vers Firebase. Ainsi le prochain update Firebase
-    // aura une version >= locale et ne déclenchera plus de fusion destructive.
-    if(remoteVer > localVer){
-      let merged = fusionnerDonnees(S, remote);
-      // PROTECTION : réinjecter les ventes/achats créés localement récemment
-      // qui pourraient manquer dans le remote (race condition multi-appareils)
-      merged = _protegerDonneesLocales(merged);
-      // Préserver la boutique_active locale (choix de l'admin)
-      merged.boutique_active = S.session?.boutique_active || S.boutique_active || remote.boutique_active || 1;
-      // Détecter si quelque chose a vraiment changé (taille ou contenu)
-      const tsOf = item => item.ts || item.updatedAt || item.date_ts || item.created_at || 0;
-      let changed = FB_COLLECTIONS.some(col=>{
-        const loc = Array.isArray(S[col]) ? S[col] : [];
-        const mer = Array.isArray(merged[col]) ? merged[col] : [];
-        if(loc.length !== mer.length) return true;
-        const locMap = new Map(loc.map(x=>[String(x.id), tsOf(x)]));
-        return mer.some(x=> !locMap.has(String(x.id)) || tsOf(x) > (locMap.get(String(x.id))||0));
-      });
-      if(changed){
-        S = merged;
-        if(savedSession && savedSession.uid){
-          S.session = savedSession;
-          if(savedSession.boutique_active) S.boutique_active = savedSession.boutique_active;
-        }
-        // Monter la version locale à remoteVer pour que les prochains updates
-        // n'écrasent plus (on est maintenant "à jour" côté version)
-        S.version = remoteVer;
-        saveLocal(S);
-        rafraichirPageCourante();
-        toast('🔄 Données mises à jour', 1800);
-        // Republier la fusion pour que tous les appareils aient le même état
-        _ignorerProchainUpdate = true;
-        clearTimeout(_ignorerTimer);
-        _ignorerTimer = setTimeout(()=>{ _ignorerProchainUpdate = false; }, 10000);
-        saveToFirebase(S).then(()=>{
-          clearTimeout(_ignorerTimer);
-          _ignorerProchainUpdate = false;
-        }).catch(()=>{});
-      } else {
-        // Même si pas de changement, aligner la version locale sur le remote
-        S.version = remoteVer;
-        saveLocal(S);
-      }
-      setSyncStatus('online','Synchronisé ✓');
-
-    // CAS 2 : Même version → chercher de nouveaux IDs des deux côtés (conflit simultané)
-    } else if(remoteVer === localVer && remoteVer > 0){
-      const merged = Object.assign({}, S);
-      let changed = false;
-      FB_COLLECTIONS.forEach(col=>{
-        const remoteArr = Array.isArray(remote[col]) ? remote[col] : [];
-        const localArr  = Array.isArray(S[col])     ? S[col]      : [];
-        const localIds  = new Set(localArr.map(x=>String(x.id)));
-        const nouveaux  = remoteArr.filter(x => !localIds.has(String(x.id)));
-        if(nouveaux.length > 0){
-          merged[col] = [...localArr, ...nouveaux];
-          changed = true;
-        }
-      });
-      if(changed){
-        S = merged;
-        if(savedSession && savedSession.uid){
-          S.session = savedSession;
-          if(savedSession.boutique_active) S.boutique_active = savedSession.boutique_active;
-        }
-        S.version = Date.now();
-        saveLocal(S);
-        _ignorerProchainUpdate = true;
-        clearTimeout(_ignorerTimer);
-        _ignorerTimer = setTimeout(()=>{ _ignorerProchainUpdate = false; }, 8000);
-        saveToFirebase(S).catch(()=>{});
-        rafraichirPageCourante();
-      }
-      setSyncStatus('online','Synchronisé ✓');
-
-    // CAS 3 : Remote plus vieux que local → fusionner quand même les nouveaux IDs
-    // (même si la version Firebase est plus ancienne, elle peut contenir des ventes
-    // d'un autre appareil qui n'ont pas encore été fusionnées localement)
-    } else {
-      const merged3 = Object.assign({}, S);
-      let changed3 = false;
-      FB_COLLECTIONS.forEach(col=>{
-        const remoteArr = Array.isArray(remote[col]) ? remote[col] : [];
-        const localArr  = Array.isArray(S[col])      ? S[col]      : [];
-        const localIds  = new Set(localArr.map(x=>String(x.id)));
-        const nouveaux  = remoteArr.filter(x => !localIds.has(String(x.id)) && !x._deleted);
-        if(nouveaux.length > 0){
-          merged3[col] = [...localArr, ...nouveaux];
-          changed3 = true;
-        }
-      });
-      if(changed3){
-        S = merged3;
-        if(savedSession && savedSession.uid){
-          S.session = savedSession;
-          if(savedSession.boutique_active) S.boutique_active = savedSession.boutique_active;
-        }
-        saveLocal(S);
-        rafraichirPageCourante();
-        toast('🔄 Nouvelles données reçues', 1800);
-        // Republier la fusion vers Firebase pour mettre à jour sa version
-        _ignorerProchainUpdate = true;
-        clearTimeout(_ignorerTimer);
-        _ignorerTimer = setTimeout(()=>{ _ignorerProchainUpdate = false; }, 8000);
-        saveToFirebase(S).catch(()=>{});
-      }
-      setSyncStatus('online','Synchronisé ✓');
+    S = merged;
+    if(savedSession?.uid){
+      S.session = savedSession;
+      if(savedSession.boutique_active) S.boutique_active = savedSession.boutique_active;
     }
+    saveLocal(S);
+    rafraichirPageCourante();
+    setSyncStatus('online','Synchronise');
+    toast('Donnees mises a jour', 1800);
+    // PAS de republication ici -- evite les boucles d'ecrasement
+
   }, e=>{
-    console.warn('Realtime listener error:',e);
+    console.warn('Realtime listener error:', e);
     setSyncStatus('offline','Hors ligne');
   });
 }
 
 function desactiverListenerTempsReel(){
-  if(_realtimeListener&&db){
-    db.ref('christmedia/data').off('value',_realtimeListener);
-    _realtimeListener=null;
+  if(_realtimeListener && db){
+    db.ref('christmedia/data').off('value', _realtimeListener);
+    _realtimeListener = null;
   }
 }
 
-// ─── SYNC MOBILE PÉRIODIQUE ───
-// Sur mobile, on évite le listener temps réel (cause d'écrasements)
-// et on fait une fusion propre toutes les 3 minutes + bouton manuel
+// SYNC MOBILE PERIODIQUE
 async function syncMobileNow(){
   if(!fbReady || !navigator.onLine || !S.session) return;
   setSyncStatus('syncing','Sync...');
@@ -1932,31 +1815,34 @@ async function syncMobileNow(){
     if(remote){
       const savedSession = S.session;
       const merged = fusionnerDonnees(S, remote);
-      const protege = _protegerDonneesLocales(merged);
-      appliquerEtatFusionne(protege);
-      if(savedSession && savedSession.uid) S.session = savedSession;
-      // Republier la fusion pour que le PC ait aussi nos dernières données
+      merged.boutique_active = S.session?.boutique_active || S.boutique_active || remote.boutique_active || 1;
+      S = merged;
+      if(savedSession?.uid){
+        S.session = savedSession;
+        if(savedSession.boutique_active) S.boutique_active = savedSession.boutique_active;
+      }
+      saveLocal(S);
+      // Republier la fusion pour que le PC recupere nos donnees
       genVersion();
+      _lastSaveTs = Date.now();
       await saveToFirebase(S);
-      setSyncStatus('online','Synchronisé ✓');
+      setSyncStatus('online','Synchronise');
       rafraichirPageCourante();
     }
   } catch(e) {
-    setSyncStatus('offline','Sync échouée');
+    console.warn('syncMobileNow error:', e);
+    setSyncStatus('offline','Sync echouee');
   }
 }
 
 function demarrerSyncMobile(){
   if(_mobileSyncInterval) clearInterval(_mobileSyncInterval);
-  // Sync immédiate au démarrage, puis toutes les 3 minutes
   syncMobileNow();
   _mobileSyncInterval = setInterval(syncMobileNow, 3 * 60 * 1000);
-  // Afficher le bouton sync dans le header si on est sur mobile
-  const btn = document.getElementById('btn-sync-mobile');
-  if(btn) btn.style.display = 'inline-flex';
   const info = document.getElementById('mobile-sync-info');
   if(info) info.style.display = 'block';
 }
+
 
 // ─── MAIN LOAD / SAVE ───
 function loadData(){
@@ -1964,41 +1850,20 @@ function loadData(){
 }
 async function saveData(){
   genVersion();
-  // Garantir que chaque vente/achat/dépense a un ts pour la fusion intelligente
+  // Garantir que chaque item a un ts pour la fusion intelligente
   const now = Date.now();
   ['ventes','achats','depenses','clients','stock','fournisseurs'].forEach(col=>{
     if(Array.isArray(S[col])) S[col].forEach(item=>{ if(!item.ts) item.ts = now; });
   });
-  // PROTECTION : mémoriser les IDs locaux récents (ventes, achats) pour éviter
-  // qu'une fusion entrante ne les écrase en cas de race condition multi-appareils
-  ['ventes','achats'].forEach(col=>{
-    if(Array.isArray(S[col])) S[col].forEach(item=>{
-      if(item.id!=null && !item._deleted) _enregistrerIdLocal(col, item.id);
-    });
-  });
   saveLocal(S);
   if(typeof majNotifBadge==='function') majNotifBadge();
-  if(fbReady&&navigator.onLine){
-    // FIX : délai porté à 10s pour couvrir les connexions lentes (Togo)
-    // Évite que le listener reçoive notre propre mise à jour et rafraîchisse inutilement
-    // Reset immédiat après succès pour ne pas bloquer les mises à jour légitimes
-    _ignorerProchainUpdate=true;
-    clearTimeout(_ignorerTimer);
-    _ignorerTimer=setTimeout(()=>{ _ignorerProchainUpdate=false; }, 10000);
-    await saveToFirebase(S).then(()=>{
-      // Attendre 2s après le save réussi avant de réactiver le listener
-      // pour laisser le temps aux autres appareils de recevoir notre version
-      // et de réécrire Firebase avec nos données fusionnées
-      clearTimeout(_ignorerTimer);
-      _ignorerTimer=setTimeout(()=>{ _ignorerProchainUpdate=false; }, 2500);
-    }).catch(()=>{
-      // En cas d'erreur on laisse le timer expirer naturellement
-    });
-    // S'il y avait des ops en attente, elles sont maintenant sync
+  if(fbReady && navigator.onLine){
+    // Marquer le timestamp d'ecriture pour que le listener ignore notre propre echo
+    _lastSaveTs = Date.now();
+    await saveToFirebase(S).catch(()=>{});
     if(getOfflineQueue().length > 0) viderFileAttente();
-  }else{
-    setSyncStatus('offline','Non synchronisé — ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}));
-    // Enregistrer dans la file d'attente hors ligne
+  } else {
+    setSyncStatus('offline','Non synchronise -- ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}));
     ajouterFileAttente('save', {version: S.version, ts: Date.now()});
   }
 }
@@ -2223,10 +2088,6 @@ window.addEventListener('online', async()=>{
       const merged = fusionnerDonnees(S, remote);
       appliquerEtatFusionne(merged);
     }
-    // FIX : délai porté à 6s pour couvrir les connexions lentes
-    _ignorerProchainUpdate = true;
-    clearTimeout(_ignorerTimer);
-    _ignorerTimer = setTimeout(()=>{ _ignorerProchainUpdate = false; }, 6000);
     const ok = await saveToFirebase(S);
     if(ok){
       viderFileAttente();
@@ -2281,9 +2142,6 @@ function switcherBoutique(bid){
   S.boutique_active = bid; // sync global
   saveLocal(S);
   // Bloquer le listener Firebase pendant 10s pour éviter rollback boutique_active
-  _ignorerProchainUpdate = true;
-  clearTimeout(_ignorerTimer);
-  _ignorerTimer = setTimeout(()=>{ _ignorerProchainUpdate = false; }, 10000);
   majBoutiqueUI();
   // Rafraîchir la page courante
   try{
