@@ -170,10 +170,6 @@ tr:hover .td-actions{opacity:1}
 
 /* ─── MODAL ─── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(2px)}
-@media(max-width:768px){
-  .overlay{align-items:flex-end}
-  .modal{border-radius:16px 16px 0 0;max-height:92dvh;width:100%;max-width:100%}
-}
 .modal{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:24px;width:500px;max-width:95vw;max-height:90dvh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
 .mft{font-size:16px;font-weight:600;margin-bottom:18px}
 .mff{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
@@ -934,93 +930,6 @@ body.dark th{background:var(--surface3)}
 @keyframes iaDot{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
 .progress-ring{transform:rotate(-90deg)}
 
-/* ═══════════════════════════════════════════
-   CORRECTIFS AFFICHAGE MOBILE — Christ Media
-   ═══════════════════════════════════════════ */
-
-/* ── Tables : scroll horizontal au lieu de débordement ── */
-@media(max-width:768px){
-  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  table{min-width:480px}
-  th,td{padding:7px 8px;font-size:12px;white-space:nowrap}
-
-  /* ── Topbar : masquer les éléments secondaires ── */
-  .topbar-actions .btn{display:none} /* masquer "+ Vente" (disponible dans nav) */
-  button[onclick*="afficherRaccourcis"]{display:none} /* masquer bouton ? */
-  .user-pill-name,.user-pill-role{display:none} /* juste l'emoji sur mobile */
-  .topbar{padding:8px 12px;gap:6px}
-  .topbar-left{gap:8px}
-
-  /* ── Modal : padding réduit, pleine largeur ── */
-  .modal{padding:16px;width:100%;max-width:100vw;border-radius:12px 12px 0 0;margin:0;max-height:88dvh}
-  .mft{font-size:14px;margin-bottom:14px}
-
-  /* ── Cards dashboard : 2 colonnes au lieu de 4 ── */
-  .g4{grid-template-columns:1fr 1fr;gap:10px}
-  .g3{grid-template-columns:1fr;gap:10px}
-  .g2{grid-template-columns:1fr;gap:10px}
-
-  /* ── Caisse rapide : panier en bas sur mobile ── */
-  .caisse-rapide-layout{flex-direction:column!important}
-  .cr-right{width:100%!important;border-left:none!important;border-top:1px solid var(--border)!important;max-height:260px}
-  .cr-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))!important;gap:6px!important;padding:8px!important}
-
-  /* ── Panier lignes : colonnes adaptées ── */
-  .panier-ligne,.panier-ligne-header{grid-template-columns:1fr 50px 80px 40px 24px;gap:4px;font-size:12px}
-
-  /* ── Toast : remonter au dessus de la nav mobile ── */
-  .toast{bottom:100px}
-
-  /* ── Page : padding minimal ── */
-  .page{padding:12px 10px;padding-bottom:100px}
-
-  /* ── Vrf (vente récap) : pas de débordement ── */
-  .vrf{padding:14px}
-
-  /* ── Stat cards : textes plus petits ── */
-  .card{padding:14px}
-  .card h3{font-size:20px}
-  .ct{font-size:9px}
-
-  /* ── Quick-bar : toujours visible avec bonne hauteur ── */
-  .quick-bar{display:flex!important;padding:5px 8px;min-height:44px;align-items:center}
-  .qb-item{padding:5px 8px;font-size:9px}
-  .qb-center{padding:5px 10px;font-size:9px}
-
-  /* ── Formulaires : inputs pleine largeur ── */
-  .fi,.fs{font-size:16px} /* évite le zoom auto iOS */
-
-  /* ── Grille inventaire/rapports ── */
-  .inv-summary{flex-direction:column;gap:8px}
-  .inv-chip{min-width:unset}
-
-  /* ── Charts ── */
-  .chart-canvas{max-height:180px}
-
-  /* ── Period tabs ── */
-  .period-tabs{gap:4px}
-  .ptab{padding:4px 10px;font-size:11px}
-
-  /* ── Facture parties : 1 colonne ── */
-  .facture-parties{grid-template-columns:1fr}
-  .f-parties{grid-template-columns:1fr}
-  .f-totaux{width:100%}
-
-  /* ── Présence bar : masquée sur mobile (gain de place sidebar) ── */
-  .presence-bar{display:none}
-}
-
-/* ── Très petits écrans (< 380px) ── */
-@media(max-width:380px){
-  .g4{grid-template-columns:1fr}
-  .qb-item span,.qb-center span{display:none}
-  .qb-item{padding:6px 8px}
-  .qb-center{padding:6px 10px}
-  th,td{font-size:11px;padding:6px 6px}
-  .card h3{font-size:18px}
-  .topbar-title{font-size:13px}
-}
-
 </style>
 </head>
 <body>
@@ -1240,9 +1149,8 @@ body.dark th{background:var(--surface3)}
     <div class="sync-bar-row">
       <div class="sync-dot" id="sync-dot"></div>
       <span id="sync-label">Initialisation...</span>
-      <button class="sync-btn" onclick="isMobile ? syncMobileNow() : manualSync()" title="Synchroniser maintenant" style="margin-left:auto">↻ Sync</button>
+      <button class="sync-btn" onclick="manualSync()" title="Synchroniser maintenant" style="margin-left:auto">↻ Sync</button>
     </div>
-    <div id="mobile-sync-info" style="display:none;font-size:10px;color:rgba(255,255,255,.4);padding:2px 0 0 15px">📱 Sync auto toutes les 3 min</div>
     <div class="presence-bar" id="presence-bar"></div>
   </div>
 </div>
@@ -1832,118 +1740,181 @@ async function saveCollectionFirebase(col, data){
   });
 }
 
-// ═══════════════════════════════════════════════════════════════
-// SYNCHRONISATION FIREBASE - VERSION PROPRE
-// Principe simple :
-//   PC  -> listener temps reel (lecture seule, jamais de republication)
-//   Mobile -> sync manuelle/periodique toutes les 3 min
-//   saveData() -> toujours ecrire Firebase directement
-//   fusionnerDonnees() -> union par ID, le plus recent (ts) gagne
-// ═══════════════════════════════════════════════════════════════
+// ─── LISTENER TEMPS RÉEL ───
+let _realtimeListener=null;
+// Cache de protection : IDs des ventes/achats créés localement dans les 5 dernières minutes
+// Ces enregistrements ne peuvent JAMAIS être effacés par une fusion entrante
+let _localRecentIds = new Map(); // Map<collection, Set<id>>
+function _enregistrerIdLocal(col, id){
+  if(!_localRecentIds.has(col)) _localRecentIds.set(col, new Map());
+  _localRecentIds.get(col).set(String(id), Date.now());
+}
+function _nettoyerIdsLocaux(){
+  const limite = Date.now() - 5*60*1000; // 5 minutes
+  _localRecentIds.forEach((map, col)=>{
+    map.forEach((ts, id)=>{ if(ts < limite) map.delete(id); });
+  });
+}
+// Après toute fusion, réinjecter les enregistrements locaux récents si manquants
+function _protegerDonneesLocales(merged){
+  _nettoyerIdsLocaux();
+  _localRecentIds.forEach((map, col)=>{
+    if(!Array.isArray(S[col])) return;
+    const mergedIds = new Set((merged[col]||[]).map(x=>String(x.id)));
+    map.forEach((ts, id)=>{
+      if(!mergedIds.has(id)){
+        const item = (S[col]||[]).find(x=>String(x.id)===id);
+        if(item && !item._deleted){
+          if(!merged[col]) merged[col]=[];
+          merged[col].push(item);
+          console.warn(`[SYNC] Réinjection protection: ${col}#${id}`);
+        }
+      }
+    });
+  });
+  return merged;
+}
+let _ignorerProchainUpdate=false;
+let _ignorerTimer=null;
 
-const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-let _mobileSyncInterval = null;
-let _realtimeListener = null;
-// Timestamp du dernier save local -- sert a ignorer notre propre echo Firebase
-let _lastSaveTs = 0;
-// Stubs de compatibilite (anciens correctifs supprimes)
-function _protegerDonneesLocales(merged){ return merged; }
-function _enregistrerIdLocal(){}
-
-// LISTENER PC (lecture seule, pas de republication)
 function activerListenerTempsReel(){
-  if(!fbReady || !db) return;
-  if(_realtimeListener) return;
+  if(!fbReady||!db)return;
+  if(_realtimeListener) return; // déjà actif
 
   _realtimeListener = db.ref('christmedia/data').on('value', snap=>{
-    const remote = snap.val();
-    if(!remote) return;
-
-    // Ignorer notre propre echo : on vient d'ecrire dans les 4 dernieres secondes
-    if(Date.now() - _lastSaveTs < 4000) return;
-
+    if(_ignorerProchainUpdate){
+      // On ignore notre propre écho — le timer s'en charge
+      return;
+    }
+    const remote=snap.val();
+    if(!remote)return;
     const remoteVer = remote.version || 0;
     const localVer  = S.version  || 0;
 
-    // Rien de nouveau a apporter
-    if(remoteVer <= localVer) return;
+    const savedSession = S.session;
 
-    // Sauvegarder la session et la boutique locale AVANT la fusion
-    // Ces valeurs ne doivent JAMAIS etre ecrasees par le remote
-    const savedSession       = S.session;
-    const savedBoutiqueActive = S.session?.boutique_active || S.boutique_active;
+    // CAS 1 : Remote plus récent → fusion complète puis republication
+    // CORRECTIF ÉCRASEMENT : après fusion on remonte la version locale ET on
+    // republie immédiatement vers Firebase. Ainsi le prochain update Firebase
+    // aura une version >= locale et ne déclenchera plus de fusion destructive.
+    if(remoteVer > localVer){
+      let merged = fusionnerDonnees(S, remote);
+      // PROTECTION : réinjecter les ventes/achats créés localement récemment
+      // qui pourraient manquer dans le remote (race condition multi-appareils)
+      merged = _protegerDonneesLocales(merged);
+      // Préserver la boutique_active locale (choix de l'admin)
+      merged.boutique_active = S.session?.boutique_active || S.boutique_active || remote.boutique_active || 1;
+      // Détecter si quelque chose a vraiment changé (taille ou contenu)
+      const tsOf = item => item.ts || item.updatedAt || item.date_ts || item.created_at || 0;
+      let changed = FB_COLLECTIONS.some(col=>{
+        const loc = Array.isArray(S[col]) ? S[col] : [];
+        const mer = Array.isArray(merged[col]) ? merged[col] : [];
+        if(loc.length !== mer.length) return true;
+        const locMap = new Map(loc.map(x=>[String(x.id), tsOf(x)]));
+        return mer.some(x=> !locMap.has(String(x.id)) || tsOf(x) > (locMap.get(String(x.id))||0));
+      });
+      if(changed){
+        S = merged;
+        if(savedSession && savedSession.uid){
+          S.session = savedSession;
+          if(savedSession.boutique_active) S.boutique_active = savedSession.boutique_active;
+        }
+        // Monter la version locale à remoteVer pour que les prochains updates
+        // n'écrasent plus (on est maintenant "à jour" côté version)
+        S.version = remoteVer;
+        saveLocal(S);
+        rafraichirPageCourante();
+        toast('🔄 Données mises à jour', 1800);
+        // Republier la fusion pour que tous les appareils aient le même état
+        _ignorerProchainUpdate = true;
+        clearTimeout(_ignorerTimer);
+        _ignorerTimer = setTimeout(()=>{ _ignorerProchainUpdate = false; }, 10000);
+        saveToFirebase(S).then(()=>{
+          clearTimeout(_ignorerTimer);
+          _ignorerProchainUpdate = false;
+        }).catch(()=>{});
+      } else {
+        // Même si pas de changement, aligner la version locale sur le remote
+        S.version = remoteVer;
+        saveLocal(S);
+      }
+      setSyncStatus('online','Synchronisé ✓');
 
-    const merged = fusionnerDonnees(S, remote);
+    // CAS 2 : Même version → chercher de nouveaux IDs des deux côtés (conflit simultané)
+    } else if(remoteVer === localVer && remoteVer > 0){
+      const merged = Object.assign({}, S);
+      let changed = false;
+      FB_COLLECTIONS.forEach(col=>{
+        const remoteArr = Array.isArray(remote[col]) ? remote[col] : [];
+        const localArr  = Array.isArray(S[col])     ? S[col]      : [];
+        const localIds  = new Set(localArr.map(x=>String(x.id)));
+        const nouveaux  = remoteArr.filter(x => !localIds.has(String(x.id)));
+        if(nouveaux.length > 0){
+          merged[col] = [...localArr, ...nouveaux];
+          changed = true;
+        }
+      });
+      if(changed){
+        S = merged;
+        if(savedSession && savedSession.uid){
+          S.session = savedSession;
+          if(savedSession.boutique_active) S.boutique_active = savedSession.boutique_active;
+        }
+        S.version = Date.now();
+        saveLocal(S);
+        _ignorerProchainUpdate = true;
+        clearTimeout(_ignorerTimer);
+        _ignorerTimer = setTimeout(()=>{ _ignorerProchainUpdate = false; }, 8000);
+        saveToFirebase(S).catch(()=>{});
+        rafraichirPageCourante();
+      }
+      setSyncStatus('online','Synchronisé ✓');
 
-    // Restaurer systematiquement boutique_active locale
-    // (le remote vient peut-etre d'un autre appareil sur une autre boutique)
-    if(savedBoutiqueActive) merged.boutique_active = savedBoutiqueActive;
-
-    S = merged;
-    if(savedSession?.uid){
-      S.session = savedSession;
-      if(savedBoutiqueActive) S.boutique_active = savedBoutiqueActive;
+    // CAS 3 : Remote plus vieux que local → fusionner quand même les nouveaux IDs
+    // (même si la version Firebase est plus ancienne, elle peut contenir des ventes
+    // d'un autre appareil qui n'ont pas encore été fusionnées localement)
+    } else {
+      const merged3 = Object.assign({}, S);
+      let changed3 = false;
+      FB_COLLECTIONS.forEach(col=>{
+        const remoteArr = Array.isArray(remote[col]) ? remote[col] : [];
+        const localArr  = Array.isArray(S[col])      ? S[col]      : [];
+        const localIds  = new Set(localArr.map(x=>String(x.id)));
+        const nouveaux  = remoteArr.filter(x => !localIds.has(String(x.id)) && !x._deleted);
+        if(nouveaux.length > 0){
+          merged3[col] = [...localArr, ...nouveaux];
+          changed3 = true;
+        }
+      });
+      if(changed3){
+        S = merged3;
+        if(savedSession && savedSession.uid){
+          S.session = savedSession;
+          if(savedSession.boutique_active) S.boutique_active = savedSession.boutique_active;
+        }
+        saveLocal(S);
+        rafraichirPageCourante();
+        toast('🔄 Nouvelles données reçues', 1800);
+        // Republier la fusion vers Firebase pour mettre à jour sa version
+        _ignorerProchainUpdate = true;
+        clearTimeout(_ignorerTimer);
+        _ignorerTimer = setTimeout(()=>{ _ignorerProchainUpdate = false; }, 8000);
+        saveToFirebase(S).catch(()=>{});
+      }
+      setSyncStatus('online','Synchronisé ✓');
     }
-    saveLocal(S);
-    rafraichirPageCourante();
-    setSyncStatus('online','Synchronisé ✓');
-    toast('🔄 Nouvelles données reçues', 1800);
-
   }, e=>{
-    console.warn('Realtime listener error:', e);
+    console.warn('Realtime listener error:',e);
     setSyncStatus('offline','Hors ligne');
   });
 }
 
 function desactiverListenerTempsReel(){
-  if(_realtimeListener && db){
-    db.ref('christmedia/data').off('value', _realtimeListener);
-    _realtimeListener = null;
+  if(_realtimeListener&&db){
+    db.ref('christmedia/data').off('value',_realtimeListener);
+    _realtimeListener=null;
   }
 }
-
-// SYNC MOBILE PERIODIQUE
-async function syncMobileNow(){
-  if(!fbReady || !navigator.onLine || !S.session) return;
-  setSyncStatus('syncing','Sync...');
-  try {
-    const remote = await loadFromFirebase();
-    if(remote){
-      const savedSession        = S.session;
-      const savedBoutiqueActive = S.session?.boutique_active || S.boutique_active;
-
-      const merged = fusionnerDonnees(S, remote);
-
-      // Restaurer boutique_active locale — jamais ecraser par le remote
-      if(savedBoutiqueActive) merged.boutique_active = savedBoutiqueActive;
-
-      S = merged;
-      if(savedSession?.uid){
-        S.session = savedSession;
-        if(savedBoutiqueActive) S.boutique_active = savedBoutiqueActive;
-      }
-      saveLocal(S);
-      // Republier la fusion pour que le PC recupere nos donnees
-      genVersion();
-      _lastSaveTs = Date.now();
-      await saveToFirebase(S);
-      setSyncStatus('online','Synchronise');
-      rafraichirPageCourante();
-    }
-  } catch(e) {
-    console.warn('syncMobileNow error:', e);
-    setSyncStatus('offline','Sync echouee');
-  }
-}
-
-function demarrerSyncMobile(){
-  if(_mobileSyncInterval) clearInterval(_mobileSyncInterval);
-  syncMobileNow();
-  _mobileSyncInterval = setInterval(syncMobileNow, 3 * 60 * 1000);
-  const info = document.getElementById('mobile-sync-info');
-  if(info) info.style.display = 'block';
-}
-
 
 // ─── MAIN LOAD / SAVE ───
 function loadData(){
@@ -1951,20 +1922,41 @@ function loadData(){
 }
 async function saveData(){
   genVersion();
-  // Garantir que chaque item a un ts pour la fusion intelligente
+  // Garantir que chaque vente/achat/dépense a un ts pour la fusion intelligente
   const now = Date.now();
   ['ventes','achats','depenses','clients','stock','fournisseurs'].forEach(col=>{
     if(Array.isArray(S[col])) S[col].forEach(item=>{ if(!item.ts) item.ts = now; });
   });
+  // PROTECTION : mémoriser les IDs locaux récents (ventes, achats) pour éviter
+  // qu'une fusion entrante ne les écrase en cas de race condition multi-appareils
+  ['ventes','achats'].forEach(col=>{
+    if(Array.isArray(S[col])) S[col].forEach(item=>{
+      if(item.id!=null && !item._deleted) _enregistrerIdLocal(col, item.id);
+    });
+  });
   saveLocal(S);
   if(typeof majNotifBadge==='function') majNotifBadge();
-  if(fbReady && navigator.onLine){
-    // Marquer le timestamp d'ecriture pour que le listener ignore notre propre echo
-    _lastSaveTs = Date.now();
-    await saveToFirebase(S).catch(()=>{});
+  if(fbReady&&navigator.onLine){
+    // FIX : délai porté à 10s pour couvrir les connexions lentes (Togo)
+    // Évite que le listener reçoive notre propre mise à jour et rafraîchisse inutilement
+    // Reset immédiat après succès pour ne pas bloquer les mises à jour légitimes
+    _ignorerProchainUpdate=true;
+    clearTimeout(_ignorerTimer);
+    _ignorerTimer=setTimeout(()=>{ _ignorerProchainUpdate=false; }, 10000);
+    await saveToFirebase(S).then(()=>{
+      // Attendre 2s après le save réussi avant de réactiver le listener
+      // pour laisser le temps aux autres appareils de recevoir notre version
+      // et de réécrire Firebase avec nos données fusionnées
+      clearTimeout(_ignorerTimer);
+      _ignorerTimer=setTimeout(()=>{ _ignorerProchainUpdate=false; }, 2500);
+    }).catch(()=>{
+      // En cas d'erreur on laisse le timer expirer naturellement
+    });
+    // S'il y avait des ops en attente, elles sont maintenant sync
     if(getOfflineQueue().length > 0) viderFileAttente();
-  } else {
-    setSyncStatus('offline','Non synchronise -- ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}));
+  }else{
+    setSyncStatus('offline','Non synchronisé — ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}));
+    // Enregistrer dans la file d'attente hors ligne
     ajouterFileAttente('save', {version: S.version, ts: Date.now()});
   }
 }
@@ -2014,11 +2006,9 @@ function fusionnerDonnees(local, remote){
 
   // Paramètres : garder celui de l'appareil avec la version la plus haute
   if((local.version||0) > (remote.version||0)){
-    result.parametres = local.parametres || remote.parametres;
+    result.parametres    = local.parametres    || remote.parametres;
+    result.boutique_active = local.boutique_active ?? remote.boutique_active;
   }
-  // boutique_active n'est JAMAIS fusionné depuis remote — c'est une valeur locale
-  // propre à chaque appareil/session. Elle est restaurée par le listener après fusion.
-  result.boutique_active = local.boutique_active;
 
   // Utilisateurs : fusion par ID — ne jamais perdre un compte (surtout l'admin)
   const usersMap = new Map();
@@ -2079,6 +2069,15 @@ async function manualSync(){
 
 // ─── INIT FIREBASE ASYNC ───
 let S=loadData();
+
+// ─── DEVICE DETECTION (anti-crash mobile) ───
+// Sur mobile, les listeners Firebase globaux peuvent provoquer une surcharge mémoire
+// (surtout avec de gros tableaux: stock, ventes, clients...).
+// On limite donc le temps réel sur mobile et on privilégie la sync manuelle/auto.
+const IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const IS_LOW_RAM = (typeof navigator.deviceMemory === 'number') && navigator.deviceMemory <= 2;
+const DISABLE_HEAVY_REALTIME = IS_MOBILE || IS_LOW_RAM;
+
 // Rendu initial de la barre de raccourcis personnalisables
 if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded', ()=>{ renderQuickBar(); showQuickBar(currentPage||'dashboard'); });
@@ -2108,11 +2107,11 @@ async function startFirebaseSync(){
         setSyncStatus('online','Synchronisé ✓');
       }
       // Activer la sync temps réel après le chargement initial
-      // Sur mobile : sync périodique toutes les 3 min au lieu du listener continu
-      if(isMobile){
-        demarrerSyncMobile();
-      } else {
+      // FIX anti-crash mobile : sur mobile on évite le listener global (trop lourd)
+      if(!DISABLE_HEAVY_REALTIME){
         activerListenerTempsReel();
+      } else {
+        console.warn('[SYNC] Temps réel global désactivé (mobile/low-ram).');
       }
     }else{
       await initAuth(); // session locale
@@ -2191,12 +2190,16 @@ window.addEventListener('online', async()=>{
       const merged = fusionnerDonnees(S, remote);
       appliquerEtatFusionne(merged);
     }
+    // FIX : délai porté à 6s pour couvrir les connexions lentes
+    _ignorerProchainUpdate = true;
+    clearTimeout(_ignorerTimer);
+    _ignorerTimer = setTimeout(()=>{ _ignorerProchainUpdate = false; }, 6000);
     const ok = await saveToFirebase(S);
     if(ok){
       viderFileAttente();
       setSyncStatus('online', nbOps > 0 ? `${nbOps} op. synchronisées ✓` : 'Synchronisé ✓');
       setTimeout(()=>setSyncStatus('online','Synchronisé ✓'), 3000);
-      if(isMobile){ demarrerSyncMobile(); } else { activerListenerTempsReel(); }
+      activerListenerTempsReel();
     }
   }
 });
@@ -2206,7 +2209,6 @@ window.addEventListener('offline', ()=>{
   toast('📵 Mode hors ligne — vos données sont sauvegardées localement', 3500);
   majBandeauOffline();
   desactiverListenerTempsReel();
-  if(_mobileSyncInterval){ clearInterval(_mobileSyncInterval); _mobileSyncInterval=null; }
 });
 
 // ─── HELPERS ───
@@ -2224,11 +2226,11 @@ const sb=s=>{const m={'Payé':'bg','Non payé':'br','Débiteur':'br','Régulier'
 function getBid(){
   const s = S.session || {};
   // Vendeur/caissier → toujours sa boutique assignée
-  if(s.role !== 'admin' && s.boutique_id) return Number(s.boutique_id);
+  if(s.role !== 'admin' && s.boutique_id) return s.boutique_id;
   // Admin → boutique sélectionnée (stockée dans la session)
-  if(s.boutique_active) return Number(s.boutique_active);
+  if(s.boutique_active) return s.boutique_active;
   // Fallback : boutique_active globale ou 1
-  return Number(S.boutique_active) || 1;
+  return S.boutique_active || 1;
 }
 
 // Retourne l'objet boutique active
@@ -2241,15 +2243,15 @@ function getBoutiqueActive(){
 function switcherBoutique(bid){
   if(S.session?.role !== 'admin'){toast('⛔ Réservé à l\'admin');return;}
   if(!S.session) S.session = {};
-
-  bid = Number(bid);
   S.session.boutique_active = bid;
-  S.boutique_active = bid;
-
-  // Affichage immédiat
+  S.boutique_active = bid; // sync global
+  saveLocal(S);
+  // Bloquer le listener Firebase pendant 10s pour éviter rollback boutique_active
+  _ignorerProchainUpdate = true;
+  clearTimeout(_ignorerTimer);
+  _ignorerTimer = setTimeout(()=>{ _ignorerProchainUpdate = false; }, 10000);
   majBoutiqueUI();
-
-  // Rafraîchir la page avec la nouvelle boutique
+  // Rafraîchir la page courante
   try{
     ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,
       vente:rVente,services:rServices,achats:rAchats,stock:rStock,
@@ -2262,19 +2264,13 @@ function switcherBoutique(bid){
       caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,
       depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive})[currentPage]();
   }catch(e){}
-
   const b = getBoutiqueActive();
-  toast('🏪 Boutique : ' + (b.emoji||'🏪') + ' ' + b.nom);
-
-  // Persister le choix de boutique sur Firebase
-  // Le listener ignorera cet écho (lastSaveTs) donc pas de rollback
-  saveData();
+  toast(`🏪 Boutique : ${b.emoji} ${b.nom}`);
 }
-
 
 // Met à jour l'affichage du switcher dans la sidebar
 function majBoutiqueUI(){
-  const bid = Number(getBid());
+  const bid = getBid();
   const b = getBoutiqueActive();
   const switcher = document.getElementById('boutique-switcher');
   if(!switcher) return;
@@ -2288,46 +2284,41 @@ function majBoutiqueUI(){
   switcher.innerHTML = `
     <div style="font-size:9px;font-weight:600;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;padding:0 10px;margin-bottom:4px">Boutique active</div>
     <div style="display:flex;flex-direction:column;gap:2px;padding:0 8px">
-      ${boutiques.map(bq=>{
-        const actif = Number(bq.id) === bid;
-        return `<div onclick="switcherBoutique(${bq.id})"
+      ${boutiques.map(bq=>`
+        <div onclick="switcherBoutique(${bq.id})"
           style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;transition:all .15s;
-          background:${actif?'rgba(255,255,255,.15)':'transparent'};
-          border:1px solid ${actif?'rgba(255,255,255,.2)':'transparent'}">
+          background:${bq.id==bid?'rgba(255,255,255,.15)':'transparent'};
+          border:1px solid ${bq.id==bid?'rgba(255,255,255,.2)':'transparent'}">
           <span style="font-size:15px">${bq.emoji||'🏪'}</span>
-          <span style="font-size:12px;font-weight:${actif?'700':'400'};color:${actif?'#fff':'rgba(255,255,255,.6)'};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${bq.nom}</span>
-          ${actif?'<span style="font-size:9px;background:rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:1px 5px">✓</span>':''}
-        </div>`;
-      }).join('')}
+          <span style="font-size:12px;font-weight:${bq.id==bid?'700':'400'};color:${bq.id==bid?'#fff':'rgba(255,255,255,.6)'};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${bq.nom}</span>
+          ${bq.id==bid?'<span style="font-size:9px;background:rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:1px 5px">✓</span>':''}
+        </div>`).join('')}
     </div>`;
 }
 
 // Filtre stock par boutique — strict : sans bid = boutique 1 seulement
 function getStockBoutique(bid){
-  bid = Number(bid || getBid());
-  return (S.stock||[]).filter(a => a.bid ? Number(a.bid) === bid : bid === 1);
+  bid = bid || getBid();
+  return (S.stock||[]).filter(a => (a.bid == bid) || (!a.bid && bid == 1));
 }
 
 // Filtre ventes par boutique active
 function getVentesBoutique(bid){
-  bid = Number(bid || getBid());
-  return (S.ventes||[]).filter(v => {
-    if(v._deleted) return false;
-    if(v.bid) return Number(v.bid) === bid;
-    return bid === 1;
-  });
+  bid = bid || getBid();
+  // FIX : exclure les ventes soft-deleted (_deleted:true) propagées par la fusion
+  return (S.ventes||[]).filter(v => !v._deleted && (!v.bid || v.bid == bid));
 }
 
 // Filtre achats par boutique active
 function getAchatsBoutique(bid){
-  bid = Number(bid || getBid());
-  return (S.achats||[]).filter(a => a.bid ? Number(a.bid) === bid : bid === 1);
+  bid = bid || getBid();
+  return (S.achats||[]).filter(a => !a.bid || a.bid == bid);
 }
 
 // Filtre dépenses par boutique active
 function getDepensesBoutique(bid){
-  bid = Number(bid || getBid());
-  return (S.depenses||[]).filter(d => d.bid ? Number(d.bid) === bid : bid === 1);
+  bid = bid || getBid();
+  return (S.depenses||[]).filter(d => !d.bid || d.bid == bid);
 }
 
 // Filtre clients par boutique active
@@ -3474,34 +3465,15 @@ function payerVente(id){
       <div class="total-preview-final"><span>Montant à encaisser</span><span>${F(v.mt)}</span></div>
     </div>
     <div class="fg"><label class="fl">Compte encaissement</label>${selectComptes('pv-cid', premierCompteId())}</div>
-    <div class="fg" style="margin-top:10px">
-      <label class="fl">💵 Montant remis par le client</label>
-      <input class="fi" type="number" id="pv-recu" min="${v.mt}" value="${v.mt}" oninput="calcPvMonnaie(${v.mt})" style="font-size:15px;font-weight:600">
-    </div>
-    <div class="fg" style="margin-top:6px">
-      <label class="fl">🔄 Monnaie à rendre</label>
-      <input class="fi" type="number" id="pv-monnaie" readonly value="0" style="background:var(--green-bg);color:var(--green);font-weight:700;font-size:15px">
-    </div>
     <div class="mff">
       <button class="btn" onclick="closeModal()">Annuler</button>
       <button class="btn btn-success" onclick="confirmerPaiementVente(${id})">✓ Confirmer</button>
     </div>`);
 }
-function calcPvMonnaie(total){
-  const recu=+document.getElementById('pv-recu').value||0;
-  const el=document.getElementById('pv-monnaie');
-  if(el) el.value=Math.max(0,recu-total);
-}
 function confirmerPaiementVente(id){
   const v=S.ventes.find(v=>v.id==id);if(!v)return;
   const cid=document.getElementById('pv-cid').value;
-  const c=S.comptes&&S.comptes.find(c=>c.id==cid);
-  const modeReel=c?c.type:nomCompte(cid);
-  const montantRecu=+document.getElementById('pv-recu')?.value||v.mt;
-  const monnaie=Math.max(0,montantRecu-v.mt);
-  v.statut='Payé';v.cid=cid;v.mode=modeReel;
-  v.montant_recu=montantRecu>v.mt?montantRecu:null;
-  v.monnaie=monnaie>0?monnaie:null;
+  v.statut='Payé';v.cid=cid;v.mode=nomCompte(cid);
   crediterCompte(cid,v.mt);
   saveData();closeModal();toast('✅ Vente encaissée sur "'+nomCompte(cid)+'"');rVente();
 }
@@ -3588,20 +3560,11 @@ function rAchats(){
   const totalDu=filtered.filter(a=>a.statut==='À payer').reduce((s,a)=>s+a.mt,0);
   document.getElementById('content').innerHTML=dfHtml('achats')+`
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Date</th><th>Fournisseur</th><th>Articles</th><th>Total</th><th>Compte</th><th>Statut</th><th>Notes</th><th></th></tr></thead>
-      <tbody>${filtered.length===0?'<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text3)">Aucun achat</td></tr>':
+      <thead><tr><th>Date</th><th>Fournisseur</th><th>Article</th><th>Qté</th><th>Montant</th><th>Compte</th><th>Statut</th><th>Notes</th><th></th></tr></thead>
+      <tbody>${filtered.length===0?'<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text3)">Aucun achat</td></tr>':
         filtered.slice().reverse().map(a=>{
           const fnom=gf(a.fid)?gf(a.fid).nom:a.four||'—';
-          const lignes=a.lignes&&a.lignes.length>0?a.lignes:[{aid:a.aid,nom:ga(a.aid)?ga(a.aid).nom:'—',qte:a.qte||1,pu:a.pu||0,mt:a.mt}];
-          const articlesHtml=lignes.length===1
-            ?`<span style="font-weight:500">${lignes[0].nom}</span> <span style="color:var(--text3);font-size:11px">×${N(lignes[0].qte)} · ${F(lignes[0].pu)}</span>`
-            :`<details style="cursor:pointer"><summary style="font-weight:600;color:var(--navy);font-size:12px">${lignes.length} articles</summary>
-               <div style="margin-top:4px;padding:4px 0">${lignes.map(l=>`
-                 <div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;border-bottom:1px solid var(--border)">
-                   <span>${l.nom}</span>
-                   <span style="color:var(--text2)">×${N(l.qte)} · <strong style="color:var(--purple)">${F(l.mt)}</strong></span>
-                 </div>`).join('')}
-               </div></details>`;
+          const anom=ga(a.aid)?ga(a.aid).nom:'—';
           const totalPaye=a.tranches?a.tranches.reduce((s,t)=>s+t.mt,0):0;
           const reste=a.mt-totalPaye;
           const statutBadge=a.statut==='Payé'
@@ -3611,8 +3574,7 @@ function rAchats(){
             ?`<button class="btn-icon btn-sm" onclick="configurerTranchesAchat(${a.id})" title="Enregistrer un paiement" style="color:var(--green)">💳</button>`:'';
           return`<tr>
           <td style="font-family:'DM Mono',monospace;font-size:12px">${a.date}</td>
-          <td class="tdm">${fnom}</td>
-          <td>${articlesHtml}</td>
+          <td class="tdm">${fnom}</td><td>${anom}</td><td>${N(a.qte)}</td>
           <td style="font-weight:600;color:var(--purple)">${F(a.mt)}</td>
           <td><span class="badge bb">${a.cid?nomCompte(a.cid):(a.mode||'—')}</span></td>
           <td>${statutBadge}</td>
@@ -3623,7 +3585,7 @@ function rAchats(){
           </div></td>
         </tr>`;}).join('')}
         <tr style="background:var(--surface2)">
-          <td colspan="3" style="font-weight:600">Total (${filtered.length} commande${filtered.length>1?'s':''})</td>
+          <td colspan="4" style="font-weight:600">Total (${filtered.length} achats)</td>
           <td style="font-weight:700;color:var(--purple)">${F(tot)}</td>
           <td></td>
           <td style="font-weight:600;color:var(--red);font-size:12px">${totalDu>0?`Dû: ${F(totalDu)}`:'✅ Tout réglé'}</td>
@@ -3794,42 +3756,29 @@ function saveAchatMulti(){
   const fid=+document.getElementById('mfid').value;
   if(!fid) return toast('❌ Fournisseur requis');
   const cid=document.getElementById('mmo').value;
-  const c=S.comptes&&S.comptes.find(c=>c.id==cid);
-  const mode=c?c.type:nomCompte(cid);
+  const mode=nomCompte(cid);
   const date=document.getElementById('mda').value;
   const notes=document.getElementById('mno').value;
   const statut_achat=document.getElementById('mstatut')?.value||'Payé';
   const bid=getBid();
-  const total=panier.reduce((s,l)=>s+l.mt,0);
-  const achatId=genId();
 
-  // Créer UN seul achat groupé avec toutes les lignes
-  const achatGroupe={
-    id:achatId,date,fid,cid,mode,notes,statut:statut_achat,bid,
-    mt:total,
-    lignes:panier.map(l=>({aid:l.aid,nom:l.nom,qte:l.qte,pu:l.pu,mt:l.mt})),
-    // Compatibilité rétro : premier article
-    aid:panier[0].aid, qte:panier[0].qte, pu:panier[0].pu,
-    heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),ts:Date.now()
-  };
-  S.achats.push(achatGroupe);
-
-  // Mettre à jour le stock et historique pour chaque ligne
   panier.forEach(l=>{
     const art=ga(l.aid);
     if(art){ art.ea=(art.ea||0)+l.qte; if(l.pu>0) art.pa=l.pu; }
+    const achatId=genId();
+    S.achats.push({id:achatId,date,fid,aid:l.aid,qte:l.qte,pu:l.pu,mt:l.mt,mode,cid,notes,statut:statut_achat,bid,heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),ts:Date.now()});
+    if(statut_achat==='Payé'){
+      debiterCompte(cid,l.mt);
+    } else {
+      const f=S.fournisseurs.find(f=>f.id==fid);
+      if(f) f.dette=(f.dette||0)+l.mt;
+      if(!S.dettesAchats) S.dettesAchats=[];
+      S.dettesAchats.push({id:achatId,fid,date,mt:l.mt,reste:l.mt,statut:'À payer'});
+    }
     if(art) addHistorique('Entrée',art,l.qte,`Achat — ${notes||'réappro'}`);
   });
 
-  if(statut_achat==='Payé'){
-    debiterCompte(cid,total);
-  } else {
-    const f=S.fournisseurs.find(f=>f.id==fid);
-    if(f) f.dette=(f.dette||0)+total;
-    if(!S.dettesAchats) S.dettesAchats=[];
-    S.dettesAchats.push({id:achatId,fid,date,mt:total,reste:total,statut:'À payer'});
-  }
-
+  const total=panier.reduce((s,l)=>s+l.mt,0);
   window.panierAchat=[];
   saveData(); closeModal();
   toast(`✅ ${panier.length} article${panier.length>1?'s':''} achetés — Total: ${F(total)}`);
@@ -3840,25 +3789,27 @@ function delAchat(id){
   if(!confirm('Supprimer cet achat ? Le stock et les comptes seront ajustés.'))return;
   const ac=S.achats.find(a=>a.id==id);
   if(ac){
-    // 1. Déduire du stock pour chaque ligne (multi ou mono)
-    const lignes=ac.lignes&&ac.lignes.length>0?ac.lignes:[{aid:ac.aid,qte:ac.qte||1}];
-    lignes.forEach(l=>{
-      const art=ga(l.aid);
-      if(art) art.ea=Math.max(0,(art.ea||0)-l.qte);
-    });
+    // 1. Déduire du stock (annuler les entrées liées à cet achat)
+    const art=ga(ac.aid);
+    if(art) art.ea=Math.max(0,(art.ea||0)-ac.qte);
 
     if(ac.statut==='Payé'){
       // 2a. Achat entièrement payé → rembourser le compte débité
       crediterCompte(ac.cid, ac.mt);
     } else {
       // 2b. Achat à crédit
+      // Rembourser les tranches déjà versées sur les comptes
       if(ac.tranches && ac.tranches.length>0){
-        ac.tranches.forEach(t=>{ crediterCompte(t.cid, t.mt); });
+        ac.tranches.forEach(t=>{
+          crediterCompte(t.cid, t.mt);
+        });
       }
+      // Réduire la dette fournisseur du montant RESTANT (non encore payé)
       const totalPaye=ac.tranches?ac.tranches.reduce((s,t)=>s+t.mt,0):0;
       const restedu=ac.mt-totalPaye;
       const f=S.fournisseurs.find(f=>f.id==ac.fid);
       if(f) f.dette=Math.max(0,(f.dette||0)-restedu);
+      // Supprimer de dettesAchats
       if(S.dettesAchats) S.dettesAchats=S.dettesAchats.filter(d=>d.id!=id);
     }
   }
@@ -5269,188 +5220,11 @@ function printFacture(vid){
   const sousTotal=v.sousTotal||v.mt;
   const remise=v.remise||0;
   const montantRecu=v.montant_recu||null;
-  const monnaieRendue=(v.monnaie!=null&&v.monnaie>0)?v.monnaie:null;
-  const caissier=(v.caissier_emoji||'') + ' ' + (v.caissier_nom||'');
+  const monnaieRendue=v.monnaie||null;
+  const caissier=(v.caissier_emoji||'')+' '+(v.caissier_nom||'');
   const typePrixLabel=v.typePrix==='gros'?'Gros':v.typePrix==='semi'?'Semi-gros':'Détail';
   const heure=v.heure||'';
   const boutique=getBoutiqueActive();
-  // Mode paiement : fallback sur type du compte si v.mode vaut un nom comptable
-  const compteObj = v.cid ? (S.comptes&&S.comptes.find(c=>c.id==v.cid)) : null;
-  const modePaiement = v.mode && !['—','null','undefined','Ventes','ventes','Compte ventes'].includes(String(v.mode))
-    ? v.mode
-    : (compteObj ? compteObj.type : 'Espèces');
-  // Si Mobile Money, afficher le nom du compte (Flooz, Mixx…)
-  const modeAffiche = modePaiement === 'Mobile Money' && compteObj ? compteObj.nom : modePaiement;
-
-  const fd=document.getElementById('facture-print');
-  fd.style.display='block';
-  fd.innerHTML=`
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    .fw{font-family:'Inter',system-ui,sans-serif;font-size:13px;color:#1a1a2e;max-width:760px;margin:0 auto;padding:40px 48px;background:#fff;line-height:1.5}
-
-    /* ── HEADER ── */
-    .fh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px}
-    .fh-left{display:flex;flex-direction:column;gap:4px}
-    .fh-badge{display:inline-flex;align-items:center;gap:8px;background:${couleur};color:#fff;border-radius:10px;padding:10px 16px;margin-bottom:10px;width:fit-content}
-    .fh-badge-icon{font-size:20px}
-    .fh-badge-name{font-size:17px;font-weight:800;letter-spacing:-.3px}
-    .fh-sub{font-size:11px;color:#888;letter-spacing:.2px}
-    .fh-right{text-align:right}
-    .fh-doc{font-size:28px;font-weight:900;color:${couleur};letter-spacing:2px;line-height:1}
-    .fh-ref{font-size:12px;color:#888;margin-top:6px}
-    .fh-date{font-size:12px;color:#555;margin-top:2px;font-weight:500}
-    .fh-statut{display:inline-block;margin-top:8px;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;
-      background:${v.statut==='Payé'?'#ecfdf5':'#fffbeb'};color:${v.statut==='Payé'?'#065f46':'#92400e'};
-      border:1.5px solid ${v.statut==='Payé'?'#6ee7b7':'#fcd34d'}}
-
-    /* ── DIVIDER ── */
-    .fdiv{height:2px;background:linear-gradient(90deg,${couleur},transparent);border-radius:2px;margin-bottom:28px}
-
-    /* ── PARTIES ── */
-    .fp{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px}
-    .fp-card{border:1.5px solid #e8e8f0;border-radius:12px;padding:16px 20px;background:#fafafa}
-    .fp-card-accent{border-color:${couleur}20;background:${couleur}05}
-    .fp-label{font-size:9px;font-weight:800;color:#bbb;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px}
-    .fp-name{font-size:16px;font-weight:800;color:#1a1a2e;margin-bottom:6px}
-    .fp-info{font-size:11.5px;color:#666;line-height:1.8}
-
-    /* ── TABLE ── */
-    table.ftbl{width:100%;border-collapse:collapse;margin-bottom:24px}
-    table.ftbl thead tr{background:${couleur}}
-    table.ftbl thead th{color:rgba(255,255,255,.9);padding:10px 14px;font-size:10px;font-weight:700;text-align:left;letter-spacing:.8px;text-transform:uppercase}
-    table.ftbl thead th:nth-child(4){text-align:center}
-    table.ftbl thead th:nth-child(5),table.ftbl thead th:last-child{text-align:right}
-    table.ftbl tbody tr{border-bottom:1px solid #f0f0f5;transition:background .1s}
-    table.ftbl tbody tr:last-child{border-bottom:2px solid #e8e8f0}
-    table.ftbl tbody tr:nth-child(even){background:#fafafa}
-    table.ftbl tbody td{padding:11px 14px;font-size:12.5px;vertical-align:middle}
-    table.ftbl tbody td:nth-child(1){color:#bbb;font-size:11px;font-weight:600}
-    table.ftbl tbody td:nth-child(2){font-weight:600;color:#1a1a2e}
-    table.ftbl tbody td:nth-child(3){color:#888;font-size:11px}
-    table.ftbl tbody td:nth-child(4){text-align:center;color:#555}
-    table.ftbl tbody td:nth-child(5){text-align:right;color:#555}
-    table.ftbl tbody td:last-child{text-align:right;font-weight:700;color:#1a1a2e}
-
-    /* ── TOTAUX ── */
-    .ft-wrap{display:flex;justify-content:flex-end;margin-bottom:28px}
-    .ft-box{width:300px;border:1.5px solid #e8e8f0;border-radius:12px;overflow:hidden}
-    .ft-row{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;font-size:12.5px;border-bottom:1px solid #f0f0f5}
-    .ft-row:last-child{border-bottom:none}
-    .ft-row-label{color:#777;font-weight:500}
-    .ft-row-val{font-weight:600;color:#1a1a2e}
-    .ft-row-mode{background:#f5f5ff}
-    .ft-row-remise .ft-row-label{color:#b45309}.ft-row-remise .ft-row-val{color:#b45309}
-    .ft-row-recu{background:#fafafa}
-    .ft-row-recu .ft-row-label,.ft-row-recu .ft-row-val{color:#555}
-    .ft-row-monnaie{background:#ecfdf5}
-    .ft-row-monnaie .ft-row-label,.ft-row-monnaie .ft-row-val{color:#065f46;font-weight:700}
-    .ft-total{background:${couleur};padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
-    .ft-total-label{color:rgba(255,255,255,.8);font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
-    .ft-total-val{color:#fff;font-size:20px;font-weight:900;letter-spacing:-.5px}
-
-    /* ── FOOTER ── */
-    .ff{text-align:center;margin-top:28px;padding-top:20px;border-top:1.5px dashed #e0e0e8}
-    .ff-msg{font-size:13px;font-weight:600;color:#444;margin-bottom:6px}
-    .ff-shop{font-size:11px;color:#888}
-    .ff-meta{font-size:10px;color:#bbb;margin-top:8px}
-
-    @media print{
-      @page{margin:10mm;size:A4}
-      body{padding:0;background:#fff}
-      .no-print{display:none!important}
-    }
-  </style>
-
-  <div class="fw">
-    <!-- HEADER -->
-    <div class="fh">
-      <div class="fh-left">
-        <div class="fh-badge">
-          <span class="fh-badge-icon">${p.ticketEmoji||'🏪'}</span>
-          <span class="fh-badge-name">${nomShop}</span>
-        </div>
-        <div class="fh-sub">${boutique.nom||nomShop}${p.ticketSlogan?' · '+p.ticketSlogan:''}</div>
-      </div>
-      <div class="fh-right">
-        <div class="fh-doc">FACTURE</div>
-        <div class="fh-ref">N° FAC-${String(factureNum).padStart(5,'0')}</div>
-        <div class="fh-date">📅 ${v.date}${heure?' à '+heure:''}</div>
-        <div><span class="fh-statut">${v.statut==='Payé'?'✅':'⏳'} ${v.statut}</span></div>
-      </div>
-    </div>
-
-    <div class="fdiv"></div>
-
-    <!-- ÉMETTEUR / CLIENT -->
-    <div class="fp">
-      <div class="fp-card fp-card-accent">
-        <div class="fp-label">Émetteur</div>
-        <div class="fp-name">${nomShop}</div>
-        <div class="fp-info">
-          ${p.ville||'Lomé, Togo'}${p.tel?'<br>'+p.tel:''}
-          ${p.email?'<br>'+p.email:''}
-          ${p.categories&&p.categories.length?'<br><span style="color:#aaa">'+p.categories.join(' · ')+'</span>':''}
-        </div>
-      </div>
-      <div class="fp-card">
-        <div class="fp-label">Client</div>
-        <div class="fp-name">${v.client||'Client anonyme'}</div>
-        <div class="fp-info">
-          ${caissier.trim()?'Servi par : '+caissier.trim()+'<br>':''}
-          Type de prix : <strong>${typePrixLabel}</strong>
-        </div>
-      </div>
-    </div>
-
-    <!-- LIGNES ARTICLES -->
-    <table class="ftbl">
-      <thead>
-        <tr><th>#</th><th>Description</th><th>Catégorie</th><th>Qté</th><th>Prix unit.</th><th>Total</th></tr>
-      </thead>
-      <tbody>
-        ${lignes.map((l,i)=>{
-          const a=ga(l.aid);
-          const nom=l.nom||(a?a.nom:'Article');
-          const cat=a?a.cat:'';
-          const pu=l.pu||0;
-          const qte=l.qte||1;
-          const mt=l.mt||(qte*pu);
-          return `<tr>
-            <td>${i+1}</td>
-            <td>${nom}</td>
-            <td>${cat||'—'}</td>
-            <td>${N(qte)}</td>
-            <td>${N(pu)} ${dev}</td>
-            <td>${N(mt)} ${dev}</td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-
-    <!-- TOTAUX -->
-    <div class="ft-wrap">
-      <div class="ft-box">
-        ${lignes.length>1||remise>0?`<div class="ft-row"><span class="ft-row-label">Sous-total</span><span class="ft-row-val">${N(sousTotal)} ${dev}</span></div>`:''}
-        ${remise>0?`<div class="ft-row ft-row-remise"><span class="ft-row-label">🎯 Remise${v.remiseType==='%'?' ('+v.remiseVal+'%)':''}</span><span class="ft-row-val">−${N(remise)} ${dev}</span></div>`:''}
-        <div class="ft-row ft-row-mode"><span class="ft-row-label">Mode de paiement</span><span class="ft-row-val">${modeAffiche}</span></div>
-        <div class="ft-total"><span class="ft-total-label">Total</span><span class="ft-total-val">${N(v.mt)} ${dev}</span></div>
-        ${montantRecu?`<div class="ft-row ft-row-recu"><span class="ft-row-label">Montant remis</span><span class="ft-row-val">${N(montantRecu)} ${dev}</span></div>`:''}
-        ${monnaieRendue?`<div class="ft-row ft-row-monnaie"><span class="ft-row-label">💵 Monnaie rendue</span><span class="ft-row-val">${N(monnaieRendue)} ${dev}</span></div>`:''}
-      </div>
-    </div>
-
-    <!-- FOOTER -->
-    <div class="ff">
-      <div class="ff-msg">${p.ticketMsg||'Merci pour votre confiance'} 🙏</div>
-      <div class="ff-shop">${nomShop} · ${p.ville||'Lomé, Togo'}${p.tel?' · '+p.tel:''}</div>
-      <div class="ff-meta">Document généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>
-    </div>
-  </div>`;
-  window.print();
-  setTimeout(()=>{fd.style.display='none';},500);
-}
 
   const fd=document.getElementById('facture-print');
   fd.style.display='block';
@@ -6183,70 +5957,6 @@ function rParametres(){
       <button class="btn btn-sm" onclick="effacerHistoriqueConnexions();rParametres()" style="margin-top:10px;color:var(--red)">🗑️ Effacer l'historique</button>
     </div>
 
-    <div class="param-section">
-      <div class="param-section-title">🛒 Paramètres de vente &amp; Caisse Rapide</div>
-
-      <!-- Type de prix par défaut -->
-      <div class="param-row">
-        <div>
-          <div class="param-label">Type de prix par défaut</div>
-          <div class="param-desc">Appliqué à l'ouverture de la caisse rapide et de la page Ventes</div>
-        </div>
-        <select class="fs" style="width:120px" onchange="majParam('defTypePrix',this.value);saveData()">
-          <option value="detail" ${(p.defTypePrix||'detail')==='detail'?'selected':''}>Détail</option>
-          <option value="semi"   ${(p.defTypePrix||'detail')==='semi'  ?'selected':''}>Semi-gros</option>
-          <option value="gros"   ${(p.defTypePrix||'detail')==='gros'  ?'selected':''}>Gros</option>
-        </select>
-      </div>
-
-      <!-- Mode de paiement par défaut -->
-      <div class="param-row">
-        <div>
-          <div class="param-label">Mode de paiement par défaut</div>
-          <div class="param-desc">Pré-sélectionné à chaque nouvelle vente</div>
-        </div>
-        <select class="fs" style="width:130px" onchange="majParam('defModePaiement',this.value);saveData()">
-          ${['Espèces','Mobile Money','Carte','Chèque','Virement','Autre'].map(m=>`<option value="${m}" ${(p.defModePaiement||'Espèces')===m?'selected':''}>${m}</option>`).join('')}
-        </select>
-      </div>
-
-      <!-- Afficher la calculette monnaie -->
-      <div class="param-row">
-        <div>
-          <div class="param-label">Calculette monnaie automatique</div>
-          <div class="param-desc">Affiche le champ "Monnaie reçue" et calcule le rendu dans la caisse rapide</div>
-        </div>
-        <div class="toggle${p.afficherMonnaie!==false?' on':''}" onclick="majParam('afficherMonnaie',${p.afficherMonnaie!==false?'false':'true'});saveData();rParametres()"></div>
-      </div>
-
-      <!-- Demander le nom du client -->
-      <div class="param-row">
-        <div>
-          <div class="param-label">Demander le client à chaque vente</div>
-          <div class="param-desc">Affiche le champ client dans la caisse rapide (sinon "Anonyme")</div>
-        </div>
-        <div class="toggle${p.demanderClient!==false?' on':''}" onclick="majParam('demanderClient',${p.demanderClient!==false?'false':'true'});saveData();rParametres()"></div>
-      </div>
-
-      <!-- Impression auto du reçu -->
-      <div class="param-row">
-        <div>
-          <div class="param-label">Impression automatique du reçu</div>
-          <div class="param-desc">Lance l'impression après chaque vente validée</div>
-        </div>
-        <div class="toggle${p.impressionAuto?' on':''}" onclick="majParam('impressionAuto',${p.impressionAuto?'false':'true'});saveData();rParametres()"></div>
-      </div>
-
-      <!-- Vente à crédit depuis la caisse rapide -->
-      <div class="param-row">
-        <div>
-          <div class="param-label">Autoriser les ventes à crédit (caisse rapide)</div>
-          <div class="param-desc">Ajoute le bouton "À crédit" dans la caisse rapide</div>
-        </div>
-        <div class="toggle${p.crAutoriserCredit?' on':''}" onclick="majParam('crAutoriserCredit',${p.crAutoriserCredit?'false':'true'});saveData();rParametres()"></div>
-      </div>
-    </div>
-
     <div class="param-section" style="border:1px solid var(--red-light)">
       <div class="param-section-title" style="color:var(--red)">🔐 Session</div>
       <div class="param-row">
@@ -6937,11 +6647,10 @@ function saveVenteService(id){
   const cid_svc=document.getElementById('ms-mode').value;
   const statut_svc=document.getElementById('ms-statut').value;
   const mt_svc=qte*pu;
-  const c_svc=S.comptes&&S.comptes.find(c=>c.id==cid_svc);
   S.ventes_services.push({
     id:genId(),date:D(),sid:id,nom_service:sv.nom,
     client:document.getElementById('ms-client').value,
-    qte,pu,mt:mt_svc,mode:c_svc?c_svc.type:nomCompte(cid_svc),cid:cid_svc,statut:statut_svc,heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),ts:Date.now()
+    qte,pu,mt:mt_svc,mode:nomCompte(cid_svc),cid:cid_svc,statut:statut_svc,heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),ts:Date.now()
   });
   if(statut_svc==='Payé') crediterCompte(cid_svc,mt_svc);
   saveData();closeModal();toast(`✅ Prestation enregistrée : ${F(mt_svc)}`);rServices();
@@ -6963,9 +6672,7 @@ function payerService(id){
 function confirmerPaiementService(id){
   const v=S.ventes_services.find(v=>v.id==id);if(!v)return;
   const cid=document.getElementById('ps-cid').value;
-  const c=S.comptes&&S.comptes.find(c=>c.id==cid);
-  const modeReel=c?c.type:nomCompte(cid);
-  v.statut='Payé';v.cid=cid;v.mode=modeReel;
+  v.statut='Payé';v.cid=cid;v.mode=nomCompte(cid);
   crediterCompte(cid,v.mt);
   saveData();closeModal();toast('✅ Prestation encaissée sur "'+nomCompte(cid)+'"');rServices();
 }
@@ -7753,7 +7460,6 @@ function confirmerConversionDevis(id){
   const vid = genId();
   S.ventes.push({
     id:vid, date, ts:Date.now(),
-    bid: getBid(),
     lignes: d.lignes,
     aid: d.lignes[0].aid, qte: d.lignes[0].qte, pu: d.lignes[0].pu,
     mt: d.mt, sousTotal: d.mt, remise: 0,
@@ -8189,7 +7895,7 @@ function _ouvrirSession(u){
   try{majBoutiqueUI();}catch(e){}
   try{toast(`✅ Bienvenue ${u.nom} !`);}catch(e){}
   try{addAudit('LOGIN','Connexion','Connexion de '+u.nom+' ('+u.role+')',null,null);}catch(e){}
-  setTimeout(()=>{try{ if(!isMobile) initPresence(); }catch(e){}},1000);
+  setTimeout(()=>{try{initPresence();}catch(e){}},1000);
   if(u.role==='admin') setTimeout(()=>{try{checkGdriveAutoBackup();}catch(e){}},3000);
   if(!S.ventes)S.ventes=[];
   if(!S.stock)S.stock=[];
@@ -8209,8 +7915,7 @@ function _ouvrirSession(u){
           appliquerEtatFusionne(merged);
           if(savedSession&&savedSession.uid) S.session=savedSession;
           setSyncStatus('online','Synchronise ✓');
-          if(!_realtimeListener && !isMobile) activerListenerTempsReel();
-          if(isMobile) demarrerSyncMobile();
+          if(!_realtimeListener) activerListenerTempsReel();
           rafraichirPageCourante();
         }
       }).catch(()=>{setSyncStatus('offline','Hors ligne');});
@@ -10190,7 +9895,7 @@ function saveVenteRapide(aid){
   if(sa(a)<qte)return toast('❌ Stock insuffisant');
   const mt=qte*pu;
   const vid=genId();
-  S.ventes.push({id:vid,date:D(),ts:Date.now(),bid:getBid(),aid,client,qte,pu,mt,cid,mode:nomCompte(cid),statut:'Payé',
+  S.ventes.push({id:vid,date:D(),ts:Date.now(),aid,client,qte,pu,mt,cid,mode:nomCompte(cid),statut:'Payé',
     lignes:[{aid,qte,pu,nom:a.nom}],heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});
   a.qv=(a.qv||0)+qte;
   crediterCompte(cid,mt);
@@ -10840,12 +10545,11 @@ let crMonnaie = 0;
 let crCid = null;
 
 function ouvrirCaisseRapide(){
-  const p = S.parametres || {};
   crPanier = [];
-  crMode = p.defModePaiement || 'Espèces';
+  crMode = 'Espèces';
   crSearch = '';
   crCat = 'Tout';
-  crTypePrix = p.defTypePrix || 'detail';
+  crTypePrix = 'detail';
   crRemise = {type:'%', val:0};
   crClient = '';
   crMonnaie = 0;
@@ -10979,7 +10683,6 @@ function renderCaisseRapide(){
       <!-- Footer validation -->
       <div class="cr-footer">
         <!-- Client -->
-        ${(S.parametres?.demanderClient!==false)?`
         <div style="margin-bottom:8px">
           <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Client</div>
           <div style="display:flex;gap:6px">
@@ -10988,7 +10691,7 @@ function renderCaisseRapide(){
               style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--surface);color:var(--text)">
             <datalist id="cr-clients-list">${clients.map(c=>`<option value="${c.nom}">`).join('')}</datalist>
           </div>
-        </div>`:''}
+        </div>
         <!-- Remise -->
         <div style="margin-bottom:8px">
           <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Remise</div>
@@ -11023,16 +10726,15 @@ function renderCaisseRapide(){
             <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:3px">Compte</div>
             ${selectComptes('cr-cid', crCid)}
           </div>
-          ${(S.parametres?.afficherMonnaie!==false)?`
           <div style="flex:1">
             <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:3px">Monnaie reçue</div>
             <input type="number" min="0" placeholder="${F(total)}" value="${crMonnaie||''}"
               oninput="crMonnaie=+this.value||0;crMajMonnaie()"
               id="cr-monnaie-inp"
               style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--surface);color:var(--text)">
-          </div>`:''}
+          </div>
         </div>
-        ${(S.parametres?.afficherMonnaie!==false)&&monnaieRendue>0?`<div style="margin-top:4px;background:var(--green-bg);border:1px solid var(--green-light);border-radius:8px;padding:6px 10px;display:flex;justify-content:space-between;font-size:13px;font-weight:700"><span>💵 Monnaie à rendre</span><span style="color:var(--green)">${F(monnaieRendue)}</span></div>`:''}
+        ${monnaieRendue>0?`<div style="margin-top:4px;background:var(--green-bg);border:1px solid var(--green-light);border-radius:8px;padding:6px 10px;display:flex;justify-content:space-between;font-size:13px;font-weight:700"><span>💵 Monnaie à rendre</span><span style="color:var(--green)">${F(monnaieRendue)}</span></div>`:''}
         <!-- Bouton valider -->
         <button class="cr-valider-btn" onclick="crValider()" ${crPanier.length===0?'disabled':''} style="margin-top:8px">
           ✓ Encaisser ${total>0?F(total):''}
