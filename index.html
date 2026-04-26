@@ -2224,11 +2224,11 @@ const sb=s=>{const m={'Payé':'bg','Non payé':'br','Débiteur':'br','Régulier'
 function getBid(){
   const s = S.session || {};
   // Vendeur/caissier → toujours sa boutique assignée
-  if(s.role !== 'admin' && s.boutique_id) return s.boutique_id;
+  if(s.role !== 'admin' && s.boutique_id) return Number(s.boutique_id);
   // Admin → boutique sélectionnée (stockée dans la session)
-  if(s.boutique_active) return s.boutique_active;
+  if(s.boutique_active) return Number(s.boutique_active);
   // Fallback : boutique_active globale ou 1
-  return S.boutique_active || 1;
+  return Number(S.boutique_active) || 1;
 }
 
 // Retourne l'objet boutique active
@@ -2241,12 +2241,15 @@ function getBoutiqueActive(){
 function switcherBoutique(bid){
   if(S.session?.role !== 'admin'){toast('⛔ Réservé à l\'admin');return;}
   if(!S.session) S.session = {};
+
+  bid = Number(bid);
   S.session.boutique_active = bid;
-  S.boutique_active = bid; // sync global
-  saveLocal(S);
-  // Bloquer le listener Firebase pendant 10s pour éviter rollback boutique_active
+  S.boutique_active = bid;
+
+  // Affichage immédiat
   majBoutiqueUI();
-  // Rafraîchir la page courante
+
+  // Rafraîchir la page avec la nouvelle boutique
   try{
     ({dashboard:rDash,objectifs:rObjectifs,transactions:rTransactions,
       vente:rVente,services:rServices,achats:rAchats,stock:rStock,
@@ -2259,13 +2262,19 @@ function switcherBoutique(bid){
       caisse:rCaisse,stats:rStats,promos:rPromos,commandes:rCommandes,
       depots:rDepots,fidelite:rFidelite,audit:rAudit,live:rLive})[currentPage]();
   }catch(e){}
+
   const b = getBoutiqueActive();
-  toast(`🏪 Boutique : ${b.emoji} ${b.nom}`);
+  toast('🏪 Boutique : ' + (b.emoji||'🏪') + ' ' + b.nom);
+
+  // Persister le choix de boutique sur Firebase
+  // Le listener ignorera cet écho (lastSaveTs) donc pas de rollback
+  saveData();
 }
+
 
 // Met à jour l'affichage du switcher dans la sidebar
 function majBoutiqueUI(){
-  const bid = getBid();
+  const bid = Number(getBid());
   const b = getBoutiqueActive();
   const switcher = document.getElementById('boutique-switcher');
   if(!switcher) return;
@@ -2279,46 +2288,46 @@ function majBoutiqueUI(){
   switcher.innerHTML = `
     <div style="font-size:9px;font-weight:600;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;padding:0 10px;margin-bottom:4px">Boutique active</div>
     <div style="display:flex;flex-direction:column;gap:2px;padding:0 8px">
-      ${boutiques.map(bq=>`
-        <div onclick="switcherBoutique(${bq.id})"
+      ${boutiques.map(bq=>{
+        const actif = Number(bq.id) === bid;
+        return `<div onclick="switcherBoutique(${bq.id})"
           style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;transition:all .15s;
-          background:${bq.id==bid?'rgba(255,255,255,.15)':'transparent'};
-          border:1px solid ${bq.id==bid?'rgba(255,255,255,.2)':'transparent'}">
+          background:${actif?'rgba(255,255,255,.15)':'transparent'};
+          border:1px solid ${actif?'rgba(255,255,255,.2)':'transparent'}">
           <span style="font-size:15px">${bq.emoji||'🏪'}</span>
-          <span style="font-size:12px;font-weight:${bq.id==bid?'700':'400'};color:${bq.id==bid?'#fff':'rgba(255,255,255,.6)'};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${bq.nom}</span>
-          ${bq.id==bid?'<span style="font-size:9px;background:rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:1px 5px">✓</span>':''}
-        </div>`).join('')}
+          <span style="font-size:12px;font-weight:${actif?'700':'400'};color:${actif?'#fff':'rgba(255,255,255,.6)'};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${bq.nom}</span>
+          ${actif?'<span style="font-size:9px;background:rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:1px 5px">✓</span>':''}
+        </div>`;
+      }).join('')}
     </div>`;
 }
 
 // Filtre stock par boutique — strict : sans bid = boutique 1 seulement
 function getStockBoutique(bid){
-  bid = bid || getBid();
-  return (S.stock||[]).filter(a => (a.bid == bid) || (!a.bid && bid == 1));
+  bid = Number(bid || getBid());
+  return (S.stock||[]).filter(a => a.bid ? Number(a.bid) === bid : bid === 1);
 }
 
 // Filtre ventes par boutique active
 function getVentesBoutique(bid){
-  bid = bid || getBid();
+  bid = Number(bid || getBid());
   return (S.ventes||[]).filter(v => {
     if(v._deleted) return false;
-    // Vente avec bid explicite → filtre strict
-    if(v.bid) return v.bid == bid;
-    // Vente sans bid (ancienne) → appartient à la boutique 1 seulement
-    return bid == 1;
+    if(v.bid) return Number(v.bid) === bid;
+    return bid === 1;
   });
 }
 
 // Filtre achats par boutique active
 function getAchatsBoutique(bid){
-  bid = bid || getBid();
-  return (S.achats||[]).filter(a => a.bid ? a.bid == bid : bid == 1);
+  bid = Number(bid || getBid());
+  return (S.achats||[]).filter(a => a.bid ? Number(a.bid) === bid : bid === 1);
 }
 
 // Filtre dépenses par boutique active
 function getDepensesBoutique(bid){
-  bid = bid || getBid();
-  return (S.depenses||[]).filter(d => d.bid ? d.bid == bid : bid == 1);
+  bid = Number(bid || getBid());
+  return (S.depenses||[]).filter(d => d.bid ? Number(d.bid) === bid : bid === 1);
 }
 
 // Filtre clients par boutique active
