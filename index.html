@@ -3474,15 +3474,34 @@ function payerVente(id){
       <div class="total-preview-final"><span>Montant à encaisser</span><span>${F(v.mt)}</span></div>
     </div>
     <div class="fg"><label class="fl">Compte encaissement</label>${selectComptes('pv-cid', premierCompteId())}</div>
+    <div class="fg" style="margin-top:10px">
+      <label class="fl">💵 Montant remis par le client</label>
+      <input class="fi" type="number" id="pv-recu" min="${v.mt}" value="${v.mt}" oninput="calcPvMonnaie(${v.mt})" style="font-size:15px;font-weight:600">
+    </div>
+    <div class="fg" style="margin-top:6px">
+      <label class="fl">🔄 Monnaie à rendre</label>
+      <input class="fi" type="number" id="pv-monnaie" readonly value="0" style="background:var(--green-bg);color:var(--green);font-weight:700;font-size:15px">
+    </div>
     <div class="mff">
       <button class="btn" onclick="closeModal()">Annuler</button>
       <button class="btn btn-success" onclick="confirmerPaiementVente(${id})">✓ Confirmer</button>
     </div>`);
 }
+function calcPvMonnaie(total){
+  const recu=+document.getElementById('pv-recu').value||0;
+  const el=document.getElementById('pv-monnaie');
+  if(el) el.value=Math.max(0,recu-total);
+}
 function confirmerPaiementVente(id){
   const v=S.ventes.find(v=>v.id==id);if(!v)return;
   const cid=document.getElementById('pv-cid').value;
-  v.statut='Payé';v.cid=cid;v.mode=nomCompte(cid);
+  const c=S.comptes&&S.comptes.find(c=>c.id==cid);
+  const modeReel=c?c.type:nomCompte(cid);
+  const montantRecu=+document.getElementById('pv-recu')?.value||v.mt;
+  const monnaie=Math.max(0,montantRecu-v.mt);
+  v.statut='Payé';v.cid=cid;v.mode=modeReel;
+  v.montant_recu=montantRecu>v.mt?montantRecu:null;
+  v.monnaie=monnaie>0?monnaie:null;
   crediterCompte(cid,v.mt);
   saveData();closeModal();toast('✅ Vente encaissée sur "'+nomCompte(cid)+'"');rVente();
 }
@@ -5234,10 +5253,13 @@ function printFacture(vid){
   const typePrixLabel=v.typePrix==='gros'?'Gros':v.typePrix==='semi'?'Semi-gros':'Détail';
   const heure=v.heure||'';
   const boutique=getBoutiqueActive();
-  // Mode paiement : utiliser v.mode (Espèces, Mobile Money…) pas nomCompte qui retourne le nom du compte comptable
-  const modePaiement = v.mode && !['—','null','undefined'].includes(String(v.mode)) ? v.mode : (v.cid ? nomCompte(v.cid) : 'Espèces');
-  // Éviter "Ventes" comme mode de paiement (nom du compte comptable, pas du mode)
-  const modeAffiche = ['Ventes','ventes','Compte ventes'].includes(modePaiement) ? 'Espèces' : modePaiement;
+  // Mode paiement : fallback sur type du compte si v.mode vaut un nom comptable
+  const compteObj = v.cid ? (S.comptes&&S.comptes.find(c=>c.id==v.cid)) : null;
+  const modePaiement = v.mode && !['—','null','undefined','Ventes','ventes','Compte ventes'].includes(String(v.mode))
+    ? v.mode
+    : (compteObj ? compteObj.type : 'Espèces');
+  // Si Mobile Money, afficher le nom du compte (Flooz, Mixx…)
+  const modeAffiche = modePaiement === 'Mobile Money' && compteObj ? compteObj.nom : modePaiement;
 
   const fd=document.getElementById('facture-print');
   fd.style.display='block';
@@ -6894,10 +6916,11 @@ function saveVenteService(id){
   const cid_svc=document.getElementById('ms-mode').value;
   const statut_svc=document.getElementById('ms-statut').value;
   const mt_svc=qte*pu;
+  const c_svc=S.comptes&&S.comptes.find(c=>c.id==cid_svc);
   S.ventes_services.push({
     id:genId(),date:D(),sid:id,nom_service:sv.nom,
     client:document.getElementById('ms-client').value,
-    qte,pu,mt:mt_svc,mode:nomCompte(cid_svc),cid:cid_svc,statut:statut_svc,heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),ts:Date.now()
+    qte,pu,mt:mt_svc,mode:c_svc?c_svc.type:nomCompte(cid_svc),cid:cid_svc,statut:statut_svc,heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),ts:Date.now()
   });
   if(statut_svc==='Payé') crediterCompte(cid_svc,mt_svc);
   saveData();closeModal();toast(`✅ Prestation enregistrée : ${F(mt_svc)}`);rServices();
@@ -6919,7 +6942,9 @@ function payerService(id){
 function confirmerPaiementService(id){
   const v=S.ventes_services.find(v=>v.id==id);if(!v)return;
   const cid=document.getElementById('ps-cid').value;
-  v.statut='Payé';v.cid=cid;v.mode=nomCompte(cid);
+  const c=S.comptes&&S.comptes.find(c=>c.id==cid);
+  const modeReel=c?c.type:nomCompte(cid);
+  v.statut='Payé';v.cid=cid;v.mode=modeReel;
   crediterCompte(cid,v.mt);
   saveData();closeModal();toast('✅ Prestation encaissée sur "'+nomCompte(cid)+'"');rServices();
 }
