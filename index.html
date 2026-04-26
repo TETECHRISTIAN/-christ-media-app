@@ -3588,11 +3588,20 @@ function rAchats(){
   const totalDu=filtered.filter(a=>a.statut==='À payer').reduce((s,a)=>s+a.mt,0);
   document.getElementById('content').innerHTML=dfHtml('achats')+`
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Date</th><th>Fournisseur</th><th>Article</th><th>Qté</th><th>Montant</th><th>Compte</th><th>Statut</th><th>Notes</th><th></th></tr></thead>
-      <tbody>${filtered.length===0?'<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text3)">Aucun achat</td></tr>':
+      <thead><tr><th>Date</th><th>Fournisseur</th><th>Articles</th><th>Total</th><th>Compte</th><th>Statut</th><th>Notes</th><th></th></tr></thead>
+      <tbody>${filtered.length===0?'<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text3)">Aucun achat</td></tr>':
         filtered.slice().reverse().map(a=>{
           const fnom=gf(a.fid)?gf(a.fid).nom:a.four||'—';
-          const anom=ga(a.aid)?ga(a.aid).nom:'—';
+          const lignes=a.lignes&&a.lignes.length>0?a.lignes:[{aid:a.aid,nom:ga(a.aid)?ga(a.aid).nom:'—',qte:a.qte||1,pu:a.pu||0,mt:a.mt}];
+          const articlesHtml=lignes.length===1
+            ?`<span style="font-weight:500">${lignes[0].nom}</span> <span style="color:var(--text3);font-size:11px">×${N(lignes[0].qte)} · ${F(lignes[0].pu)}</span>`
+            :`<details style="cursor:pointer"><summary style="font-weight:600;color:var(--navy);font-size:12px">${lignes.length} articles</summary>
+               <div style="margin-top:4px;padding:4px 0">${lignes.map(l=>`
+                 <div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;border-bottom:1px solid var(--border)">
+                   <span>${l.nom}</span>
+                   <span style="color:var(--text2)">×${N(l.qte)} · <strong style="color:var(--purple)">${F(l.mt)}</strong></span>
+                 </div>`).join('')}
+               </div></details>`;
           const totalPaye=a.tranches?a.tranches.reduce((s,t)=>s+t.mt,0):0;
           const reste=a.mt-totalPaye;
           const statutBadge=a.statut==='Payé'
@@ -3602,7 +3611,8 @@ function rAchats(){
             ?`<button class="btn-icon btn-sm" onclick="configurerTranchesAchat(${a.id})" title="Enregistrer un paiement" style="color:var(--green)">💳</button>`:'';
           return`<tr>
           <td style="font-family:'DM Mono',monospace;font-size:12px">${a.date}</td>
-          <td class="tdm">${fnom}</td><td>${anom}</td><td>${N(a.qte)}</td>
+          <td class="tdm">${fnom}</td>
+          <td>${articlesHtml}</td>
           <td style="font-weight:600;color:var(--purple)">${F(a.mt)}</td>
           <td><span class="badge bb">${a.cid?nomCompte(a.cid):(a.mode||'—')}</span></td>
           <td>${statutBadge}</td>
@@ -3613,7 +3623,7 @@ function rAchats(){
           </div></td>
         </tr>`;}).join('')}
         <tr style="background:var(--surface2)">
-          <td colspan="4" style="font-weight:600">Total (${filtered.length} achats)</td>
+          <td colspan="3" style="font-weight:600">Total (${filtered.length} commande${filtered.length>1?'s':''})</td>
           <td style="font-weight:700;color:var(--purple)">${F(tot)}</td>
           <td></td>
           <td style="font-weight:600;color:var(--red);font-size:12px">${totalDu>0?`Dû: ${F(totalDu)}`:'✅ Tout réglé'}</td>
@@ -3784,29 +3794,42 @@ function saveAchatMulti(){
   const fid=+document.getElementById('mfid').value;
   if(!fid) return toast('❌ Fournisseur requis');
   const cid=document.getElementById('mmo').value;
-  const mode=nomCompte(cid);
+  const c=S.comptes&&S.comptes.find(c=>c.id==cid);
+  const mode=c?c.type:nomCompte(cid);
   const date=document.getElementById('mda').value;
   const notes=document.getElementById('mno').value;
   const statut_achat=document.getElementById('mstatut')?.value||'Payé';
   const bid=getBid();
+  const total=panier.reduce((s,l)=>s+l.mt,0);
+  const achatId=genId();
 
+  // Créer UN seul achat groupé avec toutes les lignes
+  const achatGroupe={
+    id:achatId,date,fid,cid,mode,notes,statut:statut_achat,bid,
+    mt:total,
+    lignes:panier.map(l=>({aid:l.aid,nom:l.nom,qte:l.qte,pu:l.pu,mt:l.mt})),
+    // Compatibilité rétro : premier article
+    aid:panier[0].aid, qte:panier[0].qte, pu:panier[0].pu,
+    heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),ts:Date.now()
+  };
+  S.achats.push(achatGroupe);
+
+  // Mettre à jour le stock et historique pour chaque ligne
   panier.forEach(l=>{
     const art=ga(l.aid);
     if(art){ art.ea=(art.ea||0)+l.qte; if(l.pu>0) art.pa=l.pu; }
-    const achatId=genId();
-    S.achats.push({id:achatId,date,fid,aid:l.aid,qte:l.qte,pu:l.pu,mt:l.mt,mode,cid,notes,statut:statut_achat,bid,heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),ts:Date.now()});
-    if(statut_achat==='Payé'){
-      debiterCompte(cid,l.mt);
-    } else {
-      const f=S.fournisseurs.find(f=>f.id==fid);
-      if(f) f.dette=(f.dette||0)+l.mt;
-      if(!S.dettesAchats) S.dettesAchats=[];
-      S.dettesAchats.push({id:achatId,fid,date,mt:l.mt,reste:l.mt,statut:'À payer'});
-    }
     if(art) addHistorique('Entrée',art,l.qte,`Achat — ${notes||'réappro'}`);
   });
 
-  const total=panier.reduce((s,l)=>s+l.mt,0);
+  if(statut_achat==='Payé'){
+    debiterCompte(cid,total);
+  } else {
+    const f=S.fournisseurs.find(f=>f.id==fid);
+    if(f) f.dette=(f.dette||0)+total;
+    if(!S.dettesAchats) S.dettesAchats=[];
+    S.dettesAchats.push({id:achatId,fid,date,mt:total,reste:total,statut:'À payer'});
+  }
+
   window.panierAchat=[];
   saveData(); closeModal();
   toast(`✅ ${panier.length} article${panier.length>1?'s':''} achetés — Total: ${F(total)}`);
@@ -3817,27 +3840,25 @@ function delAchat(id){
   if(!confirm('Supprimer cet achat ? Le stock et les comptes seront ajustés.'))return;
   const ac=S.achats.find(a=>a.id==id);
   if(ac){
-    // 1. Déduire du stock (annuler les entrées liées à cet achat)
-    const art=ga(ac.aid);
-    if(art) art.ea=Math.max(0,(art.ea||0)-ac.qte);
+    // 1. Déduire du stock pour chaque ligne (multi ou mono)
+    const lignes=ac.lignes&&ac.lignes.length>0?ac.lignes:[{aid:ac.aid,qte:ac.qte||1}];
+    lignes.forEach(l=>{
+      const art=ga(l.aid);
+      if(art) art.ea=Math.max(0,(art.ea||0)-l.qte);
+    });
 
     if(ac.statut==='Payé'){
       // 2a. Achat entièrement payé → rembourser le compte débité
       crediterCompte(ac.cid, ac.mt);
     } else {
       // 2b. Achat à crédit
-      // Rembourser les tranches déjà versées sur les comptes
       if(ac.tranches && ac.tranches.length>0){
-        ac.tranches.forEach(t=>{
-          crediterCompte(t.cid, t.mt);
-        });
+        ac.tranches.forEach(t=>{ crediterCompte(t.cid, t.mt); });
       }
-      // Réduire la dette fournisseur du montant RESTANT (non encore payé)
       const totalPaye=ac.tranches?ac.tranches.reduce((s,t)=>s+t.mt,0):0;
       const restedu=ac.mt-totalPaye;
       const f=S.fournisseurs.find(f=>f.id==ac.fid);
       if(f) f.dette=Math.max(0,(f.dette||0)-restedu);
-      // Supprimer de dettesAchats
       if(S.dettesAchats) S.dettesAchats=S.dettesAchats.filter(d=>d.id!=id);
     }
   }
