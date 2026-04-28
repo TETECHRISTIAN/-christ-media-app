@@ -1438,7 +1438,13 @@ body.dark th{background:var(--surface3)}
 const F=n=>{const dev=(S&&S.parametres&&S.parametres.devise)||'FCFA';return Math.round(n).toLocaleString('fr-FR')+' '+dev;};
 const N=n=>Math.round(n).toLocaleString('fr-FR');
 const D=()=>{const n=new Date();return n.getFullYear()+'-'+(String(n.getMonth()+1).padStart(2,'0'))+'-'+(String(n.getDate()).padStart(2,'0'));};
-const genId=()=>++S.nid;
+// genId : utilise un compteur local + timestamp pour éviter les collisions entre appareils
+// (deux caissiers sur deux boutiques différentes pouvaient générer le même ID numérique)
+const genId=()=>{
+  S.nid = (S.nid||0)+1;
+  // ID unique : compteur + millisecondes + 2 chiffres aléatoires → collision quasi impossible
+  return parseInt(String(Date.now()).slice(-7) + String(S.nid).slice(-2).padStart(2,'0'));
+};
 const genVersion=()=>{ S.version=Date.now(); }; // timestamp indépendant du compteur d'IDs
 
 // ─── DATA ───
@@ -1750,7 +1756,7 @@ function _enregistrerIdLocal(col, id){
   _localRecentIds.get(col).set(String(id), Date.now());
 }
 function _nettoyerIdsLocaux(){
-  const limite = Date.now() - 5*60*1000; // 5 minutes
+  const limite = Date.now() - 10*60*1000; // 10 minutes (au lieu de 5)
   _localRecentIds.forEach((map, col)=>{
     map.forEach((ts, id)=>{ if(ts < limite) map.delete(id); });
   });
@@ -1927,11 +1933,13 @@ async function saveData(){
   ['ventes','achats','depenses','clients','stock','fournisseurs'].forEach(col=>{
     if(Array.isArray(S[col])) S[col].forEach(item=>{ if(!item.ts) item.ts = now; });
   });
-  // PROTECTION : mémoriser les IDs locaux récents (ventes, achats) pour éviter
-  // qu'une fusion entrante ne les écrase en cas de race condition multi-appareils
+  // PROTECTION : mémoriser uniquement les ventes/achats créés dans les 10 dernières minutes
+  // (pas TOUS les items — sinon les IDs anciens polluent le cache et expirent mal)
+  const _recentsLimit = Date.now() - 10*60*1000;
   ['ventes','achats'].forEach(col=>{
     if(Array.isArray(S[col])) S[col].forEach(item=>{
-      if(item.id!=null && !item._deleted) _enregistrerIdLocal(col, item.id);
+      if(item.id!=null && !item._deleted && (item.ts||0) > _recentsLimit)
+        _enregistrerIdLocal(col, item.id);
     });
   });
   saveLocal(S);
@@ -3335,7 +3343,15 @@ function ouvrirPanierModal(){
       ${remiseMt>0?`<div class="total-preview-row" style="color:var(--amber)"><span>Remise</span><span>−${F(remiseMt)}</span></div>`:''}
       <div class="total-preview-final"><span>TOTAL À PAYER</span><span>${F(totalFinal)}</span></div>
     </div>
-    <!-- Client + Compte + Statut -->
+    <!-- Sélecteur boutique (admin uniquement) + Client + Compte + Statut -->
+    ${isAdmin() && (S.boutiques||[]).length > 1 ? `
+    <div class="fg" style="margin-bottom:8px;background:var(--amber-bg);border:1px solid var(--amber-light);border-radius:var(--rs);padding:8px 10px">
+      <label class="fl" style="color:var(--amber)">🏪 Boutique du caissier</label>
+      <select class="fs" id="pa-boutique">
+        ${(S.boutiques||[]).map(b=>`<option value="${b.id}"${b.id==getBid()?' selected':''}>${b.emoji||'🏪'} ${b.nom}</option>`).join('')}
+      </select>
+      <div style="font-size:10px;color:var(--amber);margin-top:3px">⚠️ Si tu enregistres une vente à la place du caissier, choisis sa boutique ici</div>
+    </div>` : ''}
     <div class="fr">
       <div class="fg"><label class="fl">Client</label><input class="fi" id="pa-client" placeholder="Nom du client"></div>
       <div class="fg"><label class="fl">Compte encaissement</label>${selectComptes('pa-mode', premierCompteId())}</div>
@@ -3412,6 +3428,9 @@ function validerPanier(){
   const cid=document.getElementById('pa-mode')?.value||premierCompteId();
   const mode=nomCompte(cid);
   const statut=document.getElementById('pa-statut')?.value||'Payé';
+  // Si l'admin enregistre à la place d'un caissier, utiliser la boutique sélectionnée
+  const _paBoutique = document.getElementById('pa-boutique');
+  const _bidFinal = _paBoutique ? parseInt(_paBoutique.value) : getBid();
   const montantRecu=+document.getElementById('pa-recu')?.value||0;
   const sousTotal=window.panier.reduce((s,l)=>s+l.mt,0);
   const remiseMt=window.remise.type==='%'?Math.round(sousTotal*window.remise.val/100):Math.min(window.remise.val||0,sousTotal);
@@ -3432,9 +3451,10 @@ function validerPanier(){
   verifierAlerteVente(mt, function(ok){
     if(!ok) return;
     const vid=genId();
+    _enregistrerIdLocal('ventes', vid); // PROTECTION : mémoriser immédiatement avant toute fusion
     S.ventes.push({
       id:vid,date:D(),ts:Date.now(),
-      bid:getBid(),
+      bid:_bidFinal,
       lignes:window.panier.map(l=>({aid:l.aid,nom:l.nom,qte:l.qte,pu:l.pu,mt:l.mt,typePrix:l.typePrix})),
       aid:window.panier[0].aid,qte:window.panier[0].qte,pu:window.panier[0].pu,
       mt,sousTotal,remise:remiseMt,typePrix:window.typePrix||'detail',
