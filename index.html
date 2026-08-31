@@ -1985,6 +1985,11 @@ let _masterSaveListener = null;
 let _dernierMasterSaveTs = 0;
 let _justDidMasterSave = false;   // flag pour bloquer la réception après émission
 let _justDidMasterSaveTimer = null;
+// FIX VENTES PERDUES : true dès qu'un Master Save (ou Prise de service) commence sur CET
+// appareil, jusqu'à ce qu'il se termine (succès ou échec). Tant que c'est actif, on ignore
+// tout signal master_save reçu d'un AUTRE appareil, pour ne jamais écraser en mémoire des
+// ventes vendeurs qu'on vient d'absorber mais pas encore publiées sur Firebase.
+let _masterSaveEnCours = false;
 
 function initFirebase(){
   return new Promise(resolve=>{
@@ -2227,10 +2232,21 @@ async function envoyerPendingFirebase(){
   }
 }
 
-// Admin → lit toutes les zones pending, fusionne dans S, retourne true si données trouvées
-async function absorberPendingFirebase(){
-  if(!fbReady||!db) return false;
-  if(S.session?.role !== 'admin') return false;
+// Admin → lit toutes les zones pending, fusionne dans S.
+// FIX VENTES PERDUES : paramètre `deferCleanup` — si true, la fonction NE supprime PAS
+// tout de suite la zone pending sur Firebase après fusion ; elle retourne à la place la
+// liste des chemins traités, à supprimer par l'appelant SEULEMENT une fois que les
+// données absorbées ont été publiées avec succès dans christmedia/data (saveToFirebase).
+// Avant ce fix, la zone pending était vidée immédiatement après la fusion en mémoire,
+// AVANT la publication finale : si le Master Save échouait ensuite (réseau coupé,
+// timeout) ou si un autre appareil admin publiait son propre Master Save entre-temps
+// (écrasant S en mémoire via le listener), la vente absorbée disparaissait pour de bon
+// car elle n'existait plus nulle part (ni dans pending, ni encore dans data).
+// Sans deferCleanup (comportement historique, utilisé par Prise de service), le
+// nettoyage a lieu immédiatement comme avant et la fonction retourne un booléen.
+async function absorberPendingFirebase(deferCleanup){
+  if(!fbReady||!db) return deferCleanup ? {absorbed:false, chemins:[]} : false;
+  if(S.session?.role !== 'admin') return deferCleanup ? {absorbed:false, chemins:[]} : false;
 
   let totalAbsorbes = 0;
   const cheminsTraites = []; // FIX : on ne supprime que ce qu'on a réellement lu/fusionné
@@ -2394,6 +2410,15 @@ async function absorberPendingFirebase(){
       toast('📥 ' + totalAbsorbes + ' enregistrement(s) récupérés depuis les vendeurs', 4000);
     }
 
+    // FIX VENTES PERDUES : si deferCleanup est actif, on NE supprime PAS ici — on rend
+    // la main à l'appelant avec la liste des chemins, qui les supprimera lui-même une
+    // fois la publication finale (saveToFirebase) confirmée réussie. Tant que ce n'est
+    // pas fait, les ventes restent visibles dans la zone pending (donc récupérables même
+    // si cet appareil perd ses données en mémoire avant la publication).
+    if(deferCleanup){
+      return { absorbed: totalAbsorbes > 0, chemins: cheminsTraites };
+    }
+
     // FIX : nettoyer uniquement les chemins qu'on vient d'absorber, pas toute la zone.
     // Avant ce fix, un vendeur écrivant PENDANT l'absorption (entre la lecture et le
     // nettoyage) voyait sa donnée effacée sans jamais être fusionnée. Maintenant, si un
@@ -2417,7 +2442,23 @@ async function absorberPendingFirebase(){
 
   } catch(e) {
     console.warn('[PENDING] Erreur absorption:', e);
-    return false;
+    return deferCleanup ? {absorbed:false, chemins:[]} : false;
+  }
+}
+
+// FIX VENTES PERDUES : supprime de Firebase les chemins pending donnés — à appeler
+// UNIQUEMENT après confirmation que les données absorbées ont bien été publiées dans
+// christmedia/data (sinon on risque de perdre des ventes qui n'existent nulle part
+// ailleurs). Utilisé en complément d'absorberPendingFirebase(true).
+async function nettoyerCheminsPending(chemins){
+  if(!fbReady||!db||!Array.isArray(chemins)||chemins.length === 0) return;
+  const suppressions = {};
+  chemins.forEach(p => { suppressions[p] = null; });
+  try {
+    await db.ref('christmedia/pending').update(suppressions);
+    console.log('[PENDING] Chemins nettoyés après publication confirmée:', chemins);
+  } catch(delErr) {
+    console.warn('[PENDING] ÉCHEC de la suppression Firebase après publication — le badge va probablement réapparaître. Détail :', delErr, chemins);
   }
 }
 
@@ -23817,6 +23858,12 @@ async function priseDeService(){
 
   const resetBtn = () => { if(btn){ btn.style.opacity=''; btn.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 🔄 Prise de service'; } };
 
+  // FIX VENTES PERDUES : même verrou que Master Save — évite qu'un signal externe
+  // écrase S en mémoire pendant qu'on a des ventes vendeurs absorbées mais pas encore
+  // publiées.
+  _masterSaveEnCours = true;
+  let _cheminsPendingAbsorbesPDS = [];
+
   // FIX : try/catch/finally global, comme pour Master Save — garantit que le bouton ne
   // reste jamais figé sur "En cours..." même si un appel réseau se bloque en silence.
   try {
@@ -23833,9 +23880,12 @@ async function priseDeService(){
     // FIX : avant ce correctif, "Prise de service" ne récupérait pas les ventes des
     // vendeurs restées dans la zone d'attente — seul Master Save le faisait. Résultat :
     // le stock semblait ne pas bouger tant qu'on ne cliquait pas sur Master Save.
+    // FIX VENTES PERDUES : deferCleanup=true, comme pour Master Save — la zone pending
+    // n'est vidée qu'après confirmation que la publication a réussi plus bas.
     if(btn) btn.innerHTML = '📥 Récupération vendeurs...';
     try {
-      await withTimeout(absorberPendingFirebase(), 20000, 'récupération vendeurs');
+      const resultAbsorb = await withTimeout(absorberPendingFirebase(true), 20000, 'récupération vendeurs');
+      if(resultAbsorb && Array.isArray(resultAbsorb.chemins)) _cheminsPendingAbsorbesPDS = resultAbsorb.chemins;
     } catch(e) {
       console.warn('[PRISE DE SERVICE] Absorption vendeurs a expiré/échoué, on continue quand même:', e);
     }
@@ -23847,7 +23897,14 @@ async function priseDeService(){
     const ok = await withTimeout(saveToFirebase(S), 20000, 'écriture Firebase');
     if(!ok){
       toast('❌ Échec de la synchronisation');
+      // FIX VENTES PERDUES : publication échouée → on NE vide PAS la zone pending,
+      // les ventes absorbées y restent récupérables au prochain essai.
       return;
+    }
+
+    // FIX VENTES PERDUES : publication réussie → on peut vider la zone pending d'origine.
+    if(_cheminsPendingAbsorbesPDS.length > 0){
+      await nettoyerCheminsPending(_cheminsPendingAbsorbesPDS);
     }
 
     // Étape 3 : signal Master Save pour que tous les appareils se synchronisent
@@ -23870,6 +23927,8 @@ async function priseDeService(){
     toast('❌ Prise de service : ' + (e && e.message ? e.message : 'échec réseau') + ' — réessayez');
   } finally {
     resetBtn();
+    // FIX VENTES PERDUES : relâcher le verrou dans tous les cas.
+    _masterSaveEnCours = false;
   }
 }
 
@@ -23900,13 +23959,23 @@ async function masterSave(auto){
   // coupée en cours de route), le bouton est TOUJOURS remis à son état normal dans le
   // finally. Avant ce fix, un appel réseau resté bloqué (sans jamais résoudre ni rejeter)
   // laissait le bouton figé sur "Envoi..." indéfiniment, jusqu'au redémarrage de l'app.
+  // FIX VENTES PERDUES : on bloque la réception de signaux master_save d'autres
+  // appareils DÈS le début de l'opération (pas seulement après le succès), pour ne
+  // jamais écraser en mémoire des ventes vendeurs qu'on vient d'absorber mais pas
+  // encore publiées. Voir listener plus bas.
+  _masterSaveEnCours = true;
+  let _cheminsPendingAbsorbes = [];
+
   try {
     // Étape 0 : absorber les données en attente des vendeurs avant de publier
+    // FIX VENTES PERDUES : deferCleanup=true — la zone pending n'est PAS supprimée
+    // ici, seulement après confirmation que la publication a réussi (voir plus bas).
     if(navigator.onLine){
       const btnLabel = btn ? btn.innerHTML : '';
       if(btn && !auto) btn.innerHTML = '📥 Récupération vendeurs...';
       try {
-        await withTimeout(absorberPendingFirebase(), 20000, 'récupération vendeurs');
+        const resultAbsorb = await withTimeout(absorberPendingFirebase(true), 20000, 'récupération vendeurs');
+        if(resultAbsorb && Array.isArray(resultAbsorb.chemins)) _cheminsPendingAbsorbes = resultAbsorb.chemins;
       } catch(e) {
         console.warn('[MASTER SAVE] Absorption vendeurs a expiré/échoué, on continue quand même:', e);
       }
@@ -23925,7 +23994,18 @@ async function masterSave(auto){
     const ok = await withTimeout(saveToFirebase(S), 20000, 'écriture Firebase');
     if(!ok){
       toast('❌ Échec de l\'écriture Firebase');
+      // FIX VENTES PERDUES : on NE supprime PAS la zone pending ici — la publication a
+      // échoué, donc les ventes absorbées n'existent encore que dans ce navigateur.
+      // Elles restent dans christmedia/pending et seront ré-absorbées (sans doublon,
+      // grâce à la déduplication par id) au prochain Master Save réussi.
       return;
+    }
+
+    // FIX VENTES PERDUES : la publication vient de réussir — les ventes absorbées sont
+    // maintenant en sécurité dans christmedia/data. On peut enfin vider la zone pending
+    // dont elles proviennent.
+    if(_cheminsPendingAbsorbes.length > 0){
+      await nettoyerCheminsPending(_cheminsPendingAbsorbes);
     }
 
     // 2. Écrire le signal master_save avec timestamp + auteur
@@ -23973,6 +24053,9 @@ async function masterSave(auto){
     toast('❌ Master Save : ' + (e && e.message ? e.message : 'échec réseau') + ' — réessayez');
   } finally {
     if(btn){ btn.innerHTML = origHtml; btn.style.opacity=''; }
+    // FIX VENTES PERDUES : quoi qu'il arrive (succès, échec, timeout), on relâche le
+    // verrou pour que cet appareil puisse de nouveau recevoir les Master Save des autres.
+    _masterSaveEnCours = false;
   }
 }
 
@@ -24032,6 +24115,22 @@ function activerListenerMasterSave(){
     const estEmetteur = (S.session?.email === signal.email) && (Date.now() - signal.ts < 30000);
     _dernierMasterSaveTs = signal.ts;
     if(estEmetteur) return;
+
+    // FIX VENTES PERDUES : si CET appareil est lui-même en train d'absorber/publier un
+    // Master Save (ventes vendeurs déjà récupérées de la zone pending mais pas encore
+    // publiées dans christmedia/data), on NE DOIT PAS écraser S maintenant — ça effacerait
+    // ces ventes en mémoire sans espoir de les récupérer (la zone pending dont elles
+    // viennent n'est vidée qu'après succès de la publication). On attend la fin de
+    // l'opération locale avant d'appliquer le signal reçu.
+    let _tentativesAttente = 0;
+    while(_masterSaveEnCours && _tentativesAttente < 40){ // jusqu'à ~20s
+      await new Promise(r => setTimeout(r, 500));
+      _tentativesAttente++;
+    }
+    if(_masterSaveEnCours){
+      console.warn('[MASTER SAVE] Signal externe toujours en attente après 20s — opération locale trop longue, signal ignoré cette fois (sera repris au prochain signal ou rechargement).');
+      return;
+    }
 
     // Signal reçu d'un autre appareil → recharger depuis Firebase
     console.log('[MASTER SAVE] Signal reçu de', signal.par, 'à', signal.at);
