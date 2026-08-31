@@ -23894,9 +23894,14 @@ async function priseDeService(){
     genVersion();
     S.version = Date.now();
     saveLocal(S);
-    const ok = await withTimeout(saveToFirebase(S), 20000, 'écriture Firebase');
+    let ok;
+    try {
+      ok = await saveToFirebaseAvecRetry(S, () => { if(btn) btn.innerHTML = '🔄 Nouvelle tentative...'; toast('🔄 Connexion lente — nouvel essai...', 2500); });
+    } catch(e) {
+      ok = false;
+    }
     if(!ok){
-      toast('❌ Échec de la synchronisation');
+      toast('❌ Échec de la synchronisation (connexion trop lente) — réessayez');
       // FIX VENTES PERDUES : publication échouée → on NE vide PAS la zone pending,
       // les ventes absorbées y restent récupérables au prochain essai.
       return;
@@ -23940,6 +23945,27 @@ function withTimeout(promise, ms, label){
     promise,
     new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout: ' + (label||'opération') + ' (>' + Math.round(ms/1000) + 's)')), ms))
   ]);
+}
+
+// FIX ÉCRITURES FIREBASE LENTES : sur une connexion instable (ou quand le volume de
+// données a grossi — historique de ventes, audit, etc.), l'écriture complète peut
+// dépasser 20s occasionnellement sans que ce soit un vrai échec réseau. Avant ce fix,
+// un seul dépassement suffisait à faire échouer tout le Master Save (la vente restait
+// alors coincée dans la zone pending jusqu'au prochain essai manuel). Cette fonction
+// retente une seconde fois avec un délai plus généreux avant d'abandonner pour de bon.
+async function saveToFirebaseAvecRetry(data, onRetry){
+  try {
+    return await withTimeout(saveToFirebase(data), 25000, 'écriture Firebase');
+  } catch(e) {
+    console.warn('[MASTER SAVE] 1ère tentative d\'écriture échouée, on retente une fois:', e);
+    if(typeof onRetry === 'function') onRetry();
+    try {
+      return await withTimeout(saveToFirebase(data), 40000, 'écriture Firebase (2e tentative)');
+    } catch(e2) {
+      console.warn('[MASTER SAVE] 2e tentative également échouée:', e2);
+      throw e2;
+    }
+  }
 }
 
 // FIX : _justDidMasterSave / _justDidMasterSaveTimer sont déclarées tout en haut du
@@ -23991,9 +24017,14 @@ async function masterSave(auto){
     saveLocal(S);
 
     // 1. Écrire toutes les données dans Firebase
-    const ok = await withTimeout(saveToFirebase(S), 20000, 'écriture Firebase');
+    let ok;
+    try {
+      ok = await saveToFirebaseAvecRetry(S, () => { if(btn) btn.innerHTML = '🔄 Nouvelle tentative...'; if(!auto) toast('🔄 Connexion lente — nouvel essai...', 2500); });
+    } catch(e) {
+      ok = false;
+    }
     if(!ok){
-      toast('❌ Échec de l\'écriture Firebase');
+      toast('❌ Échec de l\'écriture Firebase (connexion trop lente) — réessayez');
       // FIX VENTES PERDUES : on NE supprime PAS la zone pending ici — la publication a
       // échoué, donc les ventes absorbées n'existent encore que dans ce navigateur.
       // Elles restent dans christmedia/pending et seront ré-absorbées (sans doublon,
