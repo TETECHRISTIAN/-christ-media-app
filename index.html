@@ -3866,6 +3866,9 @@ function modal(html){
   document.getElementById('modal-root').innerHTML=`<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal">${html}</div></div>`;
 }
 function closeModal(){document.getElementById('modal-root').innerHTML=''}
+function ouvrirModal(titre,contenu){
+  modal(`<div class="mft">${titre}</div>${contenu}`);
+}
 
 // ─── DASHBOARD ───
 
